@@ -263,7 +263,7 @@ retry:
 	}
 
 	// Init OpenVR
-	vr::HmdError peError;
+	vr::HmdError peError = vr::VRInitError_None;
 	gIVRSystem = vr::VR_Init(&peError, vr::VRApplication_Scene);
 	if(peError != vr::VRInitError_None)
 	{
