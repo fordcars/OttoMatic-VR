@@ -9,8 +9,12 @@
 #include "version.h"
 #include "game.h"
 
+#include "openvr.h"
+
 #include <iostream>
 #include <cstring>
+
+vr::IVRSystem *gIVRSystem;
 
 #if __APPLE__
 #include "killmacmouseacceleration.h"
@@ -115,6 +119,132 @@ void ParseCommandLine(int argc, const char** argv)
 	}
 }
 
+void GetIVRErrorString(char errorString[255], vr::HmdError peError)
+{
+	switch(peError)
+	{
+	case vr::VRInitError_None:
+		strcpy(errorString, "HmdError_None(0) - There was no error");
+		break;
+
+	case vr::VRInitError_Unknown:
+		strcpy(errorString, "HmdError_Unknown(1) - There was an unknown error");
+		break;
+
+	case vr::VRInitError_Init_InstallationNotFound:
+		strcpy(errorString, "HmdError_Init_InstallationNotFound(100) - The installation folder specified in the path registry doesn't exist.");
+		break;
+
+	case vr::VRInitError_Init_InstallationCorrupt:
+		strcpy(errorString, "HmdError_Init_InstallationCorrupt(101) - The installation folder specified in the path registry has no bin folder.");
+		break;
+
+	case vr::VRInitError_Init_VRClientDLLNotFound:
+		strcpy(errorString, "HmdError_Init_VRClientDLLNotFound(102) - The bin folder has no vrclient.dll (or system - appropriate dynamic library).");
+		break;
+
+	case vr::VRInitError_Init_FileNotFound:
+		strcpy(errorString, "HmdError_Init_FileNotFound(103) - A driver could not be loaded.");
+		break;
+
+	case vr::VRInitError_Init_FactoryNotFound:
+		strcpy(errorString, "HmdError_Init_FactoryNotFound(104) - The factory function in vrclient.dll could not be found.Is vrclient.dll corrupt ?");
+		break;
+
+	case vr::VRInitError_Init_InterfaceNotFound:
+		strcpy(errorString, "HmdError_Init_InterfaceNotFound(105) - The specific interface function requested by VR_Init or VR_GetGenericInterface could not be found. Is the SDK being used newer than the installed runtime ?");
+		break;
+
+	case vr::VRInitError_Init_InvalidInterface:
+		strcpy(errorString, "HmdError_Init_InvalidInterface(106) - This error code is currently unused.");
+		break;
+
+	case vr::VRInitError_Init_UserConfigDirectoryInvalid:
+		strcpy(errorString, "HmdError_Init_UserConfigDirectoryInvalid(107) - The config directory specified in the path registry was not writable.");
+		break;
+
+	case vr::VRInitError_Init_HmdNotFound:
+		strcpy(errorString, "HmdError_Init_HmdNotFound(108) - Either no HMD was attached to the system or the HMD could not be initialized.");
+		break;
+
+	case vr::VRInitError_Init_NotInitialized:
+		strcpy(errorString, "HmdError_Init_NotInitialized(109) - VR_GetGenericInterface will return this error if it is called before VR_Init or after VR_Shutdown.");
+		break;
+
+	case vr::VRInitError_Init_PathRegistryNotFound:
+		strcpy(errorString, "HmdError_Init_PathRegistryNotFound(110) - The VR path registry file could not be read. Reinstall the OpenVR runtime (or the SteamVR application on Steam.)");
+		break;
+
+	case vr::VRInitError_Init_NoConfigPath:
+		strcpy(errorString, "HmdError_Init_NoConfigPath(111) - The config path was not specified in the path registry.");
+		break;
+
+	case vr::VRInitError_Init_NoLogPath:
+		strcpy(errorString, "HmdError_Init_NoLogPath(112) - The log path was not specified in the path registry.");
+		break;
+
+	case vr::VRInitError_Init_PathRegistryNotWritable:
+		strcpy(errorString, "HmdError_Init_PathRegistryNotWritable(113) - The VR path registry could not be written.");
+		break;
+
+	case vr::VRInitError_Driver_Failed:
+		strcpy(errorString, "HmdError_Driver_Failed(200) - A driver failed to initialize. This is an internal error.");
+		break;
+
+	case vr::VRInitError_Driver_Unknown:
+		strcpy(errorString, "HmdError_Driver_Unknown(201) - A driver failed for an unknown reason. This is an internal error.");
+		break;
+
+	case vr::VRInitError_Driver_HmdUnknown:
+		strcpy(errorString, "HmdError_Driver_HmdUnknown(202) - A driver did not detect an HMD. This is an internal error.");
+		break;
+
+	case vr::VRInitError_Driver_NotLoaded:
+		strcpy(errorString, "HmdError_Driver_NotLoaded(203) - A driver was not loaded before requests were made from that driver. This is an internal error.");
+		break;
+
+	case vr::VRInitError_Driver_RuntimeOutOfDate:
+		strcpy(errorString, "HmdError_Driver_RuntimeOutOfDate(204) - For drivers with a runtime of their own, that runtime needs to be updated.");
+		break;
+
+	case vr::VRInitError_Driver_HmdInUse:
+		strcpy(errorString, "HmdError_Driver_HmdInUse(205) - Another non - OpenVR application is using the HMD.");
+		break;
+
+	case vr::VRInitError_IPC_ServerInitFailed:
+		strcpy(errorString, "HmdError_IPC_ServerInitFailed(300) - OpenVR was unable to start vrserver.");
+		break;
+
+	case vr::VRInitError_IPC_ConnectFailed:
+		strcpy(errorString, "HmdError_IPC_ConnectFailed(301) - After repeated attempts, OpenVR was unable to connect to vrserver or vrcompositor.");
+		break;
+
+	case vr::VRInitError_IPC_SharedStateInitFailed:
+		strcpy(errorString, "HmdError_IPC_SharedStateInitFailed(302) - Shared memory with vrserver or vrcompositor could not be opened.");
+		break;
+
+	case vr::VRInitError_IPC_CompositorInitFailed:
+		strcpy(errorString, "HmdError_IPC_CompositorInitFailed(303) - OpenVR was unable to start vrcompositor.");
+		break;
+
+	case vr::VRInitError_IPC_MutexInitFailed:
+		strcpy(errorString, "HmdError_IPC_MutexInitFailed(304) - OpenVR was unable to create a mutex to communicate with vrcompositor.");
+		break;
+
+	case vr::VRInitError_VendorSpecific_UnableToConnectToOculusRuntime:
+		strcpy(errorString, "HmdError_VendorSpecific_UnableToConnectToOculusRuntime(1000) - The connection to the Oculus runtime failed for an unknown reason.");
+		break;
+
+	case vr::VRInitError_Steam_SteamInstallationNotFound:
+		strcpy(errorString, "HmdError_Steam_SteamInstallationNotFound(2000) - This error is not currently used.)");
+		break;
+
+	default:
+		strcpy(errorString, "Unknown error!");
+		break;
+	}
+}
+
 int Boot(int argc, const char** argv)
 {
 	ParseCommandLine(argc, argv);
@@ -130,6 +260,17 @@ retry:
 	if (0 != SDL_Init(SDL_INIT_VIDEO))
 	{
 		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
+	}
+
+	// Init OpenVR
+	vr::HmdError peError;
+	gIVRSystem = vr::VR_Init(&peError, vr::VRApplication_Scene);
+	if(peError != vr::VRInitError_None)
+	{
+		char errorMsg[255];
+		GetIVRErrorString(errorMsg, peError);
+
+		throw std::runtime_error(errorMsg);
 	}
 
 	if (gGamePrefs.preferredDisplay >= SDL_GetNumVideoDisplays())
@@ -193,6 +334,7 @@ retry:
 	}
 
 	// Clean up
+	vr::VR_Shutdown();
 	Pomme::Shutdown();
 
 	SDL_DestroyWindow(gSDLWindow);
