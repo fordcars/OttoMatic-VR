@@ -1,5 +1,6 @@
 # External libraries
 extern/SDL*
+extern/openvr*
 
 # External library cache
 /cache

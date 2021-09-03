@@ -40,6 +40,7 @@ set(POMME_NO_QD3D true)
 # DEPENDENCIES
 #------------------------------------------------------------------------------
 
+set(OPENVR_DIRECTORY ${CMAKE_SOURCE_DIR}/extern/openvr-1.16.8)
 add_subdirectory(extern/Pomme)
 
 find_package(SDL2 REQUIRED COMPONENTS main)
@@ -80,6 +81,8 @@ set(GAME_LIBRARIES
 )
 
 if(WIN32)
+	list(APPEND GAME_LIBRARIES ${OPENVR_DIRECTORY}/lib/win64/openvr_api.lib)
+	
 	# "WIN32" here is equivalent to /SUBSYSTEM:WINDOWS for MSVC
 	add_executable(${GAME_TARGET} WIN32
 		${GAME_ALL_SOURCES}
@@ -105,6 +108,7 @@ target_include_directories(${GAME_TARGET} PRIVATE
 	${SDL2_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	extern/Pomme/src
+	${OPENVR_DIRECTORY}/headers
 	${GAME_SRCDIR}
 	${GAME_SRCDIR}/Headers
 )
@@ -252,6 +256,12 @@ if(WIN32)
 		add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLL} ${APP_PARENT_DIR})
 	endforeach()
+endif()
+
+# Copy OpenVR DLL for Windows
+if(WIN32)
+	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different ${OPENVR_DIRECTORY}/bin/win64/openvr_api.dll ${APP_PARENT_DIR})
 endif()
 
 # Copy documentation to output folder

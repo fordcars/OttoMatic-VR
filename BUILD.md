@@ -1,5 +1,7 @@
 # How to build Otto Matic
 
+Run the instructions below, then download [OpenVR SDK 1.16.8](https://github.com/ValveSoftware/openvr/archive/refs/tags/v1.16.8.zip) and extract the contents into the **extern** folder.
+
 ## TL;DR: Automated build script
 
 Clone the repo **recursively**, then run `python3 build.py` to execute the build steps described in this document and package up the game.
