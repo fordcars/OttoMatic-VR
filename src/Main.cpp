@@ -273,6 +273,11 @@ retry:
 		throw std::runtime_error(errorMsg);
 	}
 
+	if(!vr::VRCompositor())
+	{
+		throw std::runtime_error("Compositor initialization failed!");
+	}
+
 	if (gGamePrefs.preferredDisplay >= SDL_GetNumVideoDisplays())
 		gGamePrefs.preferredDisplay = 0;
 

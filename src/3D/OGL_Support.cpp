@@ -4,12 +4,20 @@
 /*   By Brian Greenstone    */
 /****************************/
 
-
 /****************************/
 /*    EXTERNALS             */
 /****************************/
 
+// We have to include these in CPP, not in extern "C".
+#include "Pomme.h"
+#include "PommeInit.h"
+#include "PommeFiles.h"
+#include "PommeGraphics.h"
+#include "version.h"
 #include "game.h"
+
+#include "openvr.h"
+extern vr::IVRSystem *gIVRSystem;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -17,6 +25,7 @@
 
 static void OGL_InitFont(void);
 
+static void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *), bool leftEye);
 static void OGL_CreateDrawContext(OGLViewDefType *viewDefPtr);
 static void OGL_SetStyles(OGLSetupInputType *setupDefPtr);
 static void OGL_CreateLights(OGLLightDefType *lightDefPtr);
@@ -45,6 +54,12 @@ u_char					gAnaglyphGreyTable[255];
 
 
 SDL_GLContext	gAGLContext = nil;
+GLuint gLeftEyeTexture = 0;
+GLuint gRightEyeTexture = 0;
+GLuint gEyeTargetWidth = 0;
+GLuint gEyeTargetHeight = 0;
+GLuint gEyeTextureSize = 0;
+vr::TrackedDevicePose_t gTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 
 
 OGLMatrix4x4	gViewToFrustumMatrix,gWorldToViewMatrix,gWorldToFrustumMatrix;
@@ -99,7 +114,6 @@ float	f;
 		gAnaglyphGreyTable[i] = i; //sin(f) * 255.0f;
 		f += (PI/2.0) / 255.0f;
 	}
-
 }
 
 
@@ -154,7 +168,7 @@ static OGLVector3D			fillDirection2 = { -1, -.3, -.3 };
 	viewDef->lights.fillColor[0] 	= fillColor;
 	viewDef->lights.fillColor[1] 	= fillColor;
 }
-
+#include <string>
 
 /************** SETUP OGL WINDOW *******************/
 
@@ -172,7 +186,7 @@ OGLSetupOutputType	*outputPtr;
 
 
 				/* SETUP */
-
+	
 	OGL_CreateDrawContext(&setupDefPtr->view);
 	OGL_CheckError();
 
@@ -207,6 +221,26 @@ OGLSetupOutputType	*outputPtr;
 
 	TextMesh_InitMaterial(outputPtr, setupDefPtr->styles.redFont);
 	OGL_InitFont();
+
+	gIVRSystem->GetRecommendedRenderTargetSize(&gEyeTargetWidth, &gEyeTargetHeight);
+
+	// Find next power of 2 (cool math)
+	// https://stackoverflow.com/questions/466204/rounding-up-to-next-power-of-2
+	GLuint v = 0;
+	if(gEyeTargetWidth > gEyeTargetHeight)
+		v = gEyeTargetWidth;
+	else
+		v = gEyeTargetHeight;
+	
+	v--;
+	v |= v >> 1;
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+	v++;
+
+	gEyeTextureSize = v;
 }
 
 
@@ -325,7 +359,6 @@ static char			*s;
   	glEnable(GL_NORMALIZE);
 
 
-
  		/***************************/
 		/* GET OPENGL CAPABILITIES */
  		/***************************/
@@ -350,6 +383,18 @@ static char			*s;
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(viewDefPtr->clearColor.r, viewDefPtr->clearColor.g, viewDefPtr->clearColor.b, 1.0);
 
+
+	/************************/
+	/* GENERATE VR TEXTURES */
+	/************************/
+	glGenTextures(1, &gLeftEyeTexture);
+	glGenTextures(1, &gRightEyeTexture);
+
+	glBindTexture(GL_TEXTURE_2D, gLeftEyeTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, gRightEyeTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 }
 
 
@@ -471,10 +516,283 @@ GLfloat	ambient[4];
 
 void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *))
 {
+	vr::VRCompositor()->WaitGetPoses(gTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+
+	// Render VR first
+	OGL_DrawEye(setupInfo, drawRoutine, true);
+	OGL_DrawEye(setupInfo, drawRoutine, false);
+
+	if(glGetError() != GL_NO_ERROR)
+		throw std::runtime_error("GL ERROR AFTER CALLLL");
+
+	if(gIVRSystem)
+	{
+		vr::VRTextureBounds_t bounds = { 0, 0, static_cast<float>(gEyeTargetWidth) / gEyeTextureSize, static_cast<float>(gEyeTargetHeight) / gEyeTextureSize };
+		vr::Texture_t leftEyeTexture = { (void *)(uintptr_t)gLeftEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+		vr::Texture_t rightEyeTexture = { (void *)(uintptr_t)gRightEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+
+		// Don't look!
+		// A little hack to avoid issues with https://github.com/ValveSoftware/openvr/issues/744
+		// Note: GL_TEXTURE_2D_MULTISAMPLE was only added in Opengl 3.2
+		glGetError();
+	}
+
+	glFlush();
+	glFinish();
+	SDL_GL_SwapWindow(gSDLWindow);
+
+//
+//	if (setupInfo == nil)										// make sure it's legit
+//		DoFatalAlert("OGL_DrawScene setupInfo == nil");
+//	if (!setupInfo->isActive)
+//		DoFatalAlert("OGL_DrawScene isActive == false");
+//
+//	int makeCurrentRC = SDL_GL_MakeCurrent(gSDLWindow, setupInfo->drawContext);		// make context active
+//	GAME_ASSERT_MESSAGE(makeCurrentRC == 0, SDL_GetError());
+//
+//
+//	if (gGammaFadePercent <= 0)							// if we just finished fading out and haven't started fading in yet, just show black
+//	{
+//		glClearColor(0, 0, 0, 1);
+//		glClear(GL_COLOR_BUFFER_BIT);
+//		SDL_GL_SwapWindow(gSDLWindow);					// end render loop
+//		return;
+//	}
+//
+//
+//			/* INIT SOME STUFF */
+//
+//	if (gGamePrefs.anaglyph)
+//	{
+//		gAnaglyphPass = 0;
+//		PrepAnaglyphCameras();
+//	}
+//
+//
+//	if (gDebugMode)
+//	{
+//		int depth = 32;
+//		gVRAMUsedThisFrame = gGameWindowWidth * gGameWindowHeight * (depth / 8);	// backbuffer size
+//		gVRAMUsedThisFrame += gGameWindowWidth * gGameWindowHeight * 2;				// z-buffer size
+//		gVRAMUsedThisFrame += gGameWindowWidth * gGameWindowHeight * (depth / 8);	// display size
+//	}
+//
+//
+//	gPolysThisFrame 	= 0;										// init poly counter
+//	gMostRecentMaterial = nil;
+//	gGlobalMaterialFlags = 0;
+//	SetColor4f(1,1,1,1);
+//
+//				/*****************/
+//				/* CLEAR BUFFERS */
+//				/*****************/
+//
+//				/* MAKE SURE GREEN CHANNEL IS CLEAR */
+//				//
+//				// Bringing up dialogs can write into green channel, so always be sure it's clear
+//				//
+//
+//	if (setupInfo->clearBackBuffer || (gDebugMode == 3))
+//	{
+//		if (gGamePrefs.anaglyph)
+//		{
+//			if (gGamePrefs.anaglyphColor)
+//				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);		// make sure clearing Red/Green/Blue channels
+//			else
+//				glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);		// make sure clearing Red/Blue channels
+//		}
+//		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+//	}
+//	else
+//		glClear(GL_DEPTH_BUFFER_BIT);
+//
+//
+//			/*************************/
+//			/* SEE IF DOING ANAGLYPH */
+//			/*************************/
+//
+//do_anaglyph:
+//
+//	if (gGamePrefs.anaglyph)
+//	{
+//				/* SET COLOR MASK */
+//
+//		if (gAnaglyphPass == 0)
+//		{
+//			glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_TRUE);
+//		}
+//		else
+//		{
+//			if (gGamePrefs.anaglyphColor)
+//				glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_TRUE);
+//			else
+//				glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_TRUE);
+//			glClear(GL_DEPTH_BUFFER_BIT);
+//		}
+//
+//		CalcAnaglyphCameraOffset(gAnaglyphPass);
+//	}
+//	else
+//	{
+//		gAnaglyphPass = 0;
+//		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);		// this lets us hot-switch between anaglyph and non-anaglyph in the settings
+//	}
+//
+//
+//				/* SET VIEWPORT */
+//
+//	{
+//		int x, y, w, h;
+//		OGL_GetCurrentViewport(setupInfo, &x, &y, &w, &h);
+//		glViewport(x, y, w, h);
+//		gCurrentAspectRatio = (float) w / (float) (h == 0? 1: h);
+//
+//		// Compute logical width & height for 2D elements
+//		g2DLogicalHeight = 480.0f;
+//		if (gCurrentAspectRatio < 4.0f/3.0f)
+//			g2DLogicalWidth = 640.0f;
+//		else
+//			g2DLogicalWidth = 480.0f * gCurrentAspectRatio;
+//	}
+//
+//
+//			/* GET UPDATED GLOBAL COPIES OF THE VARIOUS MATRICES */
+//
+//	OGL_Camera_SetPlacementAndUpdateMatrices(setupInfo);
+//
+//
+//			/* CALL INPUT DRAW FUNCTION */
+//
+//	if (drawRoutine != nil)
+//		drawRoutine(setupInfo);
+//
+//
+//			/***********************************/
+//			/* SEE IF DO ANOTHER ANAGLYPH PASS */
+//			/***********************************/
+//
+//	if (gGamePrefs.anaglyph)
+//	{
+//		gAnaglyphPass++;
+//		if (gAnaglyphPass == 1)
+//			goto do_anaglyph;
+//	}
+//
+//
+//		/**************************/
+//		/* SEE IF SHOW DEBUG INFO */
+//		/**************************/
+//
+//	if (GetNewKeyState(SDL_SCANCODE_F8))
+//	{
+//		if (++gDebugMode > 3)
+//			gDebugMode = 0;
+//
+//		if (gDebugMode == 3)								// see if show wireframe
+//			glPolygonMode(GL_FRONT_AND_BACK ,GL_LINE);
+//		else
+//			glPolygonMode(GL_FRONT_AND_BACK ,GL_FILL);
+//	}
+//
+//				/* SHOW BASIC DEBUG INFO */
+//
+//	if (!gDebugText)
+//	{
+//		// no-op
+//	}
+//	else if (gDebugMode > 0)
+//	{
+//		char debugString[1024];
+//		snprintf(
+//			debugString,
+//			sizeof(debugString),
+//			"fps:\t\t%d\n"
+//			"tris:\t\t%d\n"
+//			"\n"
+//			"input x:\t%.3f\n"
+//			"input y:\t%.3f\n"
+//			"input a:\t%.0f\u00b0\n"
+//			"\n"
+//			"player x:\t%.0f\n"
+//			"player z:\t%.0f\n"
+//			"\n"
+//			"enemies:\t%d\n"
+//			"t-defs:\t%d\n"
+//			"sparkles:\t%d\n"
+//			"h2o:\t\t%d\n"
+//			"ground?\t%c\n"
+//			"\n"
+//			"vram:\t\t%dK\n"
+//#if 0
+//			"ptrs:\t\t%d\n"
+//			"ptr mem:\t%ldK\n"
+//#endif
+//			"nodes:\t%d\n"
+//			"\n"
+//			"time since last thrust:\t%.3f\n"
+//			"force cam align?\t\t%c\n"
+//			"auto rotate cam?\t\t%c\n"
+//			"cam user rot:\t\t%.3f\n"
+//			"cam ctrl dX:\t\t%.3f\n"
+//			,
+//			(int)(gFramesPerSecond+.5f),
+//			gPolysThisFrame,
+//			gPlayerInfo.analogControlX,
+//			gPlayerInfo.analogControlZ,
+//			(180/PI) * ( atan2f(gPlayerInfo.analogControlZ,gPlayerInfo.analogControlX) ),
+//			gPlayerInfo.coord.x,
+//			gPlayerInfo.coord.z,
+//			gNumEnemies,
+//			gNumTerrainDeformations,
+//			gNumSparkles,
+//			gNumWaterDrawn,
+//			gPlayerInfo.objNode && (gPlayerInfo.objNode->StatusBits & STATUS_BIT_ONGROUND)? 'Y': 'N',
+//			gVRAMUsedThisFrame/1024,
+//#if 0
+//			gNumPointers,
+//			gMemAllocatedInPtrs/1024,
+//#endif
+//			gNumObjectNodes,
+//			gTimeSinceLastThrust,
+//			gForceCameraAlignment? 'Y': 'N',
+//			gAutoRotateCamera? 'Y': 'N',
+//			gCameraUserRotY,
+//			gCameraControlDelta.x
+//		);
+//		TextMesh_Update(debugString, 0, gDebugText);
+//		gDebugText->StatusBits &= ~STATUS_BIT_HIDDEN;
+//	}
+//	else
+//	{
+//		gDebugText->StatusBits |= STATUS_BIT_HIDDEN;
+//	}
+//
+//
+//
+//            /**************/
+//			/* END RENDER */
+//			/**************/
+//
+//           /* SWAP THE BUFFS */
+//
+//	SDL_GL_SwapWindow(gSDLWindow);					// end render loop
+//
+//
+//	if (gGamePrefs.anaglyph)
+//		RestoreCamerasFromAnaglyph();
+
+}
+
+/******************* OGL DRAW EYE *********************/
+// If leftEye is false, will draw right eye.
+void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *), bool leftEye)
+{
 	if (setupInfo == nil)										// make sure it's legit
-		DoFatalAlert("OGL_DrawScene setupInfo == nil");
+		DoFatalAlert("OGL_DrawEye setupInfo == nil");
 	if (!setupInfo->isActive)
-		DoFatalAlert("OGL_DrawScene isActive == false");
+		DoFatalAlert("OGL_DrawEye isActive == false");
 
 	int makeCurrentRC = SDL_GL_MakeCurrent(gSDLWindow, setupInfo->drawContext);		// make context active
 	GAME_ASSERT_MESSAGE(makeCurrentRC == 0, SDL_GetError());
@@ -490,22 +808,6 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 
 
 			/* INIT SOME STUFF */
-
-	if (gGamePrefs.anaglyph)
-	{
-		gAnaglyphPass = 0;
-		PrepAnaglyphCameras();
-	}
-
-
-	if (gDebugMode)
-	{
-		int depth = 32;
-		gVRAMUsedThisFrame = gGameWindowWidth * gGameWindowHeight * (depth / 8);	// backbuffer size
-		gVRAMUsedThisFrame += gGameWindowWidth * gGameWindowHeight * 2;				// z-buffer size
-		gVRAMUsedThisFrame += gGameWindowWidth * gGameWindowHeight * (depth / 8);	// display size
-	}
-
 
 	gPolysThisFrame 	= 0;										// init poly counter
 	gMostRecentMaterial = nil;
@@ -525,9 +827,6 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 	{
 		if (gGamePrefs.anaglyph)
 		{
-			if (gGamePrefs.anaglyphColor)
-				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);		// make sure clearing Red/Green/Blue channels
-			else
 				glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);		// make sure clearing Red/Blue channels
 		}
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -540,33 +839,8 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 			/* SEE IF DOING ANAGLYPH */
 			/*************************/
 
-do_anaglyph:
-
-	if (gGamePrefs.anaglyph)
-	{
-				/* SET COLOR MASK */
-
-		if (gAnaglyphPass == 0)
-		{
-			glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_TRUE);
-		}
-		else
-		{
-			if (gGamePrefs.anaglyphColor)
-				glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_TRUE);
-			else
-				glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_TRUE);
-			glClear(GL_DEPTH_BUFFER_BIT);
-		}
-
-		CalcAnaglyphCameraOffset(gAnaglyphPass);
-	}
-	else
-	{
 		gAnaglyphPass = 0;
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);		// this lets us hot-switch between anaglyph and non-anaglyph in the settings
-	}
-
 
 				/* SET VIEWPORT */
 
@@ -595,23 +869,30 @@ do_anaglyph:
 	if (drawRoutine != nil)
 		drawRoutine(setupInfo);
 
+	OGL_CheckError();
 
-			/***********************************/
-			/* SEE IF DO ANOTHER ANAGLYPH PASS */
-			/***********************************/
+		/********************************/
+		/* READ AND COPY RENDERED SCENE */
+		/********************************/
+	GLint oldTexture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTexture);
 
-	if (gGamePrefs.anaglyph)
-	{
-		gAnaglyphPass++;
-		if (gAnaglyphPass == 1)
-			goto do_anaglyph;
-	}
+	if(leftEye)
+		glBindTexture(GL_TEXTURE_2D, gLeftEyeTexture);
+	else
+		glBindTexture(GL_TEXTURE_2D, gRightEyeTexture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, gEyeTargetWidth, gEyeTargetHeight, 0);
+
+	glBindTexture(GL_TEXTURE_2D, oldTexture);
 
 
 		/**************************/
 		/* SEE IF SHOW DEBUG INFO */
 		/**************************/
-
+	
 	if (GetNewKeyState(SDL_SCANCODE_F8))
 	{
 		if (++gDebugMode > 3)
@@ -623,92 +904,13 @@ do_anaglyph:
 			glPolygonMode(GL_FRONT_AND_BACK ,GL_FILL);
 	}
 
-				/* SHOW BASIC DEBUG INFO */
-
-	if (!gDebugText)
-	{
-		// no-op
-	}
-	else if (gDebugMode > 0)
-	{
-		char debugString[1024];
-		snprintf(
-			debugString,
-			sizeof(debugString),
-			"fps:\t\t%d\n"
-			"tris:\t\t%d\n"
-			"\n"
-			"input x:\t%.3f\n"
-			"input y:\t%.3f\n"
-			"input a:\t%.0f\u00b0\n"
-			"\n"
-			"player x:\t%.0f\n"
-			"player z:\t%.0f\n"
-			"\n"
-			"enemies:\t%d\n"
-			"t-defs:\t%d\n"
-			"sparkles:\t%d\n"
-			"h2o:\t\t%d\n"
-			"ground?\t%c\n"
-			"\n"
-			"vram:\t\t%dK\n"
-#if 0
-			"ptrs:\t\t%d\n"
-			"ptr mem:\t%ldK\n"
-#endif
-			"nodes:\t%d\n"
-			"\n"
-			"time since last thrust:\t%.3f\n"
-			"force cam align?\t\t%c\n"
-			"auto rotate cam?\t\t%c\n"
-			"cam user rot:\t\t%.3f\n"
-			"cam ctrl dX:\t\t%.3f\n"
-			,
-			(int)(gFramesPerSecond+.5f),
-			gPolysThisFrame,
-			gPlayerInfo.analogControlX,
-			gPlayerInfo.analogControlZ,
-			(180/PI) * ( atan2f(gPlayerInfo.analogControlZ,gPlayerInfo.analogControlX) ),
-			gPlayerInfo.coord.x,
-			gPlayerInfo.coord.z,
-			gNumEnemies,
-			gNumTerrainDeformations,
-			gNumSparkles,
-			gNumWaterDrawn,
-			gPlayerInfo.objNode && (gPlayerInfo.objNode->StatusBits & STATUS_BIT_ONGROUND)? 'Y': 'N',
-			gVRAMUsedThisFrame/1024,
-#if 0
-			gNumPointers,
-			gMemAllocatedInPtrs/1024,
-#endif
-			gNumObjectNodes,
-			gTimeSinceLastThrust,
-			gForceCameraAlignment? 'Y': 'N',
-			gAutoRotateCamera? 'Y': 'N',
-			gCameraUserRotY,
-			gCameraControlDelta.x
-		);
-		TextMesh_Update(debugString, 0, gDebugText);
-		gDebugText->StatusBits &= ~STATUS_BIT_HIDDEN;
-	}
-	else
-	{
-		gDebugText->StatusBits |= STATUS_BIT_HIDDEN;
-	}
-
-
-
             /**************/
 			/* END RENDER */
 			/**************/
 
-           /* SWAP THE BUFFS */
+	/* SWAP THE BUFFS */
 
-	SDL_GL_SwapWindow(gSDLWindow);					// end render loop
-
-
-	if (gGamePrefs.anaglyph)
-		RestoreCamerasFromAnaglyph();
+	//SDL_GL_SwapWindow(gSDLWindow);					// end render loop
 
 }
 
@@ -1483,6 +1685,6 @@ static void OGL_InitFont(void)
 	newObjDef.flags = STATUS_BIT_HIDDEN;
 	newObjDef.slot = DEBUGOVERLAY_SLOT;
 	newObjDef.scale = 0.45f;
-	newObjDef.coord = (OGLPoint3D) { -320, -100, 0 };
+	newObjDef.coord = { -320, -100, 0 };
 	gDebugText = TextMesh_NewEmpty(2048, &newObjDef);
 }
