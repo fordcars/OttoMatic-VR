@@ -290,11 +290,14 @@ static void ResetCameraSettings(void)
 	gCameraFromAccelY	= 1.5;
 
 
-
+	// Disable this camera modification for first person
+	/*
 	if (gLevelNum == LEVEL_NUM_BLOBBOSS)			// keep camera high on blob boss level
 		gMinHeightOffGround = 400;
 	else
 		gMinHeightOffGround = 60;
+
+	*/
 
 			/* SPECIAL SETTINGS FOR SAUCER LEVEL */
 
@@ -375,6 +378,12 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 		/******************************************/
 		/* SEE IF THE USER WILL WANT SOME CONTROL */
 		/******************************************/
+	
+	// Forcing this always on is like always holding tab
+	// Might be required to always have camera behind player for first person view
+	// Testing in progress:
+	gForceCameraAlignment = true; // (forced always on to test)
+
 	if (gAutoRotateCamera)
 	{
 		gCameraUserRotY += fps * gAutoRotateCameraSpeed;
@@ -475,7 +484,7 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 		if ((gTimeSinceLastThrust > .5f) || gForceCameraAlignment || (gGamePrefs.playerRelControls)) 	// dont auto-align if player is being moved & we are not forcing it
 		{
 			float	r;
-			const float	ratio = .5;
+			const float	ratio = 5.5; // originally 0.5, increased to reduce acceleration
 			OGLVector2D	behind;
 
 					/* CALC PLAYER BEHIND VECTOR */
