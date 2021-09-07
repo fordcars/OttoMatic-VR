@@ -267,6 +267,9 @@ int		i;
 	gTimeSinceLastShoot = 10;
 	gResetJumpJet = true;
 	gExplodePlayerAfterElectrocute = false;
+
+	// Make player invisble: 
+	newObj->StatusBits |= STATUS_BIT_HIDDEN;
 }
 
 

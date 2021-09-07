@@ -329,6 +329,7 @@ float		fps = gFramesPerSecondFrac;
 ObjNode		*playerObj = gPlayerInfo.objNode;
 SkeletonObjDataType	*skeleton;
 float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPointOfInterestY;
+int			firstPersonHeight = 100;
 
 	if (!playerObj)
 		return;
@@ -370,7 +371,7 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 
 
 	to.x = sin(playerObj->Rot.y + PI);
-	to.y = playerObj->Coord.y + 50;
+	to.y = playerObj->Coord.y + firstPersonHeight;
 	to.z = cos(playerObj->Rot.y + PI);
 
 	to.x += playerObj->Coord.x;
@@ -390,7 +391,7 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 	}
 	else
 	{
-		from.x = playerObj->Coord.x;
+		from.x = playerObj->Coord.x; // ( + a few hundred if needed to see body for testing )
 		from.z = playerObj->Coord.z;	
 	}
 
@@ -406,7 +407,7 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 	}
 	else
 	{
-		from.y = playerObj->Coord.y + 50;
+		from.y = playerObj->Coord.y + firstPersonHeight;
 	}
 
 
