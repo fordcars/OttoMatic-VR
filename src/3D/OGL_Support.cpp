@@ -514,7 +514,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 
 	// Render VR first
 	OGL_DrawEye(setupInfo, drawRoutine, true);
-	OGL_DrawEye(setupInfo, drawRoutine, false);
+	//OGL_DrawEye(setupInfo, drawRoutine, false);
 
 	if(glGetError() != GL_NO_ERROR)
 		throw std::runtime_error("GL ERROR AFTER CALLLL");
@@ -525,7 +525,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 		vr::Texture_t leftEyeTexture = { (void *)(uintptr_t)gLeftEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 		vr::Texture_t rightEyeTexture = { (void *)(uintptr_t)gRightEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+		vr::VRCompositor()->Submit(vr::Eye_Right, &leftEyeTexture);
 	}
 
 	glFlush();
