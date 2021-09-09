@@ -47,6 +47,7 @@ Boolean				gDrawLensFlare = true, gFreezeCameraFromXZ = false, gFreezeCameraFrom
 Boolean				gForceCameraAlignment = false;
 
 float				gCameraUserRotY = 0;
+float				mouseDistY;
 float				gPlayerToCameraAngle = 0.0f;
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
@@ -260,8 +261,8 @@ ObjNode	*playerObj = gPlayerInfo.objNode;
 	{
 		float	dx,dz,x,z,r;
 
-		// r = playerObj->Rot.y + PI + PI/9; // Use player Rot y directly 
-		r = playerObj->Rot.y;
+		r = playerObj->Rot.y + PI + PI/9; // Use player Rot y directly 
+		// r = playerObj->Rot.y;
 
 		dx = sin(r) * 1800.0f;
 		dz = cos(r) * 1800.0f;
@@ -289,6 +290,7 @@ static void ResetCameraSettings(void)
 	gForceCameraAlignment = false;
 
 	gCameraUserRotY = 0;
+	mouseDistY = 0;
 
 	gCameraFromAccel 	= 4.5;
 	gCameraFromAccelY	= 1.5;
@@ -370,13 +372,28 @@ int			firstPersonHeight = 100;
 			/**********************/
 
 
-	to.x = sin(playerObj->Rot.y + PI);
-	to.y = playerObj->Coord.y + firstPersonHeight;
-	to.z = cos(playerObj->Rot.y + PI);
+	mouseDistY += gCameraControlDelta.y;
 
-	to.x += playerObj->Coord.x;
-	to.z += playerObj->Coord.z;
+	float limit = 3.2;
+	
+	// Lock the view to upper max and lower max
+	if (mouseDistY > limit)
+		mouseDistY = limit;
+	if (mouseDistY < -limit)
+		mouseDistY = -limit;
 
+	// Mouse Y axis slows down at the top and bottom limits, à la SDL3D???
+	
+	// Basic FPS view, locked to robot facing-forward view:
+	to.y = playerObj->Coord.y + firstPersonHeight - mouseDistY;
+	to.x = sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
+	to.z = cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+
+
+	// Test logging of mouseDistY breakpoint
+	if ((int)fps % 60) {
+		//mouseDistY = mouseDistY;
+	}
 
 
 
@@ -414,7 +431,7 @@ int			firstPersonHeight = 100;
 				/**********************/
 				/* UPDATE CAMERA INFO */
 				/**********************/
-
+	/*
 	if (gGamePrefs.snappyCameraControl
 		&& gCameraControlDelta.x != 0
 		&& !gAutoRotateCamera)
@@ -427,14 +444,14 @@ int			firstPersonHeight = 100;
 		OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);
 		OGLPoint3D_Transform(&from, &m, &from);
 	}
+	*/
 
-
-	if (gAutoRotateCamera && gFreezeCameraFromXZ)				// special auto-rot for frozen xz condition
-	{
-		OGLMatrix4x4	m;
-		OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, fps * gAutoRotateCameraSpeed, 0);
-		OGLPoint3D_Transform(&from, &m, &from);
-	}
+	//if (gAutoRotateCamera && gFreezeCameraFromXZ)				// special auto-rot for frozen xz condition
+	//{
+	//	OGLMatrix4x4	m;
+	//	OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, fps * gAutoRotateCameraSpeed, 0);
+	//	OGLPoint3D_Transform(&from, &m, &from);
+	//}
 
 
 	OGL_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);

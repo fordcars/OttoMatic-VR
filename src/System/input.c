@@ -321,14 +321,12 @@ void UpdateInput(void)
 		float mouseDX = mdx * mouseSensitivityFrac * .1f;
 		float mouseDY = mdy * mouseSensitivityFrac * .1f;
 
-		mouseDX = GAME_CLAMP(mouseDX, -1.0f, 1.0f);					// keep values pinned
-		mouseDY = GAME_CLAMP(mouseDY, -1.0f, 1.0f);
+		// Don't pin the values for better (smoother) mouse fps control
+		//mouseDX = GAME_CLAMP(mouseDX, -1.0f, 1.0f);					// keep values pinned
+		//mouseDY = GAME_CLAMP(mouseDY, -1.0f, 1.0f);
 
 		if (fabsf(mouseDX) > fabsf(gPlayerInfo.analogControlX))		// is the mouse delta better than what we've got from the other devices?
 			gPlayerInfo.analogControlX = mouseDX;
-
-		if (fabsf(mouseDY) > fabsf(gPlayerInfo.analogControlZ))		// is the mouse delta better than what we've got from the other devices?
-			gPlayerInfo.analogControlZ = mouseDY;
 	}
 
 
@@ -339,9 +337,9 @@ void UpdateInput(void)
 
 	if (gSDLController)
 	{
-		OGLVector2D rsVec = GetThumbStickVector(true);
-		gCameraControlDelta.x -= rsVec.x * 1.0f;
-		gCameraControlDelta.y += rsVec.y * 1.0f;
+		//OGLVector2D rsVec = GetThumbStickVector(true);
+		//gCameraControlDelta.x -= rsVec.x * 1.0f;
+		//gCameraControlDelta.y += rsVec.y * 1.0f;
 	}
 
 	if (GetNeedState(kNeed_CameraLeft))
@@ -350,8 +348,12 @@ void UpdateInput(void)
 	if (GetNeedState(kNeed_CameraRight))
 		gCameraControlDelta.x += 1.0f;
 
-	if (!gGamePrefs.mouseControlsOtto)
+	if (!gGamePrefs.mouseControlsOtto) 
 		gCameraControlDelta.x -= mdx * mouseSensitivityFrac * 0.04f;
+	else {
+		// While mouse controls Otto (which it always should in FPS), get the camera y stuff here
+		gCameraControlDelta.y += mdy * mouseSensitivityFrac * 0.008f;
+	}
 }
 
 void CaptureMouse(Boolean doCapture)

@@ -1959,7 +1959,7 @@ Boolean				killed = false;
 				/* DO PLAYER-RELATIVE CONTROLS */
 				/*******************************/
 
-	if (gGamePrefs.playerRelControls)
+	if (gGamePrefs.playerRelControls) // (Doesnt seem to be the case for fpv VR mode)
 	{
 		float	r,sens;
 
@@ -2045,10 +2045,12 @@ Boolean				killed = false;
 			{
 				float	turnSpeed;
 
-				if (theNode->Speed2D > 400.0f)					// if walking fast then decrease the turn sensitivity
-					turnSpeed = 8;
+				if (theNode->Speed2D > 400.0f)					// tweaked numbers for fpv
+					turnSpeed = 20;
 				else
-					turnSpeed = 15;
+					turnSpeed = 7;
+
+				// Still have to figure out why it all goes crazy when player is standing still and turning on himself
 
 				TurnObjectTowardTarget(theNode, &gCoord, gCoord.x + aimVec.x, gCoord.z + aimVec.y, turnSpeed, false);
 			}
