@@ -47,7 +47,7 @@ Boolean				gDrawLensFlare = true, gFreezeCameraFromXZ = false, gFreezeCameraFrom
 Boolean				gForceCameraAlignment = false;
 
 float				gCameraUserRotY = 0;
-float				mouseDistY;
+float				mouseCameraAngleY;
 float				gPlayerToCameraAngle = 0.0f;
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
@@ -290,7 +290,7 @@ static void ResetCameraSettings(void)
 	gForceCameraAlignment = false;
 
 	gCameraUserRotY = 0;
-	mouseDistY = 0;
+	mouseCameraAngleY = 0;
 
 	gCameraFromAccel 	= 4.5;
 	gCameraFromAccelY	= 1.5;
@@ -372,27 +372,28 @@ int			firstPersonHeight = 100;
 			/**********************/
 
 
-	mouseDistY += gCameraControlDelta.y;
+	mouseCameraAngleY += gCameraControlDelta.y; // Add mouse distance travelled (vertical only) to Y dist
 
-	float limit = 3.2;
-	
 	// Lock the view to upper max and lower max
-	if (mouseDistY > limit)
-		mouseDistY = limit;
-	if (mouseDistY < -limit)
-		mouseDistY = -limit;
+	// PI/2 -> Would be directly straight up, and glitches lighting
+	// Stay at slightly less than PI to prevent issues
+	float limit = PI / 2.1;
+	if (mouseCameraAngleY > limit)
+		mouseCameraAngleY = limit;
+	if (mouseCameraAngleY < -limit)
+		mouseCameraAngleY = -limit;
 
 	// Mouse Y axis slows down at the top and bottom limits, à la SDL3D???
 	
 	// Basic FPS view, locked to robot facing-forward view:
-	to.y = playerObj->Coord.y + firstPersonHeight - mouseDistY;
-	to.x = sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
-	to.z = cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+	to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
+	to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
+	to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
 
 
-	// Test logging of mouseDistY breakpoint
-	if ((int)fps % 60) {
-		//mouseDistY = mouseDistY;
+	// Test logging of mouseCameraAngleY breakpoint
+	if ((int)fps % 144) {
+		//mouseCameraAngleY = mouseCameraAngleY;
 	}
 
 
