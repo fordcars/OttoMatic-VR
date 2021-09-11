@@ -190,7 +190,9 @@ typedef struct
 			/* CONTROL INFO */
 			
 	float				analogControlX,analogControlZ;
-	
+	// Needs to be separate from analogControlX so mouse & strafe can be independant:
+	float				strafeControlX; 
+
 	float				autoAimTimer;					// set when want player to auto-turn to aim at something
 	float				autoAimTargetX;
 	float				autoAimTargetZ;

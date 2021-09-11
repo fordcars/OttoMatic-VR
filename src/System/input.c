@@ -297,10 +297,12 @@ void UpdateInput(void)
 
 
 	if (GetNeedState(kNeed_TurnLeft))							// is Left Key pressed?
-		gPlayerInfo.analogControlX = -1.0f;
+		gPlayerInfo.strafeControlX = -1.0f;
 	else
 	if (GetNeedState(kNeed_TurnRight))						// is Right Key pressed?
-		gPlayerInfo.analogControlX = 1.0f;
+		gPlayerInfo.strafeControlX = 1.0f;
+	else
+		gPlayerInfo.strafeControlX = 0.0f;			// Make sure not strafing when not pressing strafe
 
 
 	if (GetNeedState(kNeed_Forward))							// is Up Key pressed?
