@@ -260,19 +260,11 @@ OGLSetupOutputType	*data;
 
 	TextMesh_DisposeMaterial();
 
-			/* KILL GL CONTEXT */
-
-	SDL_GL_MakeCurrent(gSDLWindow, NULL);					// make context not current
-	SDL_GL_DeleteContext(data->drawContext);						// nuke the AGL context
-
-
 		/* FREE MEMORY & NIL POINTER */
 
 	data->isActive = false;									// now inactive
 	SafeDisposePtr((Ptr)data);
 	*dataHandle = nil;
-
-	gAGLContext = nil;
 }
 
 
@@ -322,10 +314,25 @@ static char			*s;
 	}
 
 			/* CREATE AGL CONTEXT & ATTACH TO WINDOW */
+			// Only generate one context, and reuse it.
+			// Multiple contexts causes pretty big issues with OpenVR.
 
-	gAGLContext = SDL_GL_CreateContext(gSDLWindow);
-	GAME_ASSERT_MESSAGE(gAGLContext, SDL_GetError());
-	GAME_ASSERT(glGetError() == GL_NO_ERROR);
+	if(gAGLContext == nil)
+	{
+		gAGLContext = SDL_GL_CreateContext(gSDLWindow);
+		GAME_ASSERT_MESSAGE(gAGLContext, SDL_GetError());
+		GAME_ASSERT(glGetError() == GL_NO_ERROR);
+
+		/* GENERATE VR TEXTURES */
+		glGenTextures(1, &gLeftEyeTexture);
+		glGenTextures(1, &gRightEyeTexture);
+
+		glBindTexture(GL_TEXTURE_2D, gLeftEyeTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+		glBindTexture(GL_TEXTURE_2D, gRightEyeTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	}
 
 
 			/* ACTIVATE CONTEXT */
@@ -382,19 +389,6 @@ static char			*s;
 	SDL_GL_SwapWindow(gSDLWindow);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(viewDefPtr->clearColor.r, viewDefPtr->clearColor.g, viewDefPtr->clearColor.b, 1.0);
-
-
-	/************************/
-	/* GENERATE VR TEXTURES */
-	/************************/
-	glGenTextures(1, &gLeftEyeTexture);
-	glGenTextures(1, &gRightEyeTexture);
-
-	glBindTexture(GL_TEXTURE_2D, gLeftEyeTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-	glBindTexture(GL_TEXTURE_2D, gRightEyeTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 }
 
 
@@ -520,7 +514,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 
 	// Render VR first
 	OGL_DrawEye(setupInfo, drawRoutine, true);
-	OGL_DrawEye(setupInfo, drawRoutine, false);
+	//OGL_DrawEye(setupInfo, drawRoutine, false);
 
 	if(glGetError() != GL_NO_ERROR)
 		throw std::runtime_error("GL ERROR AFTER CALLLL");
@@ -531,12 +525,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 		vr::Texture_t leftEyeTexture = { (void *)(uintptr_t)gLeftEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 		vr::Texture_t rightEyeTexture = { (void *)(uintptr_t)gRightEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-
-		// Don't look!
-		// A little hack to avoid issues with https://github.com/ValveSoftware/openvr/issues/744
-		// Note: GL_TEXTURE_2D_MULTISAMPLE was only added in Opengl 3.2
-		glGetError();
+		vr::VRCompositor()->Submit(vr::Eye_Right, &leftEyeTexture);
 	}
 
 	glFlush();
