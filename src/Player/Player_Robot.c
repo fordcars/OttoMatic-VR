@@ -1961,14 +1961,14 @@ static Boolean DoPlayerMovementAndCollision(ObjNode* theNode, Byte aimMode, Bool
 
 	if (true) // (Gives better mouse control?) Seems to prevent player from turning when colliding 
 	{
-		float	rotation, sens;
+		float	sens;
 
 		// analogControlX is mouse only now
 		sens = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN;
 		
 		sens *= 0.5f; // sensitivity for turning camera (horizontally)
 
-		rotation = theNode->Rot.y -= sens; // Set rotate view (view follows robot rot) with analogControl (mouse)
+		theNode->Rot.y -= sens; // Set rotate view (view follows robot rot) with analogControl (mouse)
 
 
 		float	strafe, movement;
@@ -1977,7 +1977,7 @@ static Boolean DoPlayerMovementAndCollision(ObjNode* theNode, Byte aimMode, Bool
 		if (gPlayerInfo.strafeControlX) {
 			// We are only strafing (no forward nor backward):
 			if (gPlayerInfo.analogControlZ == 0) {
-				strafe = theNode->Rot.y + PI/2;
+				strafe = theNode->Rot.y + PI / 2;
 			}
 			// We are moving forward:
 			else if (gPlayerInfo.analogControlZ < 0) {
@@ -2532,9 +2532,11 @@ static void DoRobotFrictionAndGravity(ObjNode* theNode, float friction)
 	// Dont do friction if player is pressing controls
 	//
 
-	if (!gGamePrefs.playerRelControls)
+	if (true) // Always player relative controls in VR
 	{
-		if (gPlayerInfo.analogControlX || gPlayerInfo.analogControlZ)	// if there is any player control then no friction
+		/* Removed "analogControlX" from here as that is for mouse movement only. If we don't 
+		   do friction when there is mouse movement we get the bug of moving mouse = always move (ref fordcars/OttoMatic-VR#7) */
+		if (gPlayerInfo.analogControlZ || gPlayerInfo.strafeControlX)	// if there is any player control then no friction
 			return;
 	}
 	else										// with player relative controls, do heavier friction in some cases
