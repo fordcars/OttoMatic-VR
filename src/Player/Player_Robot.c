@@ -1926,8 +1926,10 @@ static void UpdatePlayerAutoAim(ObjNode* player)
 	tx = gPlayerInfo.autoAimTargetX;									// get targt aim coords
 	tz = gPlayerInfo.autoAimTargetZ;
 
-	TurnObjectTowardTarget(player, &gCoord, tx, tz, PI2, false);
-
+	// TurnObjectTowardTarget(player, &gCoord, tx, tz, PI2, false);
+	// Disable for fpv, causes locking of camera movement. Gonna have to aim manually buddy
+	// Note: This only disables the player facing towards enemy, bullets still go sideways
+	// fordcars/OttoMatic-VR#8
 }
 
 #pragma mark -

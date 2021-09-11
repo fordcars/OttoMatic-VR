@@ -884,8 +884,10 @@ float		x,y,z, ex,ey,ez;
 
 
 			/* IF FOUND SOMETHING, THEN ADJUST AIM TO IT */
-
-	if (nearestEnemy)
+	
+	// Disabled for VR / FPV
+	// This might make aiming too hard in VR? Will have to test
+	if (false) // default is if nearestEnemy -> switched off for VR
 	{
 		aim->x += bestAngle.x * 4.0f;									// average the two, but weighted on the bestAngle aim
 		aim->y += bestAngle.y * 4.0f;
