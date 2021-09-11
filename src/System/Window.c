@@ -106,6 +106,9 @@ void GammaFadeOut(void)
 	glReadPixels(0, 0, textureWidth, textureHeight, GL_BGR, GL_UNSIGNED_BYTE, textureData);
 	CHECK_GL_ERROR();
 
+	// Reset unpack row length
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
 	GLuint texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
