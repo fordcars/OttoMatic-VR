@@ -370,9 +370,13 @@ int			firstPersonHeight = 100;
 			/**********************/
 			/* CALC LOOK AT POINT */
 			/**********************/
+	
+	
+	float verticalSens = 0.5f; // Reduce vertical axis camera speed
 
-
+	gCameraControlDelta.y *= verticalSens;
 	mouseCameraAngleY += gCameraControlDelta.y; // Add mouse distance travelled (vertical only) to Y dist
+	
 
 	// Lock the view to upper max and lower max
 	// PI/2 -> Would be directly straight up, and glitches lighting

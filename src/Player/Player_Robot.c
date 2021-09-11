@@ -1965,8 +1965,8 @@ static Boolean DoPlayerMovementAndCollision(ObjNode* theNode, Byte aimMode, Bool
 
 		// analogControlX is mouse only now
 		sens = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN;
-		if (theNode->Speed2D > 400.0f)												// turning less sensitive if walking
-			sens *= .5f;
+		
+		sens *= 0.5f; // sensitivity for turning camera (horizontally)
 
 		rotation = theNode->Rot.y -= sens; // Set rotate view (view follows robot rot) with analogControl (mouse)
 
@@ -2021,74 +2021,74 @@ static Boolean DoPlayerMovementAndCollision(ObjNode* theNode, Byte aimMode, Bool
 	/*******************************/
 	/* DO CAMERA-RELATIVE CONTROLS */
 	/*******************************/
-	else // UNUSED for VR for now
-	{
-		/* ROTATE ANALOG ACCELERATION VECTOR BASED ON CAMERA POS & APPLY TO DELTA */
+	//else // UNUSED for VR for now
+	//{
+	//	/* ROTATE ANALOG ACCELERATION VECTOR BASED ON CAMERA POS & APPLY TO DELTA */
 
-		if ((gPlayerInfo.analogControlX == 0.0f) && (gPlayerInfo.analogControlZ == 0.0f))	// see if not acceling
-		{
-			theNode->AccelVector.x = theNode->AccelVector.y = 0;
-		}
-		else
-		{
-			OGLMatrix3x3_SetRotateAboutPoint(&m, &origin, gPlayerToCameraAngle);			// make a 2D rotation matrix camera-rel
-			theNode->AccelVector.x = gPlayerInfo.analogControlX;
-			theNode->AccelVector.y = gPlayerInfo.analogControlZ;
-			//			OGLVector2D_Normalize(&theNode->AccelVector, &theNode->AccelVector);
-			OGLVector2D_Transform(&theNode->AccelVector, &m, &theNode->AccelVector);		// rotate the acceleration vector
-
-
-						/* APPLY ACCELERATION TO DELTAS */
-
-			if (theNode->StatusBits & STATUS_BIT_ONGROUND)
-			{
-				gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
-				gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
-			}
-			else
-			{
-				gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR * fps);
-				gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR * fps);
-			}
-		}
+	//	if ((gPlayerInfo.analogControlX == 0.0f) && (gPlayerInfo.analogControlZ == 0.0f))	// see if not acceling
+	//	{
+	//		theNode->AccelVector.x = theNode->AccelVector.y = 0;
+	//	}
+	//	else
+	//	{
+	//		OGLMatrix3x3_SetRotateAboutPoint(&m, &origin, gPlayerToCameraAngle);			// make a 2D rotation matrix camera-rel
+	//		theNode->AccelVector.x = gPlayerInfo.analogControlX;
+	//		theNode->AccelVector.y = gPlayerInfo.analogControlZ;
+	//		//			OGLVector2D_Normalize(&theNode->AccelVector, &theNode->AccelVector);
+	//		OGLVector2D_Transform(&theNode->AccelVector, &m, &theNode->AccelVector);		// rotate the acceleration vector
 
 
+	//					/* APPLY ACCELERATION TO DELTAS */
 
-		/**********************************************************/
-		/* TURN PLAYER TO AIM DIRECTION OF ACCELERATION OR MOTION */
-		/**********************************************************/
-		//
-		// Depending on how slippery the terrain is, we aim toward the direction
-		// of motion or the direction of acceleration.  We'll use the gPlayerSlipperyFactor value
-		// to average an aim vector between the two.
-		//
+	//		if (theNode->StatusBits & STATUS_BIT_ONGROUND)
+	//		{
+	//			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
+	//			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
+	//		}
+	//		else
+	//		{
+	//			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR * fps);
+	//			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR * fps);
+	//		}
+	//	}
 
-		if ((aimMode != AIM_MODE_NONE) && (theNode->Speed2D > 0.0f))
-		{
-			FastNormalizeVector2D(gDelta.x, gDelta.z, &deltaVec, true);
-			FastNormalizeVector2D(theNode->AccelVector.x, theNode->AccelVector.y, &accVec, true);
 
-			aimVec.x = deltaVec.x * (1.0f - gPlayerSlipperyFactor) + (accVec.x * gPlayerSlipperyFactor);
-			aimVec.y = deltaVec.y * (1.0f - gPlayerSlipperyFactor) + (accVec.y * gPlayerSlipperyFactor);
 
-			if (aimMode == AIM_MODE_REVERSE)
-				TurnObjectTowardTarget(theNode, &gCoord, gCoord.x - aimVec.x, gCoord.z - aimVec.y, 8.0f, false);
-			else
-				if (aimMode == AIM_MODE_NORMAL)
-				{
-					float	turnSpeed;
+	//	/**********************************************************/
+	//	/* TURN PLAYER TO AIM DIRECTION OF ACCELERATION OR MOTION */
+	//	/**********************************************************/
+	//	//
+	//	// Depending on how slippery the terrain is, we aim toward the direction
+	//	// of motion or the direction of acceleration.  We'll use the gPlayerSlipperyFactor value
+	//	// to average an aim vector between the two.
+	//	//
 
-					if (theNode->Speed2D > 400.0f)					// tweaked numbers for fpv
-						turnSpeed = 20;
-					else
-						turnSpeed = 7;
+	//	if ((aimMode != AIM_MODE_NONE) && (theNode->Speed2D > 0.0f))
+	//	{
+	//		FastNormalizeVector2D(gDelta.x, gDelta.z, &deltaVec, true);
+	//		FastNormalizeVector2D(theNode->AccelVector.x, theNode->AccelVector.y, &accVec, true);
 
-					// Still have to figure out why it all goes crazy when player is standing still and turning on himself
+	//		aimVec.x = deltaVec.x * (1.0f - gPlayerSlipperyFactor) + (accVec.x * gPlayerSlipperyFactor);
+	//		aimVec.y = deltaVec.y * (1.0f - gPlayerSlipperyFactor) + (accVec.y * gPlayerSlipperyFactor);
 
-					TurnObjectTowardTarget(theNode, &gCoord, gCoord.x + aimVec.x, gCoord.z + aimVec.y, turnSpeed, false);
-				}
-		}
-	}
+	//		if (aimMode == AIM_MODE_REVERSE)
+	//			TurnObjectTowardTarget(theNode, &gCoord, gCoord.x - aimVec.x, gCoord.z - aimVec.y, 8.0f, false);
+	//		else
+	//			if (aimMode == AIM_MODE_NORMAL)
+	//			{
+	//				float	turnSpeed;
+
+	//				if (theNode->Speed2D > 400.0f)					// tweaked numbers for fpv
+	//					turnSpeed = 20;
+	//				else
+	//					turnSpeed = 7;
+
+	//				// Still have to figure out why it all goes crazy when player is standing still and turning on himself
+
+	//				TurnObjectTowardTarget(theNode, &gCoord, gCoord.x + aimVec.x, gCoord.z + aimVec.y, turnSpeed, false);
+	//			}
+	//	}
+	//}
 
 	/* CALC SPEED */
 
