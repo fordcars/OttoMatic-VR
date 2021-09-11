@@ -550,8 +550,9 @@ ObjNode	*door, *rocket;
 	gAutoRotateCameraSpeed 	= -.06f;
 	gPlayerHasLanded 		= false;
 
-	gFreezeCameraFromY 		= true;
-	gFreezeCameraFromXZ		= true;
+	// Set both of these to false for VR, to allow camera in player head during rocket scene:
+	gFreezeCameraFromY 		= false;
+	gFreezeCameraFromXZ		= false;
 
 				/*************/
 				/* MAKE SHIP */

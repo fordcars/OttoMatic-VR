@@ -337,7 +337,7 @@ void MovePlayer_Robot(ObjNode* theNode)
 	/* SEE IF SHOULD FREEZE CAMERA */
 
 	if (theNode->Skeleton->AnimNum == PLAYER_ANIM_JUMPJET)		// dont move camera from during jump-jet
-		gFreezeCameraFromXZ = true;
+		gFreezeCameraFromXZ = false; // Do move it in VR
 	else
 		gFreezeCameraFromXZ = false;
 }
