@@ -47,6 +47,7 @@ Boolean				gDrawLensFlare = true, gFreezeCameraFromXZ = false, gFreezeCameraFrom
 Boolean				gForceCameraAlignment = false;
 
 float				gCameraUserRotY = 0;
+float				mouseCameraAngleY;
 float				gPlayerToCameraAngle = 0.0f;
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
@@ -260,10 +261,14 @@ ObjNode	*playerObj = gPlayerInfo.objNode;
 	{
 		float	dx,dz,x,z,r;
 
-		r = playerObj->Rot.y + PI + PI/9;
+		r = playerObj->Rot.y + PI + PI/9; // Use player Rot y directly 
+		// r = playerObj->Rot.y;
 
 		dx = sin(r) * 1800.0f;
 		dz = cos(r) * 1800.0f;
+
+		dx = 0;
+		dz = 0;
 
 		x = gGameViewInfoPtr->cameraPlacement.cameraLocation.x = playerObj->Coord.x + dx;
 		z = gGameViewInfoPtr->cameraPlacement.cameraLocation.z = playerObj->Coord.z + dz;
@@ -285,19 +290,13 @@ static void ResetCameraSettings(void)
 	gForceCameraAlignment = false;
 
 	gCameraUserRotY = 0;
+	mouseCameraAngleY = 0;
 
 	gCameraFromAccel 	= 4.5;
 	gCameraFromAccelY	= 1.5;
 
 
-
-	if (gLevelNum == LEVEL_NUM_BLOBBOSS)			// keep camera high on blob boss level
-		gMinHeightOffGround = 400;
-	else
-		gMinHeightOffGround = 60;
-
 			/* SPECIAL SETTINGS FOR SAUCER LEVEL */
-
 	if (gLevelNum == LEVEL_NUM_SAUCER)
 	{
 		gCameraLookAtAccel 	= 10;
@@ -310,8 +309,8 @@ static void ResetCameraSettings(void)
 	{
 		gCameraLookAtAccel 	= 15;
 
-		gCameraHeightFactor = 0.2;
-		gCameraLookAtYOff 	= DEFAULT_CAMERA_YOFF;
+		gCameraHeightFactor = 0.2; // ??
+		gCameraLookAtYOff 	= DEFAULT_CAMERA_YOFF; // to be increased to "head height"
 
 		gCameraDistFromMe 	= CAMERA_DEFAULT_DIST_FROM_ME;
 
@@ -327,13 +326,12 @@ static void ResetCameraSettings(void)
 void UpdateCamera(void)
 {
 OGLPoint3D	from,to,target;
-float		distX,distZ,distY,dist;
-OGLVector2D	pToC;
-float		myX,myY,myZ,delta;
+float		myX, myY, myZ;
 float		fps = gFramesPerSecondFrac;
 ObjNode		*playerObj = gPlayerInfo.objNode;
 SkeletonObjDataType	*skeleton;
 float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPointOfInterestY;
+int			firstPersonHeight = 100;
 
 	if (!playerObj)
 		return;
@@ -364,170 +362,59 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 	myY = playerObj->Coord.y + playerObj->BottomOff;
 	myZ = playerObj->Coord.z;
 
-	if (myY < -1400.0f)								// keep from looking straight down if fallen into bottomless pit
-		myY = -1400.0f;
 
 	gPlayerToCameraAngle = PI - CalcYAngleFromPointToPoint(PI-gPlayerToCameraAngle, myX, myZ, oldCamX, oldCamZ);	// calc angle of camera around player
-
-
-
-
-		/******************************************/
-		/* SEE IF THE USER WILL WANT SOME CONTROL */
-		/******************************************/
-	if (gAutoRotateCamera)
-	{
-		gCameraUserRotY += fps * gAutoRotateCameraSpeed;
-	}
-	else
-	if (skeleton->AnimNum != PLAYER_ANIM_BUBBLE)					// user can't swing camera if in bubble
-	{
-		// Vanilla manual camera swivel
-		if (!gGamePrefs.snappyCameraControl && gCameraControlDelta.x != 0)
-		{
-			gCameraUserRotY += fps * PI * gCameraControlDelta.x;
-			gForceCameraAlignment = true;							// don't zero userRot out if the player isn't moving
-		}
-	}
-	else
-		gCameraUserRotY = 0;										// always 0 if in bubble
-
-	if (GetNeedState(kNeed_CameraMode))						// see if re-align camera behind player
-	{
-		gCameraUserRotY = 0;
-		gForceCameraAlignment = true;
-	}
-	else if (gGamePrefs.snappyCameraControl
-		&& gCameraControlDelta.x != 0
-		&& !gAutoRotateCamera)
-	{
-		// force camera alignment is ALWAYS overridden by user
-		gForceCameraAlignment = false;
-	}
-
 
 
 
 			/**********************/
 			/* CALC LOOK AT POINT */
 			/**********************/
+	
+	
+	float verticalSens = 0.5f; // Reduce vertical axis camera speed
 
-	target.x = myX;								// accelerate "to" toward target "to"
-	target.y = myY + gCameraLookAtYOff;
-	target.z = myZ;
+	gCameraControlDelta.y *= verticalSens;
+	mouseCameraAngleY += gCameraControlDelta.y; // Add mouse distance travelled (vertical only) to Y dist
+	
 
-	distX = target.x - oldPointOfInterestX;
-	distY = target.y - oldPointOfInterestY;
-	distZ = target.z - oldPointOfInterestZ;
+	// Lock the view to upper max and lower max
+	// PI/2 -> Would be directly straight up, and glitches lighting
+	// Stay at slightly less than PI to prevent issues
+	float limit = PI / 2.1;
+	if (mouseCameraAngleY > limit)
+		mouseCameraAngleY = limit;
+	if (mouseCameraAngleY < -limit)
+		mouseCameraAngleY = -limit;
 
-	if (distX > 350.0f)
-		distX = 350.0f;
-	else
-	if (distX < -350.0f)
-		distX = -350.0f;
-
-	if (distZ > 350.0f)
-		distZ = 350.0f;
-	else
-	if (distZ < -350.0f)
-		distZ = -350.0f;
+	// Mouse Y axis slows down at the top and bottom limits, à la SDL3D???
+	
+	// Basic FPS view, locked to robot facing-forward view:
+	to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
+	to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
+	to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
 
 
-				/* MOVE "TO" */
-
-	delta = distX * (fps * gCameraLookAtAccel);										// calc delta to move
-	if (fabs(delta) > fabs(distX))													// see if will overshoot
-		delta = distX;
-	to.x = oldPointOfInterestX + delta;												// move x
-
-	delta = distY * (fps * gCameraLookAtAccel) * .7f;								// calc delta to move
-	if (fabs(delta) > fabs(distY))													// see if will overshoot
-		delta = distY;
-	to.y = oldPointOfInterestY + delta;												// move y
-
-	delta = distZ * (fps * gCameraLookAtAccel);										// calc delta to move
-	if (fabs(delta) > fabs(distZ))													// see if will overshoot
-		delta = distZ;
-	to.z = oldPointOfInterestZ + delta;												// move z
+	// Test logging of mouseCameraAngleY breakpoint
+	if ((int)fps % 144) {
+		//mouseCameraAngleY = mouseCameraAngleY;
+	}
 
 
 
-			/*******************/
-			/* CALC FROM POINT */
-			/*******************/
+			/*************************************/
+			/* CALC FROM (camera location) POINT */
+			/*************************************/
 
-	if (gFreezeCameraFromXZ)
+	if (gFreezeCameraFromXZ) // Rocket scene -> Not working properly for now, to fix
 	{
 		from.x = target.x = oldCamX;
 		from.z = target.x = oldCamZ;
 	}
 	else
 	{
-				/* CALC PLAYER->CAMERA VECTOR */
-
-		pToC.x = oldCamX - myX;												// calc player->camera vector
-		pToC.y = oldCamZ - myZ;
-		OGLVector2D_Normalize(&pToC,&pToC);									// normalize it
-
-
-				/* MOVE TO BEHIND PLAYER */
-
-		if ((gTimeSinceLastThrust > .5f) || gForceCameraAlignment || (gGamePrefs.playerRelControls)) 	// dont auto-align if player is being moved & we are not forcing it
-		{
-			float	r;
-			const float	ratio = .5;
-			OGLVector2D	behind;
-
-					/* CALC PLAYER BEHIND VECTOR */
-
-			r = playerObj->Rot.y;
-
-			r += gCameraUserRotY;										// offset by user rot
-
-			behind.x = sin(r);
-			behind.y = cos(r);
-
-					/* WEIGH THE VECTORS */
-
-			pToC.x = (pToC.x * (1.0f - ratio)) + (behind.x * ratio);
-			pToC.y = (pToC.y * (1.0f - ratio)) + (behind.y * ratio);
-
-			OGLVector2D_Normalize(&pToC,&pToC);
-
-			if ((fabs(pToC.x) <= EPS) && (fabs(pToC.y) <= EPS))			// check if looking straight @ player's front
-			{
-				pToC.x = 1;										// assign some random vector
-				pToC.y = 0;
-			}
-		}
-
-		dist = gCameraDistFromMe;
-
-		if (skeleton->AnimNum == PLAYER_ANIM_PICKUPANDHOLDMAGNET)	// closer if skiing
-			dist = 400.0f;
-
-
-		target.x = myX + (pToC.x * dist);									// target is appropriate dist based on cam's current coord
-		target.z = myZ + (pToC.y * dist);
-
-
-				/* MOVE CAMERA TOWARDS POINT */
-
-		distX = target.x - oldCamX;
-		distZ = target.z - oldCamZ;
-
-
-		delta = distX * (fps * gCameraFromAccel);							// calc delta to move
-		if (fabs(delta) > fabs(distX))										// see if will overshoot
-			delta = distX;
-		from.x = oldCamX + delta;											// move x
-
-		delta = distZ * (fps * gCameraFromAccel);							// calc delta to move
-		if (fabs(delta) > fabs(distZ))										// see if will overshoot
-			delta = distX;
-		from.z = oldCamZ + delta;											// move z
-
-
+		from.x = playerObj->Coord.x; // ( + a few hundred if needed to see body for testing )
+		from.z = playerObj->Coord.z;	
 	}
 
 
@@ -542,75 +429,14 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 	}
 	else
 	{
-		float	camBottom,fenceTopY,waterY;
-		Boolean	overTop;
-		OGLPoint3D	intersect;
-
-		dist = CalcQuickDistance(from.x, from.z, to.x, to.z) - CAMERA_CLOSEST;
-		if (dist < 0.0f)
-			dist = 0.0f;
-
-		target.y = myY + CAM_MINY + (dist*gCameraHeightFactor);						// calc desired y based on dist and height factor
-
-
-			/* CHECK CLEAR LINE OF SIGHT WITH FENCE */
-
-		if (SeeIfLineSegmentHitsFence(&target, &to, &intersect,&overTop,&fenceTopY))			// see if intersection with fence
-		{
-			if (!overTop)
-			{
-				target.y = fenceTopY += 200.0f;
-			}
-		}
-
-
-			/*******************************/
-			/* MOVE ABOVE ANY SOLID OBJECT */
-			/*******************************/
-			//
-			// well... not any solid object, just reasonable ones
-			//
-
-		camBottom = target.y - 100.0f;
-		if (DoSimpleBoxCollision(target.y + 100.0f, camBottom,
-								from.x - 150.0f, from.x + 150.0f,
-								from.z + 150.0f, from.z - 150.0f,
-								CTYPE_BLOCKCAMERA))
-		{
-			ObjNode *obj = gCollisionList[0].objectPtr;					// get collided object
-			if (obj)
-			{
-				target.y = obj->CollisionBoxes[0].top + 100.0f;				// set target on top of object
-			}
-		}
-
-		dist = (target.y - gGameViewInfoPtr->cameraPlacement.cameraLocation.y)*gCameraFromAccelY;	// calc dist from current y to desired y
-		from.y = gGameViewInfoPtr->cameraPlacement.cameraLocation.y+(dist*fps);
-
-		if (gPlayerInfo.scaleRatio <= 1.0f)
-			if (from.y < (to.y+CAM_MINY))								// make sure camera never under the "to" point (insures against camera flipping over)
-				from.y = (to.y+CAM_MINY);
-
-
-				/* MAKE SURE NOT UNDERGROUND OR WATER */
-
-		dist = GetTerrainY2(from.x, from.z) + gMinHeightOffGround;
-		if (from.y < dist)
-			from.y = dist;
-
-		if (GetWaterY(from.x, from.z, &waterY))
-		{
-			waterY += 50.0f;
-			if (from.y < waterY)
-				from.y = waterY;
-		}
+		from.y = playerObj->Coord.y + firstPersonHeight;
 	}
 
 
 				/**********************/
 				/* UPDATE CAMERA INFO */
 				/**********************/
-
+	/*
 	if (gGamePrefs.snappyCameraControl
 		&& gCameraControlDelta.x != 0
 		&& !gAutoRotateCamera)
@@ -623,14 +449,14 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 		OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);
 		OGLPoint3D_Transform(&from, &m, &from);
 	}
+	*/
 
-
-	if (gAutoRotateCamera && gFreezeCameraFromXZ)				// special auto-rot for frozen xz condition
-	{
-		OGLMatrix4x4	m;
-		OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, fps * gAutoRotateCameraSpeed, 0);
-		OGLPoint3D_Transform(&from, &m, &from);
-	}
+	//if (gAutoRotateCamera && gFreezeCameraFromXZ)				// special auto-rot for frozen xz condition
+	//{
+	//	OGLMatrix4x4	m;
+	//	OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, fps * gAutoRotateCameraSpeed, 0);
+	//	OGLPoint3D_Transform(&from, &m, &from);
+	//}
 
 
 	OGL_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);
