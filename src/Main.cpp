@@ -262,6 +262,8 @@ retry:
 		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
 	}
 
+	fs::path dataPath = FindGameData();
+
 	// Init OpenVR
 	vr::HmdError peError = vr::VRInitError_None;
 	gIVRSystem = vr::VR_Init(&peError, vr::VRApplication_Scene);
@@ -278,6 +280,11 @@ retry:
 		throw std::runtime_error("Compositor initialization failed!");
 	}
 
+	// Add path to action manifest for VR controls
+	std::string actionPathCPP = std::string(SDL_GetBasePath()) + "steamvr\\actions.json";
+	const char* actionPath = actionPathCPP.c_str();
+	vr::VRInput()->SetActionManifestPath(actionPath);
+	
 	if (gGamePrefs.preferredDisplay >= SDL_GetNumVideoDisplays())
 		gGamePrefs.preferredDisplay = 0;
 
@@ -315,8 +322,6 @@ retry:
 			throw std::runtime_error("Couldn't create SDL window.");
 		}
 	}
-
-	fs::path dataPath = FindGameData();
 
 	// Init joystick subsystem
 	{
