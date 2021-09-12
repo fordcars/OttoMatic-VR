@@ -1,3 +1,5 @@
+# WIP: Not yet functional
+
 <p align="center" width="100%"><img src="docs/logo.png" alt="Otto Matic"></p>
  
 # Otto Matic
