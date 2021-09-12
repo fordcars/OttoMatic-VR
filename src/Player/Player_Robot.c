@@ -1943,8 +1943,8 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 {
 	float				fps = gFramesPerSecondFrac, oldFPS, oldFPSFrac, terrainY;
 	OGLPoint3D			oldCoord;
-	OGLVector2D			aimVec, deltaVec, accVec;
-	OGLMatrix3x3		m;
+	//OGLVector2D			aimVec, deltaVec, accVec;
+	//OGLMatrix3x3		m;
 	static OGLPoint2D origin = { 0,0 };
 	int					numPasses, pass;
 	Boolean				killed = false;
@@ -1973,7 +1973,7 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		theNode->Rot.y -= sens; // Set rotate view (view follows robot rot) with analogControl (mouse)
 
 
-		float	strafe, movement;
+		float	strafe = 0.0f, movement = 0.0f;
 
 		// We are using the A or D keys (strafing):
 		if(gPlayerInfo.strafeControlX) {
