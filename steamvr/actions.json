@@ -1,0 +1,85 @@
+{
+    "default_bindings": [
+     {
+        "controller_type": "knuckles",
+        "binding_url": "knuckles.json"
+     }
+    ], 
+    "actions": [
+      {
+        "name": "/actions/movement/in/GoForward",
+        "requirement": "mandatory",
+        "type": "vector1"
+      },
+      {
+        "name": "/actions/movement/in/GoBackward",
+        "requirement": "mandatory",
+        "type": "vector1"
+      },
+      {
+        "name": "/actions/movement/in/GoLeft",
+        "requirement": "mandatory",
+        "type": "vector1"
+      },
+      {
+        "name": "/actions/movement/in/GoRight",
+        "requirement": "mandatory",
+        "type": "vector1"
+      },
+      {
+        "name": "/actions/movement/in/Jump",
+        "requirement": "mandatory",
+        "type": "vector1"
+      },
+      {
+        "name": "/actions/weapons/in/Shoot",
+        "requirement": "mandatory",
+        "type": "boolean"
+      },
+      {
+        "name": "/actions/weapons/in/PunchOrPickUp",
+        "requirement": "mandatory",
+        "type": "boolean"
+      },
+      {
+        "name": "/actions/weapons/in/PreviousWeapon",
+        "requirement": "mandatory",
+        "type": "boolean"
+      },
+      {
+        "name": "/actions/weapons/in/NextWeapon",
+        "requirement": "mandatory",
+        "type": "boolean"
+      }
+    ],
+    "action_sets": [
+      {
+        "name": "/actions/movement",
+        "usage": "leftright"
+      },
+      {
+        "name": "/actions/weapons",
+        "usage": "leftright"
+      }
+    ],
+    "localization" : [
+     {
+         "language_tag": "en_us",
+  
+          "/actions/movement" : "Movement Controls",
+          "/actions/weapons" : "Actions & Weapons",
+  
+          "/actions/movement/in/GoForward" : "Go Forward",
+          "/actions/movement/in/GoBackward" : "Go Backward",
+          "/actions/movement/in/GoLeft" : "Go Left",
+          "/actions/movement/in/GoRight" : "Go Right",
+          "/actions/movement/in/Jump" : "Jump (double->Jet)",
+  
+          "/actions/weapons/in/Shoot" : "Shoot",
+          "/actions/weapons/in/PunchOrPickUp" : "Punch, pickup",
+          "/actions/weapons/in/PreviousWeapon" : "Previous Weapon",
+          "/actions/weapons/in/NextWeapon" : "Next Weapon"
+      }
+    ]
+  }
+  
