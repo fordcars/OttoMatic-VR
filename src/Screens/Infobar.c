@@ -725,7 +725,9 @@ float	FUEL_X = g2DLogicalWidth + FUEL_XFROMRIGHT;
 
 	if (n >= 1.0f)
 	{
-		gFuelMeterRot += fps * 2.0f;
+		if(setupInfo->renderLeftEye)
+			gFuelMeterRot += fps * 2.0f;
+
 		DrawInfobarSprite_Rotated(FUEL_X, FUEL_Y, FUEL_SIZE, INFOBAR_SObjType_MeterBack, gFuelMeterRot, setupInfo);
 	}
 	else
@@ -758,12 +760,14 @@ float	size;
 
 	if (n >= 1.0f)
 	{
-		gJumpJetMeterRot -= fps * 2.0f;
+		if (setupInfo->renderLeftEye)
+			gJumpJetMeterRot -= fps * 2.0f;
+
 		DrawInfobarSprite_Rotated(x, y, JUMP_SIZE, INFOBAR_SObjType_MeterBack, gJumpJetMeterRot, setupInfo);
 	}
 	else
 	{
-		if (gJumpJetWarningCooldown > 0)
+		if (setupInfo->renderLeftEye && gJumpJetWarningCooldown > 0)
 		{
 			float amp = 4.0f * gJumpJetWarningCooldown / 0.5f;
 			x += sinf(gJumpJetWarningCooldown * 32.0f) * amp;
