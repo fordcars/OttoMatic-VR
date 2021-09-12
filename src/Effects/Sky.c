@@ -180,17 +180,17 @@ static void DrawSky(ObjNode *theNode, const OGLSetupOutputType *setupInfo)
 {
 #pragma unused(theNode)
 
-OGLMatrix4x4	m;
-int					r,c;
-float			u,v;
+	OGLMatrix4x4	m;
+	int					r, c;
+	float			u, v;
 
 	if (!kSkyTable->hasSky)
 		return;
 
 
-		/***************************/
-		/* ANIMATE & CALCULATE UVS */
-		/***************************/
+	/***************************/
+	/* ANIMATE & CALCULATE UVS */
+	/***************************/
 
 	u = gSkyScrollX += gFramesPerSecondFrac * .03f;
 	v = gSkyScrollZ += gFramesPerSecondFrac * .03f;
@@ -198,15 +198,18 @@ float			u,v;
 	u += gPlayerInfo.camera.cameraLocation.x * .0003f;
 	v += gPlayerInfo.camera.cameraLocation.z * .0003f;
 
-	for (r = 0; r < SKY_GRID_SIZE; r++)
+	// Only do this once
+	if (setupInfo->renderLeftEye)
 	{
-		for (c = 0; c < SKY_GRID_SIZE; c++)
+		for (r = 0; r < SKY_GRID_SIZE; r++)
 		{
-			gSkyUVs1[r][c].u = u + c * .8f;
-			gSkyUVs1[r][c].v = v + r * .8f;
+			for (c = 0; c < SKY_GRID_SIZE; c++)
+			{
+				gSkyUVs1[r][c].u = u + c * .8f;
+				gSkyUVs1[r][c].v = v + r * .8f;
+			}
 		}
 	}
-
 
 			/*****************/
 			/* DRAW GEOMETRY */
