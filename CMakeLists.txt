@@ -86,6 +86,7 @@ if(WIN32)
 	# "WIN32" here is equivalent to /SUBSYSTEM:WINDOWS for MSVC
 	add_executable(${GAME_TARGET} WIN32
 		${GAME_ALL_SOURCES}
+        "${CMAKE_CURRENT_SOURCE_DIR}/.editorconfig"
 		"${CMAKE_CURRENT_SOURCE_DIR}/packaging/${GAME_TARGET}.exe.rc"
 	)
 elseif(APPLE)
