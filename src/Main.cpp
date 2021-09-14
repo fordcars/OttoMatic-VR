@@ -9,7 +9,7 @@
 #include "version.h"
 #include "game.h"
 
-#include "openvr.h"
+#include "vr.hpp" // Includes openVR and more
 
 #include <iostream>
 #include <cstring>
@@ -280,10 +280,33 @@ retry:
 		throw std::runtime_error("Compositor initialization failed!");
 	}
 
+
 	// Add path to action manifest for VR controls
 	std::string actionPathCPP = std::string(SDL_GetBasePath()) + "steamvr\\actions.json";
 	const char* actionPath = actionPathCPP.c_str();
 	vr::VRInput()->SetActionManifestPath(actionPath);
+
+	vr::VRActiveActionSet_t activeActionSet{};
+
+
+	// Get handles for VR action sets and actions
+	VrActions vrActions{}; // init
+	VrActionSets vrActionSets{}; // init
+
+	vr::VRInput()->GetActionSetHandle("actions/movement", &vrActionSets.movement);
+	vr::VRInput()->GetActionSetHandle("actions/weapons", &vrActionSets.weapons);
+
+	vr::VRInput()->GetActionHandle("/actions/movement/in/GoForward", &vrActions.GoForward);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/GoBackward", &vrActions.GoBackward);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/GoLeft", &vrActions.GoLeft);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/GoRight", &vrActions.GoRight);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/Jump", &vrActions.Jump);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/Shoot", &vrActions.Shoot);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/PunchOrPickup", &vrActions.PunchOrPickUp);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/PreviousWeapon", &vrActions.PreviousWeapon);
+	vr::VRInput()->GetActionHandle("/actions/movement/in/NextWeapon", &vrActions.NextWeapon);
+	
+
 	
 	if (gGamePrefs.preferredDisplay >= SDL_GetNumVideoDisplays())
 		gGamePrefs.preferredDisplay = 0;

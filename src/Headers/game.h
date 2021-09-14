@@ -69,8 +69,12 @@ extern "C"
 #include "tga.h"
 #include "menu.h"
 
-		/* EXTERNS */
 
+		/* VR (C Code only) */
+void updateVRActionSetStateCpp(void);
+
+
+		/* EXTERNS */
 extern	BG3DFileContainer		*gBG3DContainerList[];
 extern	Boolean					gAllowAudioKeys;
 extern	Boolean					gAutoRotateCamera;
@@ -243,7 +247,6 @@ extern	u_long					gLoadedScore;
 extern	u_long					gScore;
 extern	u_short					**gTileGrid;
 extern	u_short					gTileAttribFlags;
-
 #ifdef __cplusplus
 };
 #endif
