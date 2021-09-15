@@ -71,7 +71,9 @@ extern "C"
 
 
 		/* VR (C Code only) */
+void initSteamVRInputCpp(void);
 void updateVRActionSetStateCpp(void);
+bool getVRDigitalActionDataCpp(int actionToDo);
 
 
 		/* EXTERNS */
