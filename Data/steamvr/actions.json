@@ -7,58 +7,54 @@
     ], 
     "actions": [
       {
-        "name": "/actions/movement/in/GoForward",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/GoForward",
+        "requirement": "optional",
         "type": "vector1"
       },
       {
-        "name": "/actions/movement/in/GoBackward",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/GoBackward",
+        "requirement": "optional",
         "type": "vector1"
       },
       {
-        "name": "/actions/movement/in/GoLeft",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/GoLeft",
+        "requirement": "optional",
         "type": "vector1"
       },
       {
-        "name": "/actions/movement/in/GoRight",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/GoRight",
+        "requirement": "optional",
         "type": "vector1"
       },
       {
-        "name": "/actions/movement/in/Jump",
-        "requirement": "mandatory",
-        "type": "vector1"
-      },
-      {
-        "name": "/actions/weapons/in/Shoot",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/Jump",
+        "requirement": "optional",
         "type": "boolean"
       },
       {
-        "name": "/actions/weapons/in/PunchOrPickUp",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/Shoot",
+        "requirement": "optional",
         "type": "boolean"
       },
       {
-        "name": "/actions/weapons/in/PreviousWeapon",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/PunchOrPickUp",
+        "requirement": "optional",
         "type": "boolean"
       },
       {
-        "name": "/actions/weapons/in/NextWeapon",
-        "requirement": "mandatory",
+        "name": "/actions/otto/in/PreviousWeapon",
+        "requirement": "optional",
+        "type": "boolean"
+      },
+      {
+        "name": "/actions/otto/in/NextWeapon",
+        "requirement": "optional",
         "type": "boolean"
       }
     ],
     "action_sets": [
       {
-        "name": "/actions/movement",
-        "usage": "leftright"
-      },
-      {
-        "name": "/actions/weapons",
+        "name": "/actions/otto",
         "usage": "leftright"
       }
     ],
@@ -66,19 +62,17 @@
      {
          "language_tag": "en_us",
   
-          "/actions/movement" : "Movement Controls",
-          "/actions/weapons" : "Actions & Weapons",
+          "/actions/otto" : "All Otto Actions",
+		  "/actions/otto/in/GoForward" : "Go Forward",
+          "/actions/otto/in/GoBackward" : "Go Backward",
+          "/actions/otto/in/GoLeft" : "Go Left",
+          "/actions/otto/in/GoRight" : "Go Right",
+          "/actions/otto/in/Jump" : "Jump (double->Jet)",
   
-          "/actions/movement/in/GoForward" : "Go Forward",
-          "/actions/movement/in/GoBackward" : "Go Backward",
-          "/actions/movement/in/GoLeft" : "Go Left",
-          "/actions/movement/in/GoRight" : "Go Right",
-          "/actions/movement/in/Jump" : "Jump (double->Jet)",
-  
-          "/actions/weapons/in/Shoot" : "Shoot",
-          "/actions/weapons/in/PunchOrPickUp" : "Punch, pickup",
-          "/actions/weapons/in/PreviousWeapon" : "Previous Weapon",
-          "/actions/weapons/in/NextWeapon" : "Next Weapon"
+          "/actions/otto/in/Shoot" : "Shoot",
+          "/actions/otto/in/PunchOrPickUp" : "Punch, pickup",
+          "/actions/otto/in/PreviousWeapon" : "Previous Weapon",
+          "/actions/otto/in/NextWeapon" : "Next Weapon"
       }
     ]
   }
