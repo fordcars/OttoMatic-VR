@@ -10,6 +10,7 @@
 /****************************/
 
 #include "game.h"
+#include "vr_support.h"
 
 /****************************/
 /*    PROTOTYPES            */
@@ -2877,7 +2878,7 @@ static void CheckPlayerActionControls(ObjNode *theNode)
 			/* SEE IF JUMP */
 			/***************/
 
-	if (GetNewNeedState(kNeed_Jump))										// see if user pressed the key
+	if (GetNewNeedState(kNeed_Jump) || getVRDigitalActionDataCpp(paJump))										// see if user pressed the key
 	{
 		/* SEE IF ENTER CANNON ON CLOUD LEVEL */
 

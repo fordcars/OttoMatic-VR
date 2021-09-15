@@ -10,6 +10,7 @@
 /****************************/
 
 #include "game.h"
+#include "vr_support.h"
 
 /****************************/
 /*    PROTOTYPES            */
@@ -149,7 +150,7 @@ void CheckPOWControls(ObjNode *theNode)
 {
 		/* SEE IF SHOOT GUN */
 
-	if (GetNewNeedState(kNeed_Shoot))					// see if user pressed the key
+	if (GetNewNeedState(kNeed_Shoot) || getVRDigitalActionDataCpp(paShoot))					// see if user pressed the key
 	{
 		ShootWeapon(theNode);
 	}
