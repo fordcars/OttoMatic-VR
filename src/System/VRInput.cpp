@@ -28,7 +28,7 @@ vr::VRActiveActionSet_t activeActionSet;
 vr::InputDigitalActionData_t jumpAction{};
 vr::InputDigitalActionData_t shootAction{};
 
-extern "C" void initSteamVRInputCpp(void) {
+extern "C" void vrcpp_initSteamVRInput(void) {
 	// Add path to action manifest for VR controls
 	std::string actionPathCPP = std::string(SDL_GetBasePath()) + "Data\\steamvr\\actions.json";
 	const char *actionPath = actionPathCPP.c_str();
@@ -65,8 +65,7 @@ extern "C" void initSteamVRInputCpp(void) {
 	activeActionSet.nPriority = 0; // might be needed? Unsure
 }
 
-
-extern "C" void updateVRActionSetStateCpp(void) {
+extern "C" void vrcpp_UpdateActionState(void) {
 	auto error = vr::VRInput()->UpdateActionState(&activeActionSet, sizeof(activeActionSet), 1);
 	if (error != vr::EVRInputError::VRInputError_None)
 	{
@@ -74,8 +73,8 @@ extern "C" void updateVRActionSetStateCpp(void) {
 	}
 }
 
-extern "C" bool getVRDigitalActionDataCpp(int actionToDo) {
-	if (actionToDo == playerActions::paJump) {
+extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
+	if (actionToDo == playerActions::vrJump) {
 		auto e = vr::VRInput()->GetDigitalActionData(vrActions.Jump, &jumpAction, sizeof(jumpAction), vr::k_ulInvalidInputValueHandle);
 		if (e != vr::EVRInputError::VRInputError_None)
 		{
@@ -86,12 +85,6 @@ extern "C" bool getVRDigitalActionDataCpp(int actionToDo) {
 		if (!jumpAction.bActive) {
 			printf("Available to be bound: no\n"); // If this is printed, something wrong
 		}
-		//if (jumpAction.bState) {
-		//	printf("IS PRESSED\n");
-		//}
-		//else if (!jumpAction.bChanged) {
-		//	printf("State CHANGED\n");
-		//}
 		if (jumpAction.bState && jumpAction.bChanged) {
 			//printf("Now PRESSED\n");
 			return true;
@@ -101,16 +94,17 @@ extern "C" bool getVRDigitalActionDataCpp(int actionToDo) {
 		//}
 		return false;
 	}
-	if (actionToDo == playerActions::paShoot) {
+	if (actionToDo == playerActions::vrShoot) {
 		vr::VRInput()->GetDigitalActionData(vrActions.Shoot, &shootAction, sizeof(shootAction), vr::k_ulInvalidInputValueHandle);
-		if (!shootAction.bActive) {
-			printf("Available to be bound: no\n"); // If this is printed, something wrong
-		}
 		if (shootAction.bState && shootAction.bChanged) {
 			return true;
 		}
-
+		else {
+			return false;
+		}
+	}
+	else {
+		// If we are here, incorrect parameters / not called
 		return false;
-
 	}
 }

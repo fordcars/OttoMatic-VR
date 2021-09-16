@@ -71,9 +71,16 @@ extern "C"
 
 
 		/* VR (C Code only) */
-void initSteamVRInputCpp(void);
-void updateVRActionSetStateCpp(void);
-bool getVRDigitalActionDataCpp(int actionToDo);
+
+//Gets action manifest and action handles
+void vrcpp_initSteamVRInput(void);
+
+// Reads the current state into all actions (run each frame)
+// After this call, the results of Get*ActionData calls will be the same until the next call to UpdateActionState
+void vrcpp_UpdateActionState(void);
+
+// Get Action Data (see if triggered). This function is for boolean (toggle) actions only, no vec
+bool vrcpp_GetDigitalActionData(int actionToDo);
 
 
 		/* EXTERNS */

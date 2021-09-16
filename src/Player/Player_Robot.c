@@ -2878,7 +2878,7 @@ static void CheckPlayerActionControls(ObjNode *theNode)
 			/* SEE IF JUMP */
 			/***************/
 
-	if (GetNewNeedState(kNeed_Jump) || getVRDigitalActionDataCpp(paJump))										// see if user pressed the key
+	if (GetNewNeedState(kNeed_Jump) || vrcpp_GetDigitalActionData(vrJump))										// see if user pressed the key
 	{
 		/* SEE IF ENTER CANNON ON CLOUD LEVEL */
 

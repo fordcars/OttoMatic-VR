@@ -92,9 +92,8 @@ void UpdateInput(void)
 	gMouseMotionNow = false;
 	gEatMouse = false;
 
-	// Reads the current state into all actions.
-	// After this call, the results of Get*ActionData calls will be the same until the next call to UpdateActionState
-	updateVRActionSetStateCpp();
+	// Check if any SteamVR Control has been pressed
+	vrcpp_UpdateActionState();
 
 			/**********************/
 			/* DO SDL MAINTENANCE */

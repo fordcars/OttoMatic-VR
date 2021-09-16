@@ -280,7 +280,8 @@ retry:
 		throw std::runtime_error("Compositor initialization failed!");
 	}
 
-	initSteamVRInputCpp();
+	// Init SteamVR Input
+	vrcpp_initSteamVRInput();
 
 	
 	if (gGamePrefs.preferredDisplay >= SDL_GetNumVideoDisplays())
