@@ -7,9 +7,16 @@ enum playerActions
 	vrGoBackward,
 	vrGoLeft,
 	vrGoRight,
+	vrMoveXY,
 	vrJump,
 	vrShoot,
 	vrPunchOrPickUp,
 	vrPreviousWeapon,
 	vrNextWeapon
 };
+
+typedef struct
+{
+	float x;
+	float y;
+} vrJoyPos;

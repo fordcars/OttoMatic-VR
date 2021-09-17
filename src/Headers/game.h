@@ -68,19 +68,22 @@ extern "C"
 #include "textmesh.h"
 #include "tga.h"
 #include "menu.h"
+#include "vr_support.h"
 
 
 		/* VR (C Code only) */
-
 //Gets action manifest and action handles
 void vrcpp_initSteamVRInput(void);
 
-// Reads the current state into all actions (run each frame)
+// Reads the current state into all actions (call each frame)
 // After this call, the results of Get*ActionData calls will be the same until the next call to UpdateActionState
 void vrcpp_UpdateActionState(void);
 
 // Get Action Data (see if triggered). This function is for boolean (toggle) actions only, no vec
 bool vrcpp_GetDigitalActionData(int actionToDo);
+
+// Get Action Data (see if triggered). This function is for analog (vector) actions only, no digital bools
+vrJoyPos vrcpp_GetAnalogActionData(int actionToDo);
 
 
 		/* EXTERNS */

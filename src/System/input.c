@@ -5,6 +5,7 @@
 #include "game.h"
 #include "mousesmoothing.h"
 #include "killmacmouseacceleration.h"
+#include "vr_support.h"
 
 
 /***************/
@@ -313,6 +314,28 @@ void UpdateInput(void)
 	else
 	if (GetNeedState(kNeed_Backward))						// is Down Key pressed?
 		gPlayerInfo.analogControlZ = 1.0f;
+
+
+
+			/* CHECK VR VECTOR INPUT */
+	float VRpostionX = vrcpp_GetAnalogActionData(vrMoveXY).x; // Strafing
+	float VRpositionY = vrcpp_GetAnalogActionData(vrMoveXY).y; // Fore / back
+
+
+	if (VRpostionX || VRpositionY) // If joystick is not at 0, 0
+	{
+		// For better strafing, if really not moving forward or back much, make it 0
+		if (fabs(VRpositionY) < 0.13)
+			VRpositionY = 0;
+
+		gPlayerInfo.analogControlZ = -VRpositionY;
+		gPlayerInfo.strafeControlX = VRpostionX;
+		printf("X (LEFT RIGHT): %f                  ", VRpostionX);
+		printf("Y (FORE BACK): %f                   ", -VRpositionY);
+	}
+
+
+
 
 		/* AND FINALLY SEE IF MOUSE DELTAS ARE BEST */
 

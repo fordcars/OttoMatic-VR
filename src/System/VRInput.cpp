@@ -5,12 +5,13 @@
 #include <SDL_filesystem.h>
 
 
-struct VRActions
+struct VRActionHandlers
 {
 	vr::VRActionHandle_t GoForward;
 	vr::VRActionHandle_t GoBackward;
 	vr::VRActionHandle_t GoLeft;
 	vr::VRActionHandle_t GoRight;
+	vr::VRActionHandle_t MoveXY;
 	vr::VRActionHandle_t Jump;
 	vr::VRActionHandle_t Shoot;
 	vr::VRActionHandle_t PunchOrPickUp;
@@ -20,12 +21,16 @@ struct VRActions
 
 static vr::VRInputValueHandle_t notRestrictedToHand = vr::k_ulInvalidInputValueHandle;
 
-static VRActions vrActions{}; // init
+static VRActionHandlers vrActions{}; // init
 static vr::VRActionSetHandle_t ottoVRactions;
 
-
-
 static vr::VRActiveActionSet_t activeActionSet;
+
+static vr::InputAnalogActionData_t goForwardAction{};
+static vr::InputAnalogActionData_t goBackwardAction{};
+static vr::InputAnalogActionData_t goLeftAction{};
+static vr::InputAnalogActionData_t goRightAction{};
+static vr::InputAnalogActionData_t moveXYAction{};
 static vr::InputDigitalActionData_t jumpAction{};
 static vr::InputDigitalActionData_t shootAction{};
 static vr::InputDigitalActionData_t punchOrPickupAction{};
@@ -53,6 +58,7 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 	vr::VRInput()->GetActionHandle("/actions/otto/in/GoBackward", &vrActions.GoBackward);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/GoLeft", &vrActions.GoLeft);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/GoRight", &vrActions.GoRight);
+	vr::VRInput()->GetActionHandle("/actions/otto/in/MoveXY", &vrActions.MoveXY);
 	error = vr::VRInput()->GetActionHandle("/actions/otto/in/Jump", &vrActions.Jump);
 	if (error != vr::EVRInputError::VRInputError_None)
 	{
@@ -77,6 +83,56 @@ extern "C" void vrcpp_UpdateActionState(void) {
 		std::cerr << "Error UpdateActionState.\n";
 	}
 }
+
+
+
+extern "C" vrJoyPos vrcpp_GetAnalogActionData(int actionToDo) {
+	vr::VRActionHandle_t actionHandler;
+	vr::InputAnalogActionData_t actionDataStruct;
+	switch (actionToDo) {
+	case playerActions::vrGoForward:
+		actionHandler = vrActions.GoForward;
+		actionDataStruct = goForwardAction;
+		break;
+	case playerActions::vrGoBackward:
+		actionHandler = vrActions.GoBackward;
+		actionDataStruct = goBackwardAction;
+		break;
+	case playerActions::vrGoLeft:
+		actionHandler = vrActions.GoLeft;
+		actionDataStruct = goLeftAction;
+		break;
+	case playerActions::vrGoRight:
+		actionHandler = vrActions.GoRight;
+		actionDataStruct = goRightAction;
+		break;
+	case playerActions::vrMoveXY:
+		actionHandler = vrActions.MoveXY;
+		actionDataStruct = moveXYAction;
+		break;
+	default:
+		printf("vrcpp_GetAnalogActionData called incorrectly");
+		return { 0,0 };
+	}
+
+	// Get the state of the action
+	vr::VRInput()->GetAnalogActionData(actionHandler, &actionDataStruct, sizeof(actionDataStruct), notRestrictedToHand);
+	if (!actionDataStruct.bActive) {
+		printf("GetAnalogActionData Problem, available to be bound: no\n"); // If this is printed, something wrong
+	}
+
+	// If any movement on any axis, return something other than 0
+	if (actionDataStruct.x || actionDataStruct.y || actionDataStruct.z) {
+		// For now all my actions are vector2 so only the XY is useful.
+		// Must change this if we use vector3 actions eventually!!!
+		return { actionDataStruct.x, actionDataStruct.y };
+	}
+	else {
+		return { 0,0 };
+	}
+}
+
+
 
 extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 	vr::VRActionHandle_t actionHandler;
@@ -110,7 +166,7 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 	// Get the state of the action
 	vr::VRInput()->GetDigitalActionData(actionHandler, &actionDataStruct, sizeof(actionDataStruct), notRestrictedToHand);
 	if (!actionDataStruct.bActive) {
-		printf("Problem, available to be bound: no\n"); // If this is printed, something wrong
+		printf("vrcpp_GetDigitalActionData Problem, available to be bound: no\n"); // If this is printed, something wrong
 	}
 	if (actionDataStruct.bState && actionDataStruct.bChanged) {
 		return true;
@@ -118,53 +174,4 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 	else {
 		return false;
 	}
-
-
-	//if (actionToDo == playerActions::vrJump) {
-	//	auto e = vr::VRInput()->GetDigitalActionData(vrActions.Jump, &jumpAction, sizeof(jumpAction), notRestrictedToHand);
-	//	if (e != vr::EVRInputError::VRInputError_None)
-	//	{
-	//		// Print the rror code.
-	//		std::cerr << e << '\n';
-	//		std::cerr << "GetDigitalAction error.\n";
-	//	}
-	//	if (!jumpAction.bActive) {
-	//		printf("Available to be bound: no\n"); // If this is printed, something wrong
-	//	}
-	//	if (jumpAction.bState && jumpAction.bChanged) {
-	//		//printf("Now PRESSED\n");
-	//		return true;
-	//	}
-	//	//if (!jumpAction.bState && jumpAction.bChanged) {
-	//	//	printf("Now RELEASED\n");
-	//	//}
-	//	return false;
-	//}
-	//if (actionToDo == playerActions::vrShoot) {
-	//	vr::VRInput()->GetDigitalActionData(vrActions.Shoot, &shootAction, sizeof(shootAction), notRestrictedToHand);
-	//	if (shootAction.bState && shootAction.bChanged) {
-	//		return true;
-	//	}
-	//	else {
-	//		return false;
-	//	}
-	//}
-	//if (actionToDo == playerActions::vrPreviousWeapon) {
-	//	vr::VRInput()->GetDigitalActionData(vrActions.PreviousWeapon, &previousWeaponAction, sizeof(previousWeaponAction), notRestrictedToHand);
-	//	if (previousWeaponAction.bState && previousWeaponAction.bChanged) {
-	//		return true;
-	//	}
-	//	else {
-	//		return false;
-	//	}
-	//}
-	//if (actionToDo == playerActions::vrNextWeapon) {
-	//	vr::VRInput()->GetDigitalActionData(vrActions.NextWeapon, &nextWeaponAction, sizeof(nextWeaponAction), notRestrictedToHand);
-	//	if (nextWeaponAction.bState && nextWeaponAction.bChanged) {
-	//		return true;
-	//	}
-	//	else {
-	//		return false;
-	//	}
-	//}
 }
