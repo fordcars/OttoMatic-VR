@@ -18,15 +18,20 @@ struct VRActions
 	vr::VRActionHandle_t NextWeapon;
 };
 
+static vr::VRInputValueHandle_t notRestrictedToHand = vr::k_ulInvalidInputValueHandle;
 
-VRActions vrActions{}; // init
-vr::VRActionSetHandle_t ottoVRactions;
+static VRActions vrActions{}; // init
+static vr::VRActionSetHandle_t ottoVRactions;
 
 
 
-vr::VRActiveActionSet_t activeActionSet;
-vr::InputDigitalActionData_t jumpAction{};
-vr::InputDigitalActionData_t shootAction{};
+static vr::VRActiveActionSet_t activeActionSet;
+static vr::InputDigitalActionData_t jumpAction{};
+static vr::InputDigitalActionData_t shootAction{};
+static vr::InputDigitalActionData_t punchOrPickupAction{};
+static vr::InputDigitalActionData_t nextWeaponAction{};
+static vr::InputDigitalActionData_t previousWeaponAction{};
+
 
 extern "C" void vrcpp_initSteamVRInput(void) {
 	// Add path to action manifest for VR controls
@@ -58,8 +63,8 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PunchOrPickup", &vrActions.PunchOrPickUp);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PreviousWeapon", &vrActions.PreviousWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/NextWeapon", &vrActions.NextWeapon);
-	
-	
+
+
 	activeActionSet.ulActionSet = ottoVRactions;
 	activeActionSet.ulRestrictedToDevice = vr::k_ulInvalidInputValueHandle;
 	activeActionSet.nPriority = 0; // might be needed? Unsure
@@ -74,37 +79,92 @@ extern "C" void vrcpp_UpdateActionState(void) {
 }
 
 extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
-	if (actionToDo == playerActions::vrJump) {
-		auto e = vr::VRInput()->GetDigitalActionData(vrActions.Jump, &jumpAction, sizeof(jumpAction), vr::k_ulInvalidInputValueHandle);
-		if (e != vr::EVRInputError::VRInputError_None)
-		{
-			// Print the rror code.
-			std::cerr << e << '\n';
-			std::cerr << "GetDigitalAction error.\n";
-		}
-		if (!jumpAction.bActive) {
-			printf("Available to be bound: no\n"); // If this is printed, something wrong
-		}
-		if (jumpAction.bState && jumpAction.bChanged) {
-			//printf("Now PRESSED\n");
-			return true;
-		}
-		//if (!jumpAction.bState && jumpAction.bChanged) {
-		//	printf("Now RELEASED\n");
-		//}
+	vr::VRActionHandle_t actionHandler;
+	vr::InputDigitalActionData_t actionDataStruct;
+	switch (actionToDo) {
+	case playerActions::vrJump:
+		actionHandler = vrActions.Jump;
+		actionDataStruct = jumpAction;
+		break;
+	case playerActions::vrShoot:
+		actionHandler = vrActions.Shoot;
+		actionDataStruct = shootAction;
+		break;
+	case playerActions::vrPunchOrPickUp:
+		actionHandler = vrActions.PunchOrPickUp;
+		actionDataStruct = punchOrPickupAction;
+		break;
+	case playerActions::vrPreviousWeapon:
+		actionHandler = vrActions.PreviousWeapon;
+		actionDataStruct = previousWeaponAction;
+		break;
+	case playerActions::vrNextWeapon:
+		actionHandler = vrActions.NextWeapon;
+		actionDataStruct = nextWeaponAction;
+		break;
+	default:
+		printf("vrcpp_GetDigitalActionData called incorrectly");
 		return false;
 	}
-	if (actionToDo == playerActions::vrShoot) {
-		vr::VRInput()->GetDigitalActionData(vrActions.Shoot, &shootAction, sizeof(shootAction), vr::k_ulInvalidInputValueHandle);
-		if (shootAction.bState && shootAction.bChanged) {
-			return true;
-		}
-		else {
-			return false;
-		}
+
+	// Get the state of the action
+	vr::VRInput()->GetDigitalActionData(actionHandler, &actionDataStruct, sizeof(actionDataStruct), notRestrictedToHand);
+	if (!actionDataStruct.bActive) {
+		printf("Problem, available to be bound: no\n"); // If this is printed, something wrong
+	}
+	if (actionDataStruct.bState && actionDataStruct.bChanged) {
+		return true;
 	}
 	else {
-		// If we are here, incorrect parameters / not called
 		return false;
 	}
+
+
+	//if (actionToDo == playerActions::vrJump) {
+	//	auto e = vr::VRInput()->GetDigitalActionData(vrActions.Jump, &jumpAction, sizeof(jumpAction), notRestrictedToHand);
+	//	if (e != vr::EVRInputError::VRInputError_None)
+	//	{
+	//		// Print the rror code.
+	//		std::cerr << e << '\n';
+	//		std::cerr << "GetDigitalAction error.\n";
+	//	}
+	//	if (!jumpAction.bActive) {
+	//		printf("Available to be bound: no\n"); // If this is printed, something wrong
+	//	}
+	//	if (jumpAction.bState && jumpAction.bChanged) {
+	//		//printf("Now PRESSED\n");
+	//		return true;
+	//	}
+	//	//if (!jumpAction.bState && jumpAction.bChanged) {
+	//	//	printf("Now RELEASED\n");
+	//	//}
+	//	return false;
+	//}
+	//if (actionToDo == playerActions::vrShoot) {
+	//	vr::VRInput()->GetDigitalActionData(vrActions.Shoot, &shootAction, sizeof(shootAction), notRestrictedToHand);
+	//	if (shootAction.bState && shootAction.bChanged) {
+	//		return true;
+	//	}
+	//	else {
+	//		return false;
+	//	}
+	//}
+	//if (actionToDo == playerActions::vrPreviousWeapon) {
+	//	vr::VRInput()->GetDigitalActionData(vrActions.PreviousWeapon, &previousWeaponAction, sizeof(previousWeaponAction), notRestrictedToHand);
+	//	if (previousWeaponAction.bState && previousWeaponAction.bChanged) {
+	//		return true;
+	//	}
+	//	else {
+	//		return false;
+	//	}
+	//}
+	//if (actionToDo == playerActions::vrNextWeapon) {
+	//	vr::VRInput()->GetDigitalActionData(vrActions.NextWeapon, &nextWeaponAction, sizeof(nextWeaponAction), notRestrictedToHand);
+	//	if (nextWeaponAction.bState && nextWeaponAction.bChanged) {
+	//		return true;
+	//	}
+	//	else {
+	//		return false;
+	//	}
+	//}
 }

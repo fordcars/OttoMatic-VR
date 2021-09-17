@@ -10,6 +10,7 @@
 /****************************/
 
 #include "game.h"
+#include "vr_support.h"
 
 /****************************/
 /*    PROTOTYPES            */
@@ -706,7 +707,10 @@ float	s;
 	if ((bubble->Health <= 0.0f)
 		|| GetNewNeedState(kNeed_Jump)
 		|| GetNewNeedState(kNeed_Shoot)
-		|| GetNewNeedState(kNeed_PunchPickup))
+		|| GetNewNeedState(kNeed_PunchPickup)
+		|| vrcpp_GetDigitalActionData(vrJump)
+		|| vrcpp_GetDigitalActionData(vrShoot)
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp))
 	{
 		PopSoapBubble(bubble);
 		return;

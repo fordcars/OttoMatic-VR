@@ -3351,7 +3351,11 @@ OGLMatrix3x3	m;
 	{
 		if (GetNewNeedState(kNeed_Jump)
 			|| GetNewNeedState(kNeed_Shoot)
-			|| GetNewNeedState(kNeed_PunchPickup))
+			|| GetNewNeedState(kNeed_PunchPickup)
+			|| vrcpp_GetDigitalActionData(vrJump)
+			|| vrcpp_GetDigitalActionData(vrShoot)
+			|| vrcpp_GetDigitalActionData(vrPunchOrPickUp)
+			)
 		{
 			DisableHelpType(HELP_MESSAGE_LETGOMAGNET);							// player has figured it out, so don't show this anymore
 
