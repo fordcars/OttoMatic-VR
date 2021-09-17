@@ -26,6 +26,11 @@
         "requirement": "optional",
         "type": "vector1"
       },
+	  {
+        "name": "/actions/otto/in/MoveXY",
+        "requirement": "optional",
+        "type": "vector2"
+      },
       {
         "name": "/actions/otto/in/Jump",
         "requirement": "optional",
