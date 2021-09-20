@@ -12,6 +12,7 @@ struct VRActionHandlers
 	vr::VRActionHandle_t GoLeft;
 	vr::VRActionHandle_t GoRight;
 	vr::VRActionHandle_t MoveXY;
+	vr::VRActionHandle_t CameraXY;
 	vr::VRActionHandle_t Jump;
 	vr::VRActionHandle_t Shoot;
 	vr::VRActionHandle_t PunchOrPickUp;
@@ -31,6 +32,7 @@ static vr::InputAnalogActionData_t goBackwardAction{};
 static vr::InputAnalogActionData_t goLeftAction{};
 static vr::InputAnalogActionData_t goRightAction{};
 static vr::InputAnalogActionData_t moveXYAction{};
+static vr::InputAnalogActionData_t cameraXYAction{};
 static vr::InputDigitalActionData_t jumpAction{};
 static vr::InputDigitalActionData_t shootAction{};
 static vr::InputDigitalActionData_t punchOrPickupAction{};
@@ -59,6 +61,7 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 	vr::VRInput()->GetActionHandle("/actions/otto/in/GoLeft", &vrActions.GoLeft);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/GoRight", &vrActions.GoRight);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/MoveXY", &vrActions.MoveXY);
+	vr::VRInput()->GetActionHandle("/actions/otto/in/CameraXY", &vrActions.CameraXY);
 	error = vr::VRInput()->GetActionHandle("/actions/otto/in/Jump", &vrActions.Jump);
 	if (error != vr::EVRInputError::VRInputError_None)
 	{
@@ -90,21 +93,9 @@ extern "C" vrJoyPos vrcpp_GetAnalogActionData(int actionToDo) {
 	vr::VRActionHandle_t actionHandler;
 	vr::InputAnalogActionData_t actionDataStruct;
 	switch (actionToDo) {
-	case playerActions::vrGoForward:
-		actionHandler = vrActions.GoForward;
-		actionDataStruct = goForwardAction;
-		break;
-	case playerActions::vrGoBackward:
-		actionHandler = vrActions.GoBackward;
-		actionDataStruct = goBackwardAction;
-		break;
-	case playerActions::vrGoLeft:
-		actionHandler = vrActions.GoLeft;
-		actionDataStruct = goLeftAction;
-		break;
-	case playerActions::vrGoRight:
-		actionHandler = vrActions.GoRight;
-		actionDataStruct = goRightAction;
+	case playerActions::vrCameraXY:
+		actionHandler = vrActions.CameraXY;
+		actionDataStruct = cameraXYAction;
 		break;
 	case playerActions::vrMoveXY:
 		actionHandler = vrActions.MoveXY;

@@ -8,6 +8,7 @@ enum playerActions
 	vrGoLeft,
 	vrGoRight,
 	vrMoveXY,
+	vrCameraXY,
 	vrJump,
 	vrShoot,
 	vrPunchOrPickUp,

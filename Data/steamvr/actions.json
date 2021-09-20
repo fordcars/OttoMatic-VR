@@ -31,6 +31,11 @@
         "requirement": "optional",
         "type": "vector2"
       },
+	  {
+        "name": "/actions/otto/in/CameraXY",
+        "requirement": "optional",
+        "type": "vector2"
+      },
       {
         "name": "/actions/otto/in/Jump",
         "requirement": "optional",
