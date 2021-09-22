@@ -60,9 +60,9 @@
     "localization" : [
      {
          "language_tag": "en_us",
-		     "/actions/otto" : "All Otto Actions",
-		     "/actions/otto/in/MoveXY": "Move Joystick",
-		     "/actions/otto/in/CameraXY": "Camera Joystick",
+		 "/actions/otto" : "All Otto Actions",
+		 "/actions/otto/in/MoveXY": "Move Joystick",
+		 "/actions/otto/in/CameraXY": "Camera Joystick",
           
          "/actions/otto/in/Jump" : "Jump (double->Jet)",
   
