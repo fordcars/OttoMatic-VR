@@ -335,6 +335,17 @@ void UpdateInput(void)
 	}
 
 
+		/* CHECK IF VR WANTS TO PAUSE GAME */
+
+	if (vrcpp_GetDigitalActionData(vrEscapeMenu))
+	{
+		if (gGamePaused) {
+			gGameIsPausedVR = false; // If game is already paused, the pause key should tell it to unpause
+		}
+		else {
+			gGameIsPausedVR = true; // If here, the pause key was pressed but the game was not paused when the press occured
+		}
+	}
 
 
 		/* AND FINALLY SEE IF MOUSE DELTAS ARE BEST */
@@ -420,6 +431,9 @@ Boolean UserWantsOut(void)
 	return GetNewNeedState(kNeed_UIConfirm)
 		|| GetNewNeedState(kNeed_UIBack)
 		|| GetNewNeedState(kNeed_UIStart)
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp)
+		|| vrcpp_GetDigitalActionData(vrJump)
+		|| vrcpp_GetDigitalActionData(vrShoot)
 		|| FlushMouseButtonPress(SDL_BUTTON_LEFT);
 }
 

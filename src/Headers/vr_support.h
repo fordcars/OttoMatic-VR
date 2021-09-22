@@ -13,7 +13,8 @@ enum playerActions
 	vrShoot,
 	vrPunchOrPickUp,
 	vrPreviousWeapon,
-	vrNextWeapon
+	vrNextWeapon,
+	vrEscapeMenu
 };
 
 typedef struct

@@ -18,6 +18,7 @@ struct VRActionHandlers
 	vr::VRActionHandle_t PunchOrPickUp;
 	vr::VRActionHandle_t PreviousWeapon;
 	vr::VRActionHandle_t NextWeapon;
+	vr::VRActionHandle_t EscapeMenu;
 };
 
 static vr::VRInputValueHandle_t notRestrictedToHand = vr::k_ulInvalidInputValueHandle;
@@ -38,6 +39,7 @@ static vr::InputDigitalActionData_t shootAction{};
 static vr::InputDigitalActionData_t punchOrPickupAction{};
 static vr::InputDigitalActionData_t nextWeaponAction{};
 static vr::InputDigitalActionData_t previousWeaponAction{};
+static vr::InputDigitalActionData_t EscapeMenuAction{};
 
 
 extern "C" void vrcpp_initSteamVRInput(void) {
@@ -72,6 +74,7 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PunchOrPickup", &vrActions.PunchOrPickUp);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PreviousWeapon", &vrActions.PreviousWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/NextWeapon", &vrActions.NextWeapon);
+	vr::VRInput()->GetActionHandle("/actions/otto/in/EscapeMenu", &vrActions.EscapeMenu);
 
 
 	activeActionSet.ulActionSet = ottoVRactions;
@@ -149,6 +152,10 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 		actionHandler = vrActions.NextWeapon;
 		actionDataStruct = nextWeaponAction;
 		break;
+	case playerActions::vrEscapeMenu:
+		actionHandler = vrActions.EscapeMenu;
+		actionDataStruct = EscapeMenuAction;
+		break;
 	default:
 		printf("vrcpp_GetDigitalActionData called incorrectly");
 		return false;
@@ -160,6 +167,7 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 		printf("vrcpp_GetDigitalActionData Problem, available to be bound: no\n"); // If this is printed, something wrong
 	}
 	if (actionDataStruct.bState && actionDataStruct.bChanged) {
+		// printf("Changed\n"); // Use to test, prints if command detects
 		return true;
 	}
 	else {

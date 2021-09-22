@@ -77,6 +77,7 @@ u_long				gGameFrameNum = 0;
 
 Boolean				gPlayingFromSavedGame = false;
 Boolean				gGameOver = false;
+Boolean				gGameIsPausedVR = false;
 Boolean				gLevelCompleted = false;
 float				gLevelCompletedCoolDownTimer = 0;
 
@@ -307,11 +308,12 @@ static void PlayArea(void)
 
 			/* SEE IF PAUSED */
 
-		if (GetNewNeedState(kNeed_UIPause))
+		if (GetNewNeedState(kNeed_UIPause) || gGameIsPausedVR)
 		{
-			CaptureMouse(false);
-			DoPaused();
-			CaptureMouse(true);
+				gGameIsPausedVR = false;
+				CaptureMouse(false);
+				DoPaused();
+				CaptureMouse(true);
 		}
 
 		CalcFramesPerSecond();

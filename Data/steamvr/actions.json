@@ -6,26 +6,6 @@
      }
     ], 
     "actions": [
-      {
-        "name": "/actions/otto/in/GoForward",
-        "requirement": "optional",
-        "type": "vector1"
-      },
-      {
-        "name": "/actions/otto/in/GoBackward",
-        "requirement": "optional",
-        "type": "vector1"
-      },
-      {
-        "name": "/actions/otto/in/GoLeft",
-        "requirement": "optional",
-        "type": "vector1"
-      },
-      {
-        "name": "/actions/otto/in/GoRight",
-        "requirement": "optional",
-        "type": "vector1"
-      },
 	  {
         "name": "/actions/otto/in/MoveXY",
         "requirement": "optional",
@@ -60,6 +40,15 @@
         "name": "/actions/otto/in/NextWeapon",
         "requirement": "optional",
         "type": "boolean"
+      },
+	  {
+        "name": "/actions/otto/in/EscapeMenu",
+        "requirement": "optional",
+        "type": "boolean"
+      },
+	  {
+      "name": "/actions/otto/out/Haptic",
+      "type": "vibration"
       }
     ],
     "action_sets": [
@@ -71,18 +60,17 @@
     "localization" : [
      {
          "language_tag": "en_us",
+		     "/actions/otto" : "All Otto Actions",
+		     "/actions/otto/in/MoveXY": "Move Joystick",
+		     "/actions/otto/in/CameraXY": "Camera Joystick",
+          
+         "/actions/otto/in/Jump" : "Jump (double->Jet)",
   
-          "/actions/otto" : "All Otto Actions",
-		  "/actions/otto/in/GoForward" : "Go Forward",
-          "/actions/otto/in/GoBackward" : "Go Backward",
-          "/actions/otto/in/GoLeft" : "Go Left",
-          "/actions/otto/in/GoRight" : "Go Right",
-          "/actions/otto/in/Jump" : "Jump (double->Jet)",
-  
-          "/actions/otto/in/Shoot" : "Shoot",
-          "/actions/otto/in/PunchOrPickUp" : "Punch, pickup",
-          "/actions/otto/in/PreviousWeapon" : "Previous Weapon",
-          "/actions/otto/in/NextWeapon" : "Next Weapon"
+         "/actions/otto/in/Shoot" : "Shoot",
+         "/actions/otto/in/PunchOrPickUp" : "Punch, pickup",
+         "/actions/otto/in/PreviousWeapon" : "Previous Weapon",
+         "/actions/otto/in/NextWeapon" : "Next Weapon",
+		 "/actions/otto/in/EscapeMenu": "Pause/Escape"
       }
     ]
   }

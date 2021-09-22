@@ -104,6 +104,7 @@ extern	Boolean					gFreezeCameraFromY;
 extern	Boolean					gG4;
 extern	Boolean					gGameOver;
 extern	Boolean					gGamePaused;
+extern  Boolean					gGameIsPausedVR;
 extern	Boolean					gHelpMessageDisabled[NUM_HELP_MESSAGES];
 extern	Boolean					gIceCracked;
 extern	Boolean					gLevelCompleted;
