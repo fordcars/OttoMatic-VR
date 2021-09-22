@@ -553,7 +553,7 @@ ObjNode	*newObj;
 int				i;
 
 	PlayEffect3D(EFFECT_STUNGUN, where);
-	Rumble(0.2f, 150);
+	Rumble(0.4f, .100, 300, vrLeftVibrate);
 
 		/*********************/
 		/* MAKE MUZZLE FLASH */

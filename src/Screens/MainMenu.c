@@ -1110,7 +1110,8 @@ static Boolean DoMainMenuControl(void)
 			/* SPIN LEFT */
 
 		if (GetNewNeedState(kNeed_UILeft) || GetNewNeedState(kNeed_UINext)
-			|| vrcpp_GetAnalogActionData(vrMoveXY).x >= 0.4)
+			|| vrcpp_GetAnalogActionData(vrMoveXY).x >= 0.4
+			|| vrcpp_GetAnalogActionData(vrCameraXY).x >= 0.4)
 		{
 			if (frameCounter >= minFramesBetweenActions) {
 				PlayEffect(EFFECT_MENUCHANGE);
@@ -1119,6 +1120,7 @@ static Boolean DoMainMenuControl(void)
 				if (gSelection < 0)
 					gSelection = NUM_SELECTIONS - 1;
 				gFadeInIconString = false;
+				vrcpp_DoVibrationHaptics(vrRightVibrate, 0.2, 80, 0.7);
 				frameCounter = 0;
 			}
 		}
@@ -1126,7 +1128,8 @@ static Boolean DoMainMenuControl(void)
 
 		else
 		if (GetNewNeedState(kNeed_UIRight) || GetNewNeedState(kNeed_UIPrev)
-			|| vrcpp_GetAnalogActionData(vrMoveXY).x <= -0.4)
+			|| vrcpp_GetAnalogActionData(vrMoveXY).x <= -0.4
+			|| vrcpp_GetAnalogActionData(vrCameraXY).x <= -0.4)
 		{
 			if (frameCounter >= minFramesBetweenActions) {
 				PlayEffect(EFFECT_MENUCHANGE);
@@ -1135,6 +1138,7 @@ static Boolean DoMainMenuControl(void)
 				if (gSelection == NUM_SELECTIONS)
 					gSelection = 0;
 				gFadeInIconString = false;
+				vrcpp_DoVibrationHaptics(vrLeftVibrate, 0.2, 80, 1);
 				frameCounter = 0;
 			}
 		}

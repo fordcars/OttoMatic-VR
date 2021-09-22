@@ -37,8 +37,10 @@ typedef struct
 
 typedef struct
 {
-	float			force;
-	uint16_t		duration;
+	float			amplitude;
+	float			durationSeconds;
+	float           frequency; // Default 200
+	float			handToRumble; // Default both
 } AutoRumbleDef;
 
 typedef struct
@@ -290,41 +292,42 @@ static const EffectDef kEffectsTable[] =
 
 static const AutoRumbleDef kAutoRumbleTable[] =
 {
+	// Amplitude, duration, frequency
 	[EFFECT_BADSELECT]        = {0,0},
 	[EFFECT_SAUCER]           = {0,0},
 	[EFFECT_STUNGUN]          = {0,0},//{0.2f, 150}, // --no auto rumble for this one because lv9 uses it all over the place
-	[EFFECT_ZAP]              = {1.0f, 1000},
+	[EFFECT_ZAP]              = {1.0f, .1000},
 	[EFFECT_ROCKET]           = {0,0},
 	[EFFECT_ROCKETLANDED]     = {0,0},
-	[EFFECT_JUMPJET]          = {0.5f, 750},
+	[EFFECT_JUMPJET]          = {0.07f, 1, 100}, // tweaked VR
 	[EFFECT_SHATTER]          = {0,0},
 	[EFFECT_WEAPONCLICK]      = {0,0},
 	[EFFECT_WEAPONWHIR]       = {0,0},
 	[EFFECT_NEWLIFE]          = {0,0},
-	[EFFECT_FREEZEGUN]        = {0.2f, 150},
-	[EFFECT_PUNCHHIT]         = {0.5f, 300},
-	[EFFECT_PLAYERCRASH]      = {1.0f, 1000},
-	[EFFECT_NOJUMPJET]        = {0,0},
-	[EFFECT_PLAYERCRUSH]      = {1.0f, 350},
+	[EFFECT_FREEZEGUN]        = {0.2f, .150},
+	[EFFECT_PUNCHHIT]         = {0.5f, .300},
+	[EFFECT_PLAYERCRASH]      = {1.0f, .1000},
+	[EFFECT_NOJUMPJET]        = {0.4f, 0.3, 100}, // tweaked VR
+	[EFFECT_PLAYERCRUSH]      = {1.0f, .350},
 	[EFFECT_HEADSWOOSH]       = {0,0},
-	[EFFECT_HEADTHUD]         = {1.0f, 250},
-	[EFFECT_POWPODHIT]        = {0.5f, 300},
+	[EFFECT_HEADTHUD]         = {1.0f, .250},
+	[EFFECT_POWPODHIT]        = {0.5f, .300},
 	[EFFECT_METALLAND]        = {0,0},
 	[EFFECT_SERVO]            = {0,0},
 	[EFFECT_LEFTFOOT]         = {0,0},
 	[EFFECT_RIGHTFOOT]        = {0,0},
 	[EFFECT_NOVACHARGE]       = {0,0},
-	[EFFECT_TELEPORTHUMAN]    = {0.2f, 200},
+	[EFFECT_TELEPORTHUMAN]    = {0.2f, .800, 50}, // tweaked VR
 	[EFFECT_CHECKPOINTHIT]    = {0,0},
 	[EFFECT_CHECKPOINTLOOP]   = {0,0},
-	[EFFECT_FLARESHOOT]       = {0.8f, 150},
+	[EFFECT_FLARESHOOT]       = {0.8f, .150},
 	[EFFECT_FLAREEXPLODE]     = {0,0},
-	[EFFECT_DARTWOOSH]        = {0.2f, 150},
-	[EFFECT_ATOMCHIME]        = {0.2f, 100},
-	[EFFECT_PLAYERCLANG]      = {1.0f, 250},
+	[EFFECT_DARTWOOSH]        = {0.2f, .150},
+	[EFFECT_ATOMCHIME]        = {0.2f, .100},
+	[EFFECT_PLAYERCLANG]      = {1.0f, .250},
 	[EFFECT_THROWNSWOOSH]     = {0,0},
 	[EFFECT_BEAMHUM]          = {0,0},
-	[EFFECT_JUMP]             = {0,0},
+	[EFFECT_JUMP]             = {0.2f, .200, 50}, // tweaked VR
 	[EFFECT_HEALTHWARNING]    = {0,0},
 	[EFFECT_HATCH]            = {0,0},
 	[EFFECT_BRAINWAVE]        = {0,0},
@@ -347,14 +350,14 @@ static const AutoRumbleDef kAutoRumbleTable[] =
 
 	[EFFECT_POPCORN]          = {0,0},
 	[EFFECT_SHOOTCORN]        = {0,0},
-	[EFFECT_METALGATEHIT]     = {0.6f, 300},
-	[EFFECT_METALGATECRASH]   = {0.8f, 500},
+	[EFFECT_METALGATEHIT]     = {0.6f, .300},
+	[EFFECT_METALGATECRASH]   = {0.8f, .500},
 	[EFFECT_TRACTOR]          = {0,0},
 	[EFFECT_ONIONSWOOSH]      = {0,0},
-	[EFFECT_WOODGATECRASH]    = {0.8f, 500},
+	[EFFECT_WOODGATECRASH]    = {1.0f, .300, 120}, // tweaked VR
 	[EFFECT_TOMATOJUMP]       = {0,0},
 	[EFFECT_TOMATOSPLAT]      = {0,0},
-	[EFFECT_WOODDOORHIT]      = {0.6f, 300},
+	[EFFECT_WOODDOORHIT]      = {0.6f, .300},
 	[EFFECT_ONIONSPLAT]       = {0,0},
 	[EFFECT_CORNCRUNCH]       = {0,0},
 
@@ -368,9 +371,9 @@ static const AutoRumbleDef kAutoRumbleTable[] =
 	[EFFECT_SLIMEBOSSOPEN]    = {0,0},
 	[EFFECT_BLOBSHOOT]        = {0,0},
 	[EFFECT_BLOBBEAMHUM]      = {0,0},
-	[EFFECT_SLIMEBOUNCE]      = {0.8f, 500},
-	[EFFECT_SLIMEBOOM]        = {0.5f, 300},
-	[EFFECT_BLOBBOSSBOOM]     = {0.6f, 200},
+	[EFFECT_SLIMEBOUNCE]      = {0.8f, .500},
+	[EFFECT_SLIMEBOOM]        = {0.5f, .300},
+	[EFFECT_BLOBBOSSBOOM]     = {0.6f, .200},
 	[EFFECT_AIRPUMP]          = {0,0},
 
 	[EFFECT_PODBUZZ]          = {0,0},
@@ -380,28 +383,28 @@ static const AutoRumbleDef kAutoRumbleTable[] =
 	[EFFECT_MANHOLEROLL]      = {0,0},
 	[EFFECT_DOORCLANKOPEN]    = {0,0},
 	[EFFECT_DOORCLANKCLOSE]   = {0,0},
-	[EFFECT_MINEEXPLODE]      = {0.5f, 300},
+	[EFFECT_MINEEXPLODE]      = {0.5f, .300},
 	[EFFECT_MUTANTROBOTSHOOT] = {0,0},
 	[EFFECT_MUTANTGROWL]      = {0,0},
 	[EFFECT_PLAYERTELEPORT]   = {0,0},
 	[EFFECT_TELEPORTERDRONE]  = {0,0},
-	[EFFECT_DEBRISSMASH]      = {0.8f, 500},
+	[EFFECT_DEBRISSMASH]      = {0.8f, .500},
 
-	[EFFECT_CANNONFIRE]       = {0.8f, 500},
+	[EFFECT_CANNONFIRE]       = {0.8f, .500},
 	[EFFECT_BUMPERHIT]        = {0,0},
 	[EFFECT_BUMPERHUM]        = {0,0},
 	[EFFECT_BUMPERPOLETAP]    = {0,0},
 	[EFFECT_BUMPERPOLEHUM]    = {0,0},
-	[EFFECT_BUMPERPOLEOFF]    = {0.8f, 300},
+	[EFFECT_BUMPERPOLEOFF]    = {0.8f, .300},
 	[EFFECT_CLOWNBUBBLEPOP]   = {0,0},
 	[EFFECT_INFLATE]          = {0,0},
 	[EFFECT_BOMBDROP]         = {0,0},
-	[EFFECT_BUMPERPOLEBREAK]  = {0.6f, 300},
+	[EFFECT_BUMPERPOLEBREAK]  = {0.6f, .300},
 	[EFFECT_ROCKETSLED]       = {0,0},
-	[EFFECT_TRAPDOOR]         = {1.0f, 200},
+	[EFFECT_TRAPDOOR]         = {1.0f, .200},
 	[EFFECT_BALLOONPOP]       = {0,0},
-	[EFFECT_FALLYAA]          = {1.0f, 250},
-	[EFFECT_BIRDBOMBBOOM]     = {0.5f, 300},
+	[EFFECT_FALLYAA]          = {1.0f, .250},
+	[EFFECT_BIRDBOMBBOOM]     = {0.5f, .300},
 	[EFFECT_CONFETTIBOOM]     = {0,0},
 	[EFFECT_FISHBOOM]         = {0,0},
 
@@ -410,39 +413,39 @@ static const AutoRumbleDef kAutoRumbleTable[] =
 	[EFFECT_FIREBREATH]       = {0,0},
 	[EFFECT_LIZARDINHALE]     = {0,0},
 	[EFFECT_MANTISSPIT]       = {0,0},
-	[EFFECT_GIANTFOOTSTEP]    = {0.6f, 200},
-	[EFFECT_BIGDOORSMASH]     = {0.8f, 600},
+	[EFFECT_GIANTFOOTSTEP]    = {0.6f, .200},
+	[EFFECT_BIGDOORSMASH]     = {0.8f, .600},
 	[EFFECT_TRACTORBEAM]      = {0,0},
 	[EFFECT_PITCHERPAIN]      = {0,0},
 	[EFFECT_PITCHERPUKE]      = {0,0},
 	[EFFECT_FLYTRAP]          = {0,0},
-	[EFFECT_PITCHERBOOM]      = {1.0f, 1000},
+	[EFFECT_PITCHERBOOM]      = {1.0f, .1000},
 	[EFFECT_PODSHOOT]         = {0,0},
 	[EFFECT_PODBOOM]          = {0,0},
 
 	[EFFECT_VOLCANOBLOW]      = {0,0},
 	[EFFECT_METALHIT]         = {0,0},
 	[EFFECT_SWINGERDRONE]     = {0,0},
-	[EFFECT_METALHIT2]        = {1.0f, 250},
+	[EFFECT_METALHIT2]        = {1.0f, .250},
 	[EFFECT_SAUCERHATCH]      = {0,0},
-	[EFFECT_ICECRACK]         = {1.0f, 400},
+	[EFFECT_ICECRACK]         = {1.0f, .400},
 	[EFFECT_ROBOTEXPLODE]     = {0,0},
 	[EFFECT_HAMMERSQUEAK]     = {0,0},
 	[EFFECT_DRILLBOTWHINE]    = {0,0},
-	[EFFECT_DRILLBOTWHINEHI]  = {0.8f, 1500},
-	[EFFECT_PILLARCRUNCH]     = {0.8f, 200},
+	[EFFECT_DRILLBOTWHINEHI]  = {0.8f, .1500},
+	[EFFECT_PILLARCRUNCH]     = {0.8f, .200},
 	[EFFECT_ROCKETSLED2]      = {0,0},
 	[EFFECT_SPLATHIT]         = {0,0},
 	[EFFECT_SQUOOSHYSHOOT]    = {0,0},
-	[EFFECT_SLEDEXPLODE]      = {1.0f, 500},
+	[EFFECT_SLEDEXPLODE]      = {1.0f, .500},
 
-	[EFFECT_SAUCERKABOOM]     = {0.4f, 600},
-	[EFFECT_SAUCERHIT]        = {0.6f, 200},
+	[EFFECT_SAUCERKABOOM]     = {0.4f, .600},
+	[EFFECT_SAUCERHIT]        = {0.6f, .200},
 
 	[EFFECT_BRAINSTATIC]      = {0,0},
-	[EFFECT_BRAINBOSSSHOOT]   = {0.5f, 300},
+	[EFFECT_BRAINBOSSSHOOT]   = {0.5f, .300},
 	[EFFECT_BRAINBOSSDIE]     = {0,0},
-	[EFFECT_PORTALBOOM]       = {0.5f, 300},
+	[EFFECT_PORTALBOOM]       = {0.5f, .300},
 	[EFFECT_BRAINPAIN]        = {0,0},
 
 	[EFFECT_CONVEYORBELT]     = {0,0},
@@ -1243,10 +1246,27 @@ u_long			lv2,rv2;
 	gChannelInfo[theChan].rightVolume 	= rightVolume;
 
 			/* AUTO-RUMBLE */
-
-	if (kAutoRumbleTable[effectNum].force > 0)
+	
+	if (kAutoRumbleTable[effectNum].amplitude > 0)
 	{
-		Rumble(kAutoRumbleTable[effectNum].force, kAutoRumbleTable[effectNum].duration);
+		float amplitudeToRumble = kAutoRumbleTable[effectNum].amplitude;
+		float durationToRumble = kAutoRumbleTable[effectNum].durationSeconds;
+		float frequencyToRumble = kAutoRumbleTable[effectNum].frequency;
+		int handToVibrate = kAutoRumbleTable[effectNum].handToRumble;
+
+		// Set defaults:
+		// If no frequency is specified, default to this
+		if (!kAutoRumbleTable[effectNum].frequency)
+			frequencyToRumble = 200;
+
+		// If no hand is specificed, default to both
+		if (!kAutoRumbleTable[effectNum].handToRumble)
+			handToVibrate = vrBothVibrate;
+
+		printf("Rumbling with amplitude %f, frequency %f, duration %f\n", amplitudeToRumble, frequencyToRumble, durationToRumble);
+	
+
+		Rumble(amplitudeToRumble, durationToRumble, frequencyToRumble, handToVibrate);
 	}
 
 	return(theChan);										// return channel #

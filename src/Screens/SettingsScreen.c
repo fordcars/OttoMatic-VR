@@ -22,7 +22,7 @@ static void cb_SetRumble(void)
 {
 	if (gGamePrefs.gamepadRumble)
 	{
-		Rumble(1.0f, 500);
+		Rumble(1.0f, .500, 200, vrBothVibrate);
 	}
 }
 

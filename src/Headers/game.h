@@ -85,9 +85,14 @@ bool vrcpp_GetDigitalActionData(int actionToDo);
 // Get Action Data (see if triggered). This function is for analog (vector) actions only, no digital bools
 vrJoyPos vrcpp_GetAnalogActionData(int actionToDo);
 
-// Trigger a vibration event
+// HAPTIC TRIGGER
+//handToVibrate -> Wether to vibrate both hands or just 1
+//fStartSecondsFromNow -> When to start the haptic event
+//fDurationSeconds -> How long to trigger the haptic event for
+//fFrequency -> The frequency in cycles per second of the haptic event
+//fAmplitude -> The magnitude of the haptic event.This value must be between 0.0 and 1.0.
 void vrcpp_DoVibrationHaptics(int handToVibrate,
-	float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude);
+	float fDurationSeconds, float fFrequency, float fAmplitude);
 
 
 		/* EXTERNS */

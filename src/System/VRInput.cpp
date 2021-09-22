@@ -172,7 +172,7 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 }
 
 extern "C" void vrcpp_DoVibrationHaptics(int handToVibrate,
-	float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude)
+	float fDurationSeconds, float fFrequency, float fAmplitude)
 {
 	vr::VRInputValueHandle_t deviceRestriction;
 	switch (handToVibrate) {
@@ -189,11 +189,7 @@ extern "C" void vrcpp_DoVibrationHaptics(int handToVibrate,
 		printf("vrcpp_GetDigitalActionData called incorrectly");
 		return;
 	}
-	fStartSecondsFromNow; // When to start the haptic event
-	fDurationSeconds; // How long to trigger the haptic event for
-	fFrequency; // The frequency in cycles per second of the haptic event
-	fAmplitude; // The magnitude of the haptic event.This value must be between 0.0 and 1.0.
 
-	vr::VRInput()->TriggerHapticVibrationAction(vrActions.Vibration, fStartSecondsFromNow, fDurationSeconds, fFrequency, fAmplitude, deviceRestriction);
+	vr::VRInput()->TriggerHapticVibrationAction(vrActions.Vibration, 0, fDurationSeconds, fFrequency, fAmplitude, deviceRestriction);
 
 }

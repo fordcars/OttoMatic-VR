@@ -721,7 +721,7 @@ short	area = theNode->AreaNum;
 					PlayEffect_Parms3D(EFFECT_BUMPERHIT, &gCoord, NORMAL_CHANNEL_RATE + (q * (float)0x3000), q);
 
 					if (theNode == gPlayerCar || otherCar == gPlayerCar)
-						Rumble(0.5f, 250);
+						Rumble(0.5f, .250, 200, vrBothVibrate);
 				}
 			}
 

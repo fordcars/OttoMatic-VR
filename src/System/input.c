@@ -508,19 +508,10 @@ SDL_GameController* TryOpenController(bool showMessage)
 	return gSDLController;
 }
 
-void Rumble(float strength, uint32_t ms)
+void Rumble(float amplitude, float durationSeconds, float frequency, int handToVibrate)
 {
-	// All actions will vibrate both hands for now to test
-	vrcpp_DoVibrationHaptics(vrBothVibrate, 0, ms * 1000, 200, 0.5);
-	
-	if (NULL == gSDLController || !gGamePrefs.gamepadRumble)
-		return;
+	vrcpp_DoVibrationHaptics(handToVibrate, durationSeconds, frequency, amplitude);
 
-#if !(SDL_VERSION_ATLEAST(2,0,9))
-	#warning Rumble support requires SDL 2.0.9 or later
-#else
-	SDL_GameControllerRumble(gSDLController, (Uint16)(strength * 65535), (Uint16)(strength * 65535), ms);
-#endif
 }
 
 void OnJoystickRemoved(SDL_JoystickID which)
