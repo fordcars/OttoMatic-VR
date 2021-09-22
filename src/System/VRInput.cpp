@@ -19,6 +19,7 @@ struct VRActionHandlers
 	vr::VRActionHandle_t PreviousWeapon;
 	vr::VRActionHandle_t NextWeapon;
 	vr::VRActionHandle_t EscapeMenu;
+	vr::VRActionHandle_t Vibration;
 };
 
 static vr::VRInputValueHandle_t notRestrictedToHand = vr::k_ulInvalidInputValueHandle;
@@ -75,6 +76,7 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PreviousWeapon", &vrActions.PreviousWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/NextWeapon", &vrActions.NextWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/EscapeMenu", &vrActions.EscapeMenu);
+	vr::VRInput()->GetActionHandle("/actions/otto/out/Haptic", &vrActions.Vibration);
 
 
 	activeActionSet.ulActionSet = ottoVRactions;
@@ -173,4 +175,15 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 	else {
 		return false;
 	}
+}
+
+extern "C" void vrcpp_DoVibrationHaptics(
+	float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude) {
+	vr::VRActionHandle_t actionHandler = vrActions.Vibration; // The action to trigger
+	fStartSecondsFromNow; // When to start the haptic event
+	fDurationSeconds; // How long to trigger the haptic event for
+	fFrequency; // The frequency in cycles per second of the haptic event
+	fAmplitude; // The magnitude of the haptic event.This value must be between 0.0 and 1.0.
+	
+	vr::VRInput()->TriggerHapticVibrationAction(actionHandler, fStartSecondsFromNow, fDurationSeconds, fFrequency, fAmplitude, notRestrictedToHand);
 }

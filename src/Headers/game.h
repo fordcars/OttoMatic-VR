@@ -85,6 +85,9 @@ bool vrcpp_GetDigitalActionData(int actionToDo);
 // Get Action Data (see if triggered). This function is for analog (vector) actions only, no digital bools
 vrJoyPos vrcpp_GetAnalogActionData(int actionToDo);
 
+// Trigger a vibration event
+void vrcpp_DoVibrationHaptics(float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude);
+
 
 		/* EXTERNS */
 extern	BG3DFileContainer		*gBG3DContainerList[];
