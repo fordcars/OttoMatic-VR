@@ -125,6 +125,10 @@ static	float	gMenuLogoFadeAlpha;
 
 static 	Boolean	gFadeInText,gTextDone,gFadeInIconString,gHideIconString;
 
+static Boolean menuControlAllowed = true;
+
+static int frameCounter;
+
 
 /********************** DO MAINMENU SCREEN ***********************/
 
@@ -1099,35 +1103,46 @@ static Boolean DoMainMenuControl(void)
 			/* HANDLE MENU */
 			/***************/
 
+	float	minFramesBetweenActions = gFramesPerSecond /2;
+
 	if (gSaturn)
 	{
 			/* SPIN LEFT */
 
-		if (GetNewNeedState(kNeed_UILeft) || GetNewNeedState(kNeed_UINext))
+		if (GetNewNeedState(kNeed_UILeft) || GetNewNeedState(kNeed_UINext)
+			|| vrcpp_GetAnalogActionData(vrMoveXY).x >= 0.4)
 		{
-			PlayEffect(EFFECT_MENUCHANGE);
-			gTargetRot -= PI2 / (float)NUM_SELECTIONS;
-			gSelection--;
-			if (gSelection < 0)
-				gSelection = NUM_SELECTIONS-1;
-			gFadeInIconString = false;
+			if (frameCounter >= minFramesBetweenActions) {
+				PlayEffect(EFFECT_MENUCHANGE);
+				gTargetRot -= PI2 / (float)NUM_SELECTIONS;
+				gSelection--;
+				if (gSelection < 0)
+					gSelection = NUM_SELECTIONS - 1;
+				gFadeInIconString = false;
+				frameCounter = 0;
+			}
 		}
 				/* SPIN RIGHT */
 
 		else
-		if (GetNewNeedState(kNeed_UIRight) || GetNewNeedState(kNeed_UIPrev))
+		if (GetNewNeedState(kNeed_UIRight) || GetNewNeedState(kNeed_UIPrev)
+			|| vrcpp_GetAnalogActionData(vrMoveXY).x <= -0.4)
 		{
-			PlayEffect(EFFECT_MENUCHANGE);
-			gTargetRot += PI2 / (float)NUM_SELECTIONS;
-			gSelection++;
-			if (gSelection == NUM_SELECTIONS)
-				gSelection = 0;
-			gFadeInIconString = false;
+			if (frameCounter >= minFramesBetweenActions) {
+				PlayEffect(EFFECT_MENUCHANGE);
+				gTargetRot += PI2 / (float)NUM_SELECTIONS;
+				gSelection++;
+				if (gSelection == NUM_SELECTIONS)
+					gSelection = 0;
+				gFadeInIconString = false;
+				frameCounter = 0;
+			}
 		}
+		
 
 				/* MAKE SELECTION */
 		else
-		if (GetNewNeedState(kNeed_UIConfirm) || GetNewNeedState(kNeed_UIStart))
+		if (GetNewNeedState(kNeed_UIConfirm) || GetNewNeedState(kNeed_UIStart) || vrcpp_GetDigitalActionData(vrShoot))
 		{
 			gHideIconString = true;
 
@@ -1187,6 +1202,14 @@ static Boolean DoMainMenuControl(void)
 
 			gHideIconString = false;
 		}
+		// Add 1 to the frame counter and cap it at the max reasonable fps
+		if (frameCounter >= minFramesBetweenActions * 2.5) {
+			frameCounter = minFramesBetweenActions * 2.5;
+		}
+		else {
+			frameCounter++;
+		}
+		// printf("MenuFrame#: %i & MinimumFrame %f\n", frameCounter, minFramesBetweenActions);
 	}
 		/***************/
 		/* ABORT INTRO */

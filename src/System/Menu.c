@@ -472,7 +472,8 @@ static void NavigateAction(const MenuItem* entry)
 
 static void NavigatePick(const MenuItem* entry)
 {
-	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT)))
+	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT))
+		|| vrcpp_GetDigitalActionData(vrShoot))
 	{
 		gMenuPick = entry->pick;
 
@@ -657,13 +658,13 @@ static void NavigateMenu(void)
 {
 	GAME_ASSERT(gMenuStyle->isInteractive);
 
-	if (GetNewNeedState(kNeed_UIBack))
+	if (GetNewNeedState(kNeed_UIBack) || vrcpp_GetDigitalActionData(vrEscapeMenu))
 		MenuCallback_Back();
 
-	if (GetNewNeedState(kNeed_UIUp))
+	if (GetNewNeedState(kNeed_UIUp) || vrcpp_GetDigitalActionData(vrPreviousWeapon))
 		NavigateSettingEntriesVertically(-1);
 
-	if (GetNewNeedState(kNeed_UIDown))
+	if (GetNewNeedState(kNeed_UIDown) || vrcpp_GetDigitalActionData(vrNextWeapon))
 		NavigateSettingEntriesVertically(1);
 
 	NavigateSettingEntriesMouseHover();
