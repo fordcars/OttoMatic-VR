@@ -3,18 +3,17 @@
 // This is used for calling Get*ActionData, to tell SteamVR Input which control triggered
 enum playerActions
 {
-	vrGoForward = 0,
-	vrGoBackward,
-	vrGoLeft,
-	vrGoRight,
-	vrMoveXY,
+	vrMoveXY = 0,
 	vrCameraXY,
 	vrJump,
 	vrShoot,
 	vrPunchOrPickUp,
 	vrPreviousWeapon,
 	vrNextWeapon,
-	vrEscapeMenu
+	vrEscapeMenu,
+	vrLeftVibrate,
+	vrRightVibrate,
+	vrBothVibrate
 };
 
 typedef struct

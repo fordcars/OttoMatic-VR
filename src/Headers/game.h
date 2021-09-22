@@ -86,7 +86,8 @@ bool vrcpp_GetDigitalActionData(int actionToDo);
 vrJoyPos vrcpp_GetAnalogActionData(int actionToDo);
 
 // Trigger a vibration event
-void vrcpp_DoVibrationHaptics(float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude);
+void vrcpp_DoVibrationHaptics(int handToVibrate,
+	float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude);
 
 
 		/* EXTERNS */

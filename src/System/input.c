@@ -510,6 +510,9 @@ SDL_GameController* TryOpenController(bool showMessage)
 
 void Rumble(float strength, uint32_t ms)
 {
+	// All actions will vibrate both hands for now to test
+	vrcpp_DoVibrationHaptics(vrBothVibrate, 0, ms * 1000, 200, 0.5);
+	
 	if (NULL == gSDLController || !gGamePrefs.gamepadRumble)
 		return;
 

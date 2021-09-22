@@ -5,12 +5,8 @@
 #include <SDL_filesystem.h>
 
 
-struct VRActionHandlers
+struct VRActionHandlers // vrActions is an instance of this
 {
-	vr::VRActionHandle_t GoForward;
-	vr::VRActionHandle_t GoBackward;
-	vr::VRActionHandle_t GoLeft;
-	vr::VRActionHandle_t GoRight;
 	vr::VRActionHandle_t MoveXY;
 	vr::VRActionHandle_t CameraXY;
 	vr::VRActionHandle_t Jump;
@@ -23,16 +19,15 @@ struct VRActionHandlers
 };
 
 static vr::VRInputValueHandle_t notRestrictedToHand = vr::k_ulInvalidInputValueHandle;
+static vr::VRInputValueHandle_t rightHandOnly;
+static vr::VRInputValueHandle_t leftHandOnly;
 
 static VRActionHandlers vrActions{}; // init
 static vr::VRActionSetHandle_t ottoVRactions;
 
 static vr::VRActiveActionSet_t activeActionSet;
 
-static vr::InputAnalogActionData_t goForwardAction{};
-static vr::InputAnalogActionData_t goBackwardAction{};
-static vr::InputAnalogActionData_t goLeftAction{};
-static vr::InputAnalogActionData_t goRightAction{};
+
 static vr::InputAnalogActionData_t moveXYAction{};
 static vr::InputAnalogActionData_t cameraXYAction{};
 static vr::InputDigitalActionData_t jumpAction{};
@@ -59,10 +54,6 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 	}
 
 
-	vr::VRInput()->GetActionHandle("/actions/otto/in/GoForward", &vrActions.GoForward);
-	vr::VRInput()->GetActionHandle("/actions/otto/in/GoBackward", &vrActions.GoBackward);
-	vr::VRInput()->GetActionHandle("/actions/otto/in/GoLeft", &vrActions.GoLeft);
-	vr::VRInput()->GetActionHandle("/actions/otto/in/GoRight", &vrActions.GoRight);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/MoveXY", &vrActions.MoveXY);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/CameraXY", &vrActions.CameraXY);
 	error = vr::VRInput()->GetActionHandle("/actions/otto/in/Jump", &vrActions.Jump);
@@ -77,6 +68,9 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 	vr::VRInput()->GetActionHandle("/actions/otto/in/NextWeapon", &vrActions.NextWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/EscapeMenu", &vrActions.EscapeMenu);
 	vr::VRInput()->GetActionHandle("/actions/otto/out/Haptic", &vrActions.Vibration);
+
+	vr::VRInput()->GetInputSourceHandle("/user/hand/left", &leftHandOnly);
+	vr::VRInput()->GetInputSourceHandle("/user/hand/right", &rightHandOnly);
 
 
 	activeActionSet.ulActionSet = ottoVRactions;
@@ -177,13 +171,29 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 	}
 }
 
-extern "C" void vrcpp_DoVibrationHaptics(
-	float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude) {
-	vr::VRActionHandle_t actionHandler = vrActions.Vibration; // The action to trigger
+extern "C" void vrcpp_DoVibrationHaptics(int handToVibrate,
+	float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude)
+{
+	vr::VRInputValueHandle_t deviceRestriction;
+	switch (handToVibrate) {
+	case playerActions::vrLeftVibrate:
+		deviceRestriction = leftHandOnly;
+		break;
+	case playerActions::vrRightVibrate:
+		deviceRestriction = rightHandOnly;
+		break;
+	case playerActions::vrBothVibrate:
+		deviceRestriction = notRestrictedToHand;
+		break;
+	default:
+		printf("vrcpp_GetDigitalActionData called incorrectly");
+		return;
+	}
 	fStartSecondsFromNow; // When to start the haptic event
 	fDurationSeconds; // How long to trigger the haptic event for
 	fFrequency; // The frequency in cycles per second of the haptic event
 	fAmplitude; // The magnitude of the haptic event.This value must be between 0.0 and 1.0.
-	
-	vr::VRInput()->TriggerHapticVibrationAction(actionHandler, fStartSecondsFromNow, fDurationSeconds, fFrequency, fAmplitude, notRestrictedToHand);
+
+	vr::VRInput()->TriggerHapticVibrationAction(vrActions.Vibration, fStartSecondsFromNow, fDurationSeconds, fFrequency, fAmplitude, deviceRestriction);
+
 }
