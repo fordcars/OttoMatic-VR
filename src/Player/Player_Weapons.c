@@ -87,6 +87,9 @@ const OGLPoint3D antennaROff = {40,45,12};
 static SuperNovaTargetType	gSuperNovaTargets[MAX_SUPERNOVA_DISCHARGES];
 float		gDischargeTimer;
 
+bool gunShotVR = false;
+bool gunShotVRblocked = false;
+
 
 #define	DelayToSeek		SpecialF[0]									// timer for seeking flares
 
@@ -150,9 +153,24 @@ void CheckPOWControls(ObjNode *theNode)
 {
 		/* SEE IF SHOOT GUN */
 
-	if (GetNewNeedState(kNeed_Shoot) || vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault)					// see if user pressed the key
+	// Prevent multi-fire while trigger is held
+	if (vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault) // Trigger pressed
+	{
+		gunShotVR = true;
+	}
+	else {
+		gunShotVR = false;
+	}
+	if (vrcpp_GetAnalogActionData(vrShoot).x <= 0.2) // Must almost release trigger to reshoot
+	{
+		gunShotVRblocked = false;
+	}
+
+	// Do the shot
+	if (GetNewNeedState(kNeed_Shoot) || (gunShotVR && !gunShotVRblocked))					// see if user pressed the key
 	{
 		ShootWeapon(theNode);
+		gunShotVRblocked = true; // Prevent double fire
 	}
 
 		/* SEE IF PUNCH / PICKUP */
