@@ -229,6 +229,7 @@ typedef struct
 	float					fov,hither,yon;
 	Boolean					useFog;
 	Boolean					clearBackBuffer;
+	Boolean					renderLeftEye;
 }OGLSetupOutputType;
 
 
