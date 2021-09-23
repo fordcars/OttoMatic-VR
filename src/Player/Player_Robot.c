@@ -3361,7 +3361,7 @@ OGLMatrix3x3	m;
 			|| GetNewNeedState(kNeed_Shoot)
 			|| GetNewNeedState(kNeed_PunchPickup)
 			|| vrcpp_GetDigitalActionData(vrJump)
-			|| vrcpp_GetDigitalActionData(vrShoot)
+			|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault
 			|| vrcpp_GetDigitalActionData(vrPunchOrPickUp)
 			)
 		{

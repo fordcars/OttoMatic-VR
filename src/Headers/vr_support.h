@@ -16,6 +16,8 @@ enum playerActions
 	vrBothVibrate
 };
 
+#define VRminimumTriggerDefault 0.7f // How far the trigger has to be pulled for most trigger actions
+
 typedef struct
 {
 	float x;

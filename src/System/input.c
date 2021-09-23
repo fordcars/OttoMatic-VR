@@ -330,8 +330,8 @@ void UpdateInput(void)
 
 		gPlayerInfo.analogControlZ = -VRpositionY;
 		gPlayerInfo.strafeControlX = VRpostionX;
-		printf("X (LEFT RIGHT): %f                  ", VRpostionX);
-		printf("Y (FORE BACK): %f                   ", -VRpositionY);
+		printf("X (LEFT RIGHT): %f\n", VRpostionX);
+		printf("Y (FORE BACK): %f\n", -VRpositionY);
 	}
 
 
@@ -433,7 +433,7 @@ Boolean UserWantsOut(void)
 		|| GetNewNeedState(kNeed_UIStart)
 		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp)
 		|| vrcpp_GetDigitalActionData(vrJump)
-		|| vrcpp_GetDigitalActionData(vrShoot)
+		|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault
 		|| FlushMouseButtonPress(SDL_BUTTON_LEFT);
 }
 

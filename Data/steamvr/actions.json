@@ -17,12 +17,12 @@
       "type": "vector2"
     },
     {
-      "name": "/actions/otto/in/Jump",
+      "name": "/actions/otto/in/Shoot",
       "requirement": "optional",
-      "type": "boolean"
+      "type": "vector1"
     },
     {
-      "name": "/actions/otto/in/Shoot",
+      "name": "/actions/otto/in/Jump",
       "requirement": "optional",
       "type": "boolean"
     },

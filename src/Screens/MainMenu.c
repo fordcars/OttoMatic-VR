@@ -1146,7 +1146,7 @@ static Boolean DoMainMenuControl(void)
 
 				/* MAKE SELECTION */
 		else
-		if (GetNewNeedState(kNeed_UIConfirm) || GetNewNeedState(kNeed_UIStart) || vrcpp_GetDigitalActionData(vrShoot))
+		if (GetNewNeedState(kNeed_UIConfirm) || GetNewNeedState(kNeed_UIStart) || vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault)
 		{
 			gHideIconString = true;
 

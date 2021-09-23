@@ -9,8 +9,8 @@ struct VRActionHandlers // vrActions is an instance of this
 {
 	vr::VRActionHandle_t MoveXY;
 	vr::VRActionHandle_t CameraXY;
-	vr::VRActionHandle_t Jump;
 	vr::VRActionHandle_t Shoot;
+	vr::VRActionHandle_t Jump;
 	vr::VRActionHandle_t PunchOrPickUp;
 	vr::VRActionHandle_t PreviousWeapon;
 	vr::VRActionHandle_t NextWeapon;
@@ -30,8 +30,8 @@ static vr::VRActiveActionSet_t activeActionSet;
 
 static vr::InputAnalogActionData_t moveXYAction{};
 static vr::InputAnalogActionData_t cameraXYAction{};
+static vr::InputAnalogActionData_t shootAction{};
 static vr::InputDigitalActionData_t jumpAction{};
-static vr::InputDigitalActionData_t shootAction{};
 static vr::InputDigitalActionData_t punchOrPickupAction{};
 static vr::InputDigitalActionData_t nextWeaponAction{};
 static vr::InputDigitalActionData_t previousWeaponAction{};
@@ -56,13 +56,13 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 
 	vr::VRInput()->GetActionHandle("/actions/otto/in/MoveXY", &vrActions.MoveXY);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/CameraXY", &vrActions.CameraXY);
+	vr::VRInput()->GetActionHandle("/actions/otto/in/Shoot", &vrActions.Shoot);
 	error = vr::VRInput()->GetActionHandle("/actions/otto/in/Jump", &vrActions.Jump);
 	if (error != vr::EVRInputError::VRInputError_None)
 	{
 		std::cerr << "GetActionHandle error.\n";
 		printf("GetActionHandle error.\n");
 	}
-	vr::VRInput()->GetActionHandle("/actions/otto/in/Shoot", &vrActions.Shoot);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PunchOrPickup", &vrActions.PunchOrPickUp);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PreviousWeapon", &vrActions.PreviousWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/NextWeapon", &vrActions.NextWeapon);
@@ -100,6 +100,10 @@ extern "C" vrJoyPos vrcpp_GetAnalogActionData(int actionToDo) {
 		actionHandler = vrActions.MoveXY;
 		actionDataStruct = moveXYAction;
 		break;
+	case playerActions::vrShoot:
+		actionHandler = vrActions.Shoot;
+		actionDataStruct = shootAction;
+		break;
 	default:
 		printf("vrcpp_GetAnalogActionData called incorrectly");
 		return { 0,0 };
@@ -131,10 +135,6 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 	case playerActions::vrJump:
 		actionHandler = vrActions.Jump;
 		actionDataStruct = jumpAction;
-		break;
-	case playerActions::vrShoot:
-		actionHandler = vrActions.Shoot;
-		actionDataStruct = shootAction;
 		break;
 	case playerActions::vrPunchOrPickUp:
 		actionHandler = vrActions.PunchOrPickUp;

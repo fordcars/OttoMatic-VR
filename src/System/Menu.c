@@ -473,7 +473,7 @@ static void NavigateAction(const MenuItem* entry)
 static void NavigatePick(const MenuItem* entry)
 {
 	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT))
-		|| vrcpp_GetDigitalActionData(vrShoot))
+		|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault)
 	{
 		gMenuPick = entry->pick;
 
