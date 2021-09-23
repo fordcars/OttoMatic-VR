@@ -317,7 +317,7 @@ static const AutoRumbleDef kAutoRumbleTable[] =
 	[EFFECT_LEFTFOOT]         = {0,0},
 	[EFFECT_RIGHTFOOT]        = {0,0},
 	[EFFECT_NOVACHARGE]       = {0,0},
-	[EFFECT_TELEPORTHUMAN]    = {0.2f, .800, 50}, // tweaked VR
+	[EFFECT_TELEPORTHUMAN]    = {0.1f, .800, 80}, // tweaked VR
 	[EFFECT_CHECKPOINTHIT]    = {0,0},
 	[EFFECT_CHECKPOINTLOOP]   = {0,0},
 	[EFFECT_FLARESHOOT]       = {0.8f, .150},
@@ -350,14 +350,14 @@ static const AutoRumbleDef kAutoRumbleTable[] =
 
 	[EFFECT_POPCORN]          = {0,0},
 	[EFFECT_SHOOTCORN]        = {0,0},
-	[EFFECT_METALGATEHIT]     = {0.6f, .300},
-	[EFFECT_METALGATECRASH]   = {0.8f, .500},
+	[EFFECT_METALGATEHIT]     = {0,0},
+	[EFFECT_METALGATECRASH]   = {1.0f, .300, 150}, // tweaked VR
 	[EFFECT_TRACTOR]          = {0,0},
 	[EFFECT_ONIONSWOOSH]      = {0,0},
 	[EFFECT_WOODGATECRASH]    = {1.0f, .300, 120}, // tweaked VR
 	[EFFECT_TOMATOJUMP]       = {0,0},
 	[EFFECT_TOMATOSPLAT]      = {0,0},
-	[EFFECT_WOODDOORHIT]      = {0.6f, .300},
+	[EFFECT_WOODDOORHIT]      = {0,0},
 	[EFFECT_ONIONSPLAT]       = {0,0},
 	[EFFECT_CORNCRUNCH]       = {0,0},
 
