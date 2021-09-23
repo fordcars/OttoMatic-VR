@@ -519,6 +519,43 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 	setupInfo->renderLeftEye = false;
 	OGL_DrawEye(setupInfo, drawRoutine);
 
+
+
+
+	vr::TrackedDevicePose_t trackedDevicePose;
+	gIVRSystem->GetDeviceToAbsoluteTrackingPose(
+		vr::TrackingUniverseStanding, 0, &trackedDevicePose, 1);
+
+	vr::HmdMatrix34_t matrix = trackedDevicePose.mDeviceToAbsoluteTracking;
+
+	vr::HmdVector3_t vector;
+	vector.v[0] = matrix.m[0][3];
+	vector.v[1] = matrix.m[1][3];
+	vector.v[2] = matrix.m[2][3];
+
+	std::cout << "POS X: " << vector.v[0] << "  ";
+	std::cout << "POS Y: " << vector.v[1] << "  ";
+	std::cout << "POS Z: " << vector.v[2] << "\n\n\n\n";
+
+
+	vr::HmdQuaternion_t q;
+	q.w = sqrt(fmax(0, 1 + matrix.m[0][0] + matrix.m[1][1] + matrix.m[2][2])) / 2;
+	q.x = sqrt(fmax(0, 1 + matrix.m[0][0] - matrix.m[1][1] - matrix.m[2][2])) / 2;
+	q.y = sqrt(fmax(0, 1 - matrix.m[0][0] + matrix.m[1][1] - matrix.m[2][2])) / 2;
+	q.z = sqrt(fmax(0, 1 - matrix.m[0][0] - matrix.m[1][1] + matrix.m[2][2])) / 2;
+	q.x = copysign(q.x, matrix.m[2][1] - matrix.m[1][2]);
+	q.y = copysign(q.y, matrix.m[0][2] - matrix.m[2][0]);
+	q.z = copysign(q.z, matrix.m[1][0] - matrix.m[0][1]);
+
+	std::cout << "ROT X: " << q.x << "  ";
+	std::cout << "ROT Y: " << q.y << "  ";
+	std::cout << "ROT Z: " << q.z << "\n\n\n\n";
+
+
+
+
+
+
 	if(glGetError() != GL_NO_ERROR)
 		throw std::runtime_error("GL ERROR AFTER CALLLL");
 
