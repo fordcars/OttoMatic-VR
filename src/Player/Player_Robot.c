@@ -10,6 +10,7 @@
 /****************************/
 
 #include "game.h"
+#include "vr_support.h"
 
 /****************************/
 /*    PROTOTYPES            */
@@ -1963,15 +1964,23 @@ Boolean				killed = false;
 
 	if (true) // (Gives better mouse control?) Seems to prevent player from turning when colliding 
 	{
-		float	sens;
+		float	mouseRotationPlayer;
+		float   VRpostionX;
 
-		// analogControlX is mouse only now
-		sens = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN;
-		
-		sens *= 0.5f; // sensitivity for turning camera (horizontally)
+		if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
+			// Only do mouse movement if not moving VR joystick
+			// analogControlX is mouse only now, no keyboard (controls where player is looking / where he is facing)
+			mouseRotationPlayer = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN *0.5f;
 
-		theNode->Rot.y -= sens; // Set rotate view (view follows robot rot) with analogControl (mouse)
-
+			theNode->Rot.y -= mouseRotationPlayer; // Set rotate view (view follows robot rot) with analogControl (mouse)
+		}
+		else {
+			// If here, VR joystick is moving
+			VRpostionX = vrcpp_GetAnalogActionData(vrCameraXY).x;
+			VRpostionX /= 30; // Reduce for sensitivty
+			theNode->Rot.y -= VRpostionX;
+			printf("ROTATE X: %f                  ", VRpostionX);
+		}
 
 		float	strafe = 0.0f, movement = 0.0f;
 
@@ -2877,7 +2886,7 @@ static void CheckPlayerActionControls(ObjNode *theNode)
 			/* SEE IF JUMP */
 			/***************/
 
-	if (GetNewNeedState(kNeed_Jump))										// see if user pressed the key
+	if (GetNewNeedState(kNeed_Jump) || vrcpp_GetDigitalActionData(vrJump, false))										// see if user pressed the key
 	{
 		/* SEE IF ENTER CANNON ON CLOUD LEVEL */
 
@@ -3350,7 +3359,11 @@ OGLMatrix3x3	m;
 	{
 		if (GetNewNeedState(kNeed_Jump)
 			|| GetNewNeedState(kNeed_Shoot)
-			|| GetNewNeedState(kNeed_PunchPickup))
+			|| GetNewNeedState(kNeed_PunchPickup)
+			|| vrcpp_GetDigitalActionData(vrJump, false)
+			|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault
+			|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, false)
+			)
 		{
 			DisableHelpType(HELP_MESSAGE_LETGOMAGNET);							// player has figured it out, so don't show this anymore
 

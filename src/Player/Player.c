@@ -289,7 +289,7 @@ Boolean	killed = false;
 	}
 	else
 	{
-		Rumble(0.8f, 300);
+		Rumble(0.8f, .300, 200, vrBothVibrate);
 	}
 
 
