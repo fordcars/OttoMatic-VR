@@ -708,9 +708,9 @@ float	s;
 		|| GetNewNeedState(kNeed_Jump)
 		|| GetNewNeedState(kNeed_Shoot)
 		|| GetNewNeedState(kNeed_PunchPickup)
-		|| vrcpp_GetDigitalActionData(vrJump)
+		|| vrcpp_GetDigitalActionData(vrJump, false)
 		|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault
-		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp))
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, false))
 	{
 		PopSoapBubble(bubble);
 		return;

@@ -2886,7 +2886,7 @@ static void CheckPlayerActionControls(ObjNode *theNode)
 			/* SEE IF JUMP */
 			/***************/
 
-	if (GetNewNeedState(kNeed_Jump) || vrcpp_GetDigitalActionData(vrJump))										// see if user pressed the key
+	if (GetNewNeedState(kNeed_Jump) || vrcpp_GetDigitalActionData(vrJump, false))										// see if user pressed the key
 	{
 		/* SEE IF ENTER CANNON ON CLOUD LEVEL */
 
@@ -3360,9 +3360,9 @@ OGLMatrix3x3	m;
 		if (GetNewNeedState(kNeed_Jump)
 			|| GetNewNeedState(kNeed_Shoot)
 			|| GetNewNeedState(kNeed_PunchPickup)
-			|| vrcpp_GetDigitalActionData(vrJump)
+			|| vrcpp_GetDigitalActionData(vrJump, false)
 			|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault
-			|| vrcpp_GetDigitalActionData(vrPunchOrPickUp)
+			|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, false)
 			)
 		{
 			DisableHelpType(HELP_MESSAGE_LETGOMAGNET);							// player has figured it out, so don't show this anymore

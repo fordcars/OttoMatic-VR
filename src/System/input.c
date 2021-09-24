@@ -336,14 +336,16 @@ void UpdateInput(void)
 
 
 		/* CHECK IF VR WANTS TO PAUSE GAME */
-
-	if (vrcpp_GetDigitalActionData(vrEscapeMenu))
-	{
-		if (gGamePaused) {
-			gGameIsPausedVR = false; // If game is already paused, the pause key should tell it to unpause
-		}
-		else {
-			gGameIsPausedVR = true; // If here, the pause key was pressed but the game was not paused when the press occured
+	
+	if (!gPlayerInMainMenu) { // Don't check when in main menu or the game will auto-pause as soon as it starts
+		if (vrcpp_GetDigitalActionData(vrEscapeMenu, true))
+		{
+			if (gGamePaused) {
+				gGameIsPausedVR = false; // If game is already paused, the pause key should tell it to unpause
+			}
+			else {
+				gGameIsPausedVR = true; // If here, the pause key was pressed but the game was not paused when the press occured
+			}
 		}
 	}
 
@@ -431,9 +433,8 @@ Boolean UserWantsOut(void)
 	return GetNewNeedState(kNeed_UIConfirm)
 		|| GetNewNeedState(kNeed_UIBack)
 		|| GetNewNeedState(kNeed_UIStart)
-		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp)
-		|| vrcpp_GetDigitalActionData(vrJump)
-		|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, true)
+		|| vrcpp_GetDigitalActionData(vrJump, true)
 		|| FlushMouseButtonPress(SDL_BUTTON_LEFT);
 }
 

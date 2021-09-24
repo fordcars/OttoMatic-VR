@@ -134,12 +134,12 @@ int	i;
 
 void CheckWeaponChangeControls(ObjNode* theNode)
 {
-	if (GetNewNeedState(kNeed_NextWeapon) || vrcpp_GetDigitalActionData(vrNextWeapon))
+	if (GetNewNeedState(kNeed_NextWeapon) || vrcpp_GetDigitalActionData(vrNextWeapon, false))
 	{
 		int i = FindWeaponInventoryIndex(gPlayerInfo.currentWeaponType);	// get current into inventory list
 		ChangeWeapons(i, 1, false);
 	}
-	else if (GetNewNeedState(kNeed_PrevWeapon) || vrcpp_GetDigitalActionData(vrPreviousWeapon))
+	else if (GetNewNeedState(kNeed_PrevWeapon) || vrcpp_GetDigitalActionData(vrPreviousWeapon, false))
 	{
 		int i = FindWeaponInventoryIndex(gPlayerInfo.currentWeaponType);	// get current into inventory list
 		ChangeWeapons(i, -1, false);
@@ -176,7 +176,7 @@ void CheckPOWControls(ObjNode *theNode)
 		/* SEE IF PUNCH / PICKUP */
 
 	else
-	if (GetNewNeedState(kNeed_PunchPickup) || vrcpp_GetDigitalActionData(vrPunchOrPickUp))
+	if (GetNewNeedState(kNeed_PunchPickup) || vrcpp_GetDigitalActionData(vrPunchOrPickUp, false))
 	{
 		if (!SeeIfDoPickup(theNode))						// if not picking up then punching
 		{

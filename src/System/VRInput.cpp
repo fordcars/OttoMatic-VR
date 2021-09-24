@@ -112,7 +112,7 @@ extern "C" vrJoyPos vrcpp_GetAnalogActionData(int actionToDo) {
 	// Get the state of the action
 	vr::VRInput()->GetAnalogActionData(actionHandler, &actionDataStruct, sizeof(actionDataStruct), notRestrictedToHand);
 	if (!actionDataStruct.bActive) {
-		printf("GetAnalogActionData Problem, available to be bound: no\n"); // If this is printed, something wrong
+		// printf("GetAnalogActionData Problem, available to be bound: no\n"); // If this is printed, something wrong
 	}
 
 	// If any movement on any axis, return something other than 0
@@ -128,7 +128,7 @@ extern "C" vrJoyPos vrcpp_GetAnalogActionData(int actionToDo) {
 
 
 
-extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
+extern "C" bool vrcpp_GetDigitalActionData(int actionToDo, bool preventPressAndHold) {
 	vr::VRActionHandle_t actionHandler;
 	vr::InputDigitalActionData_t actionDataStruct;
 	switch (actionToDo) {
@@ -160,11 +160,24 @@ extern "C" bool vrcpp_GetDigitalActionData(int actionToDo) {
 	// Get the state of the action
 	vr::VRInput()->GetDigitalActionData(actionHandler, &actionDataStruct, sizeof(actionDataStruct), notRestrictedToHand);
 	if (!actionDataStruct.bActive) {
-		printf("vrcpp_GetDigitalActionData Problem, available to be bound: no\n"); // If this is printed, something wrong
+		// printf("vrcpp_GetDigitalActionData Problem, available to be bound: no\n"); // If this is printed, something wrong
 	}
 	if (actionDataStruct.bState && actionDataStruct.bChanged) {
 		// printf("Changed\n"); // Use to test, prints if command detects
-		return true;
+		if (preventPressAndHold) {
+			if (actionDataStruct.fUpdateTime >= -0.02) {
+				printf("Update Time %f is >= -0.02, command allowed\n", actionDataStruct.fUpdateTime);
+				return true;
+			}
+			else {
+				printf("Update Time %f is < -0.02, BLOCKED, potential press & hold\n", actionDataStruct.fUpdateTime);
+				return false;
+			}
+		}
+		else {
+			// If not preventing pressAndHold, return true here since button state pressed
+			return true;
+		}
 	}
 	else {
 		return false;

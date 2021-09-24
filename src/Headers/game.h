@@ -79,8 +79,10 @@ void vrcpp_initSteamVRInput(void);
 // After this call, the results of Get*ActionData calls will be the same until the next call to UpdateActionState
 void vrcpp_UpdateActionState(void);
 
-// Get Action Data (see if triggered). This function is for boolean (toggle) actions only, no vec
-bool vrcpp_GetDigitalActionData(int actionToDo);
+// Check if a IVRInput button is pressed
+// actionToDo  ->   the button (enum)
+// preventPressAndHold  ->   prevent old actions, should be false for most game actions but true for most menus
+bool vrcpp_GetDigitalActionData(int actionToDo, bool preventPressAndHold);
 
 // Get Action Data (see if triggered). This function is for analog (vector) actions only, no digital bools
 vrJoyPos vrcpp_GetAnalogActionData(int actionToDo);
@@ -104,6 +106,7 @@ extern	Boolean					gBumperCarGateBlown[];
 extern	Boolean					gDisableAnimSounds;
 extern	Boolean					gDisableHiccupTimer;
 extern	Boolean					gDoDeathExit;
+extern  Boolean                 gPlayerInMainMenu;
 extern	Boolean					gDoJumpJetAtApex;
 extern	Boolean					gDrawLensFlare;
 extern	Boolean					gExplodePlayerAfterElectrocute;
