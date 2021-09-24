@@ -25,7 +25,7 @@ extern vr::IVRSystem *gIVRSystem;
 
 static void OGL_InitFont(void);
 
-static void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *), bool leftEye);
+static void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *));
 static void OGL_CreateDrawContext(OGLViewDefType *viewDefPtr);
 static void OGL_SetStyles(OGLSetupInputType *setupDefPtr);
 static void OGL_CreateLights(OGLLightDefType *lightDefPtr);
@@ -208,6 +208,7 @@ OGLSetupOutputType	*outputPtr;
 	outputPtr->yon 				= setupDefPtr->camera.yon;
 	outputPtr->useFog 			= setupDefPtr->styles.useFog;
 	outputPtr->clearBackBuffer 	= setupDefPtr->view.clearBackBuffer;
+	outputPtr->renderLeftEye = true;
 
 	outputPtr->isActive = true;											// it's now an active structure
 
@@ -513,8 +514,10 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 	vr::VRCompositor()->WaitGetPoses(gTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 	// Render VR first
-	OGL_DrawEye(setupInfo, drawRoutine, true);
-	//OGL_DrawEye(setupInfo, drawRoutine, false);
+	setupInfo->renderLeftEye = true;
+	OGL_DrawEye(setupInfo, drawRoutine);
+	setupInfo->renderLeftEye = false;
+	OGL_DrawEye(setupInfo, drawRoutine);
 
 	if(glGetError() != GL_NO_ERROR)
 		throw std::runtime_error("GL ERROR AFTER CALLLL");
@@ -776,7 +779,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 
 /******************* OGL DRAW EYE *********************/
 // If leftEye is false, will draw right eye.
-void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *), bool leftEye)
+void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *))
 {
 	if (setupInfo == nil)										// make sure it's legit
 		DoFatalAlert("OGL_DrawEye setupInfo == nil");
@@ -866,7 +869,7 @@ void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutp
 	GLint oldTexture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTexture);
 
-	if(leftEye)
+	if(setupInfo->renderLeftEye)
 		glBindTexture(GL_TEXTURE_2D, gLeftEyeTexture);
 	else
 		glBindTexture(GL_TEXTURE_2D, gRightEyeTexture);

@@ -653,14 +653,18 @@ Boolean	warningOn;
 	if (warningOn)												// see if wobble
 	{
 		xoff = sin(gHealthWarningWobble) * 4.0f;
-		gHealthWarningWobble += fps * 25.0f;
+
+		if(setupInfo->renderLeftEye)
+			gHealthWarningWobble += fps * 25.0f;
 	}
 	else
 		xoff = 0;
 
 	if (n >= 1.0f)
 	{
-		gHealthMeterRot += fps * 2.0f;
+		if (setupInfo->renderLeftEye)
+			gHealthMeterRot += fps * 2.0f;
+
 		DrawInfobarSprite_Rotated(HEALTH_X + xoff, HEALTH_Y, HEALTH_SIZE, INFOBAR_SObjType_MeterBack, gHealthMeterRot, setupInfo);
 	}
 	else
@@ -669,7 +673,9 @@ Boolean	warningOn;
 
 			/* DRAW METER */
 
-	gHealthOccilate += fps * 10.0f;
+	if (setupInfo->renderLeftEye)
+		gHealthOccilate += fps * 10.0f;
+
 	size = HEALTH_SIZE * (1.0f + sin(gHealthOccilate)*.04f) * n;
 	x = HEALTH_X + (HEALTH_SIZE - size) * .5f;
 	y = HEALTH_Y + (HEALTH_SIZE - size) * .5f;
@@ -682,16 +688,19 @@ Boolean	warningOn;
 
 		/* WHILE WE'RE HERE, UPDATE WARNING BEEP */
 
-
-	if (warningOn)
+	// Only play sound if this is the first render pass
+	if (setupInfo->renderLeftEye)
 	{
-		if (gHealthWarningChannel == -1)
-			gHealthWarningChannel = PlayEffect(EFFECT_HEALTHWARNING);
-	}
-	else									// make sure warning is OFF since not in danger
-	{
-		if (gHealthWarningChannel != -1)
-			StopAChannel(&gHealthWarningChannel);
+		if (warningOn)
+		{
+			if (gHealthWarningChannel == -1)
+				gHealthWarningChannel = PlayEffect(EFFECT_HEALTHWARNING);
+		}
+		else									// make sure warning is OFF since not in danger
+		{
+			if (gHealthWarningChannel != -1)
+				StopAChannel(&gHealthWarningChannel);
+		}
 	}
 }
 
@@ -716,7 +725,9 @@ float	FUEL_X = g2DLogicalWidth + FUEL_XFROMRIGHT;
 
 	if (n >= 1.0f)
 	{
-		gFuelMeterRot += fps * 2.0f;
+		if(setupInfo->renderLeftEye)
+			gFuelMeterRot += fps * 2.0f;
+
 		DrawInfobarSprite_Rotated(FUEL_X, FUEL_Y, FUEL_SIZE, INFOBAR_SObjType_MeterBack, gFuelMeterRot, setupInfo);
 	}
 	else
@@ -749,12 +760,14 @@ float	size;
 
 	if (n >= 1.0f)
 	{
-		gJumpJetMeterRot -= fps * 2.0f;
+		if (setupInfo->renderLeftEye)
+			gJumpJetMeterRot -= fps * 2.0f;
+
 		DrawInfobarSprite_Rotated(x, y, JUMP_SIZE, INFOBAR_SObjType_MeterBack, gJumpJetMeterRot, setupInfo);
 	}
 	else
 	{
-		if (gJumpJetWarningCooldown > 0)
+		if (setupInfo->renderLeftEye && gJumpJetWarningCooldown > 0)
 		{
 			float amp = 4.0f * gJumpJetWarningCooldown / 0.5f;
 			x += sinf(gJumpJetWarningCooldown * 32.0f) * amp;

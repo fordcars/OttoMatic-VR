@@ -68,9 +68,36 @@ extern "C"
 #include "textmesh.h"
 #include "tga.h"
 #include "menu.h"
+#include "vr_support.h"
+
+
+		/* VR (C Code only) */
+//Gets action manifest and action handles
+void vrcpp_initSteamVRInput(void);
+
+// Reads the current state into all actions (call each frame)
+// After this call, the results of Get*ActionData calls will be the same until the next call to UpdateActionState
+void vrcpp_UpdateActionState(void);
+
+// Check if a IVRInput button is pressed
+// actionToDo  ->   the button (enum)
+// preventPressAndHold  ->   prevent old actions, should be false for most game actions but true for most menus
+bool vrcpp_GetDigitalActionData(int actionToDo, bool preventPressAndHold);
+
+// Get Action Data (see if triggered). This function is for analog (vector) actions only, no digital bools
+vrJoyPos vrcpp_GetAnalogActionData(int actionToDo);
+
+// HAPTIC TRIGGER
+//handToVibrate -> Wether to vibrate both hands or just 1
+//fStartSecondsFromNow -> When to start the haptic event
+//fDurationSeconds -> How long to trigger the haptic event for
+//fFrequency -> The frequency in cycles per second of the haptic event
+//fAmplitude -> The magnitude of the haptic event.This value must be between 0.0 and 1.0.
+void vrcpp_DoVibrationHaptics(int handToVibrate,
+	float fDurationSeconds, float fFrequency, float fAmplitude);
+
 
 		/* EXTERNS */
-
 extern	BG3DFileContainer		*gBG3DContainerList[];
 extern	Boolean					gAllowAudioKeys;
 extern	Boolean					gAutoRotateCamera;
@@ -79,6 +106,7 @@ extern	Boolean					gBumperCarGateBlown[];
 extern	Boolean					gDisableAnimSounds;
 extern	Boolean					gDisableHiccupTimer;
 extern	Boolean					gDoDeathExit;
+extern  Boolean                 gPlayerInMainMenu;
 extern	Boolean					gDoJumpJetAtApex;
 extern	Boolean					gDrawLensFlare;
 extern	Boolean					gExplodePlayerAfterElectrocute;
@@ -88,6 +116,7 @@ extern	Boolean					gFreezeCameraFromY;
 extern	Boolean					gG4;
 extern	Boolean					gGameOver;
 extern	Boolean					gGamePaused;
+extern  Boolean					gGameIsPausedVR;
 extern	Boolean					gHelpMessageDisabled[NUM_HELP_MESSAGES];
 extern	Boolean					gIceCracked;
 extern	Boolean					gLevelCompleted;
@@ -243,7 +272,6 @@ extern	u_long					gLoadedScore;
 extern	u_long					gScore;
 extern	u_short					**gTileGrid;
 extern	u_short					gTileAttribFlags;
-
 #ifdef __cplusplus
 };
 #endif

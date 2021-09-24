@@ -102,7 +102,7 @@ Boolean GetNewNeedState(int needID);
 Boolean GetNeedState(int needID);
 Boolean FlushMouseButtonPress(uint8_t sdlButton);
 Boolean UserWantsOut(void);
-void Rumble(float strength, uint32_t ms);
+void Rumble(float amplitude, float durationSeconds, float frequency, int handToVibrate);
 float SnapAngle(float angle, float snap);
 
 SDL_GameController* TryOpenController(bool showMessageOnFailure);

@@ -77,6 +77,7 @@ u_long				gGameFrameNum = 0;
 
 Boolean				gPlayingFromSavedGame = false;
 Boolean				gGameOver = false;
+Boolean				gGameIsPausedVR = false;
 Boolean				gLevelCompleted = false;
 float				gLevelCompletedCoolDownTimer = 0;
 
@@ -87,6 +88,8 @@ OGLPoint2D			gBestCheckpointCoord;
 float				gBestCheckpointAim;
 
 u_long	gScore,gLoadedScore;
+
+Boolean gPlayerInMainMenu = false;
 
 
 
@@ -180,6 +183,7 @@ static void PlayGame(void)
 			/***********************/
 
 	gDoDeathExit = false;
+	gPlayerInMainMenu = false;
 
 	InitPlayerInfo_Game();					// init player info for entire game
 	InitHelpMessages();						// init all help messages
@@ -307,11 +311,12 @@ static void PlayArea(void)
 
 			/* SEE IF PAUSED */
 
-		if (GetNewNeedState(kNeed_UIPause))
+		if (GetNewNeedState(kNeed_UIPause) || gGameIsPausedVR)
 		{
-			CaptureMouse(false);
-			DoPaused();
-			CaptureMouse(true);
+				gGameIsPausedVR = false;
+				CaptureMouse(false);
+				DoPaused();
+				CaptureMouse(true);
 		}
 
 		CalcFramesPerSecond();

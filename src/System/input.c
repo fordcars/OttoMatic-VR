@@ -5,6 +5,7 @@
 #include "game.h"
 #include "mousesmoothing.h"
 #include "killmacmouseacceleration.h"
+#include "vr_support.h"
 
 
 /***************/
@@ -91,6 +92,9 @@ void UpdateInput(void)
 	gTextInput[0] = '\0';
 	gMouseMotionNow = false;
 	gEatMouse = false;
+
+	// Check if any SteamVR Control has been pressed
+	vrcpp_UpdateActionState();
 
 			/**********************/
 			/* DO SDL MAINTENANCE */
@@ -311,6 +315,41 @@ void UpdateInput(void)
 	if (GetNeedState(kNeed_Backward))						// is Down Key pressed?
 		gPlayerInfo.analogControlZ = 1.0f;
 
+
+
+			/* CHECK VR VECTOR INPUT */
+	float VRpostionX = vrcpp_GetAnalogActionData(vrMoveXY).x; // Strafing
+	float VRpositionY = vrcpp_GetAnalogActionData(vrMoveXY).y; // Fore / back
+
+
+	if (VRpostionX || VRpositionY) // If joystick is not at 0, 0
+	{
+		// For better strafing, if really not moving forward or back much, make it 0
+		if (fabs(VRpositionY) < 0.13)
+			VRpositionY = 0;
+
+		gPlayerInfo.analogControlZ = -VRpositionY;
+		gPlayerInfo.strafeControlX = VRpostionX;
+		printf("X (LEFT RIGHT): %f\n", VRpostionX);
+		printf("Y (FORE BACK): %f\n", -VRpositionY);
+	}
+
+
+		/* CHECK IF VR WANTS TO PAUSE GAME */
+	
+	if (!gPlayerInMainMenu) { // Don't check when in main menu or the game will auto-pause as soon as it starts
+		if (vrcpp_GetDigitalActionData(vrEscapeMenu, true))
+		{
+			if (gGamePaused) {
+				gGameIsPausedVR = false; // If game is already paused, the pause key should tell it to unpause
+			}
+			else {
+				gGameIsPausedVR = true; // If here, the pause key was pressed but the game was not paused when the press occured
+			}
+		}
+	}
+
+
 		/* AND FINALLY SEE IF MOUSE DELTAS ARE BEST */
 
 	const float mouseSensitivityFrac = (float)gGamePrefs.mouseSensitivityLevel / NUM_MOUSE_SENSITIVITY_LEVELS;
@@ -394,6 +433,8 @@ Boolean UserWantsOut(void)
 	return GetNewNeedState(kNeed_UIConfirm)
 		|| GetNewNeedState(kNeed_UIBack)
 		|| GetNewNeedState(kNeed_UIStart)
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, true)
+		|| vrcpp_GetDigitalActionData(vrJump, true)
 		|| FlushMouseButtonPress(SDL_BUTTON_LEFT);
 }
 
@@ -468,16 +509,10 @@ SDL_GameController* TryOpenController(bool showMessage)
 	return gSDLController;
 }
 
-void Rumble(float strength, uint32_t ms)
+void Rumble(float amplitude, float durationSeconds, float frequency, int handToVibrate)
 {
-	if (NULL == gSDLController || !gGamePrefs.gamepadRumble)
-		return;
+	vrcpp_DoVibrationHaptics(handToVibrate, durationSeconds, frequency, amplitude);
 
-#if !(SDL_VERSION_ATLEAST(2,0,9))
-	#warning Rumble support requires SDL 2.0.9 or later
-#else
-	SDL_GameControllerRumble(gSDLController, (Uint16)(strength * 65535), (Uint16)(strength * 65535), ms);
-#endif
 }
 
 void OnJoystickRemoved(SDL_JoystickID which)

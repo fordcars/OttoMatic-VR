@@ -966,9 +966,14 @@ Boolean			superTileVisible;
 			}
 		}
 	}
-	gCleanupDeformation = false;							// reset this now
 
 	OGL_PopState();
+
+	// Don't do anything else! We are only rendering the first eye; we'll be back here real soon.
+	if (setupInfo->renderLeftEye)
+		return;
+
+	gCleanupDeformation = false;							// reset this now
 
 
 

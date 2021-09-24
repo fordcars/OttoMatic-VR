@@ -10,6 +10,7 @@
 /****************************/
 
 #include "game.h"
+#include "vr_support.h"
 
 /****************************/
 /*    PROTOTYPES            */
@@ -86,6 +87,9 @@ const OGLPoint3D antennaROff = {40,45,12};
 static SuperNovaTargetType	gSuperNovaTargets[MAX_SUPERNOVA_DISCHARGES];
 float		gDischargeTimer;
 
+bool gunShotVR = false;
+bool gunShotVRblocked = false;
+
 
 #define	DelayToSeek		SpecialF[0]									// timer for seeking flares
 
@@ -130,12 +134,12 @@ int	i;
 
 void CheckWeaponChangeControls(ObjNode* theNode)
 {
-	if (GetNewNeedState(kNeed_NextWeapon))
+	if (GetNewNeedState(kNeed_NextWeapon) || vrcpp_GetDigitalActionData(vrNextWeapon, false))
 	{
 		int i = FindWeaponInventoryIndex(gPlayerInfo.currentWeaponType);	// get current into inventory list
 		ChangeWeapons(i, 1, false);
 	}
-	else if (GetNewNeedState(kNeed_PrevWeapon))
+	else if (GetNewNeedState(kNeed_PrevWeapon) || vrcpp_GetDigitalActionData(vrPreviousWeapon, false))
 	{
 		int i = FindWeaponInventoryIndex(gPlayerInfo.currentWeaponType);	// get current into inventory list
 		ChangeWeapons(i, -1, false);
@@ -149,15 +153,30 @@ void CheckPOWControls(ObjNode *theNode)
 {
 		/* SEE IF SHOOT GUN */
 
-	if (GetNewNeedState(kNeed_Shoot))					// see if user pressed the key
+	// Prevent multi-fire while trigger is held
+	if (vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault) // Trigger pressed
+	{
+		gunShotVR = true;
+	}
+	else {
+		gunShotVR = false;
+	}
+	if (vrcpp_GetAnalogActionData(vrShoot).x <= 0.2) // Must almost release trigger to reshoot
+	{
+		gunShotVRblocked = false;
+	}
+
+	// Do the shot
+	if (GetNewNeedState(kNeed_Shoot) || (gunShotVR && !gunShotVRblocked))					// see if user pressed the key
 	{
 		ShootWeapon(theNode);
+		gunShotVRblocked = true; // Prevent double fire
 	}
 
 		/* SEE IF PUNCH / PICKUP */
 
 	else
-	if (GetNewNeedState(kNeed_PunchPickup))
+	if (GetNewNeedState(kNeed_PunchPickup) || vrcpp_GetDigitalActionData(vrPunchOrPickUp, false))
 	{
 		if (!SeeIfDoPickup(theNode))						// if not picking up then punching
 		{
@@ -552,7 +571,7 @@ ObjNode	*newObj;
 int				i;
 
 	PlayEffect3D(EFFECT_STUNGUN, where);
-	Rumble(0.2f, 150);
+	Rumble(0.4f, .100, 300, vrLeftVibrate);
 
 		/*********************/
 		/* MAKE MUZZLE FLASH */
