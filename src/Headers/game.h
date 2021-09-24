@@ -69,6 +69,12 @@ extern "C"
 #include "tga.h"
 #include "menu.h"
 
+
+
+
+void updateHMDposition(void);
+
+
 		/* EXTERNS */
 
 extern	BG3DFileContainer		*gBG3DContainerList[];

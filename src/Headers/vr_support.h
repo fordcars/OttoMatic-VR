@@ -23,3 +23,20 @@ typedef struct
 	float x;
 	float y;
 } vrJoyPos;
+
+
+		// * TRACKING * //
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+	extern double vrpos_hmdRotX;
+	extern double vrpos_hmdRotY;
+	extern double vrpos_hmdRotZ;
+
+	extern float vrpos_hmdPosX;
+	extern float vrpos_hmdPosY;
+	extern float vrpos_hmdPosZ;
+#ifdef __cplusplus
+}
+#endif
