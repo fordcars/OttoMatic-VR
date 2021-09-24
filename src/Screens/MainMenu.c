@@ -138,6 +138,7 @@ void DoMainMenuScreen(void)
 
 	SetupMainMenuScreen();
 	MakeFadeEvent(true, 1.0);
+	gPlayerInMainMenu = true;
 
 				/*************/
 				/* MAIN LOOP */
@@ -1110,10 +1111,10 @@ static Boolean DoMainMenuControl(void)
 			/* SPIN LEFT */
 
 		if (GetNewNeedState(kNeed_UILeft) || GetNewNeedState(kNeed_UINext)
-			|| vrcpp_GetAnalogActionData(vrMoveXY).x >= 0.4
-			|| vrcpp_GetAnalogActionData(vrCameraXY).x >= 0.4)
+			|| vrcpp_GetAnalogActionData(vrMoveXY).x >= VRminimumThumbstickDefault
+			|| vrcpp_GetAnalogActionData(vrCameraXY).x >= VRminimumThumbstickDefault)
 		{
-			if (frameCounter >= minFramesBetweenActions) {
+			if (frameCounter >= minFramesBetweenActions || GetNewNeedState(kNeed_UILeft) || GetNewNeedState(kNeed_UINext)) {
 				PlayEffect(EFFECT_MENUCHANGE);
 				gTargetRot -= PI2 / (float)NUM_SELECTIONS;
 				gSelection--;
@@ -1128,17 +1129,17 @@ static Boolean DoMainMenuControl(void)
 
 		else
 		if (GetNewNeedState(kNeed_UIRight) || GetNewNeedState(kNeed_UIPrev)
-			|| vrcpp_GetAnalogActionData(vrMoveXY).x <= -0.4
-			|| vrcpp_GetAnalogActionData(vrCameraXY).x <= -0.4)
+			|| vrcpp_GetAnalogActionData(vrMoveXY).x <= -VRminimumThumbstickDefault
+			|| vrcpp_GetAnalogActionData(vrCameraXY).x <= -VRminimumThumbstickDefault)
 		{
-			if (frameCounter >= minFramesBetweenActions) {
+			if (frameCounter >= minFramesBetweenActions || GetNewNeedState(kNeed_UIRight) || GetNewNeedState(kNeed_UIPrev)) {
 				PlayEffect(EFFECT_MENUCHANGE);
 				gTargetRot += PI2 / (float)NUM_SELECTIONS;
 				gSelection++;
 				if (gSelection == NUM_SELECTIONS)
 					gSelection = 0;
 				gFadeInIconString = false;
-				vrcpp_DoVibrationHaptics(vrLeftVibrate, 0.2, 80, 1);
+				vrcpp_DoVibrationHaptics(vrLeftVibrate, 0.2, 80, 0.7);
 				frameCounter = 0;
 			}
 		}
@@ -1146,7 +1147,7 @@ static Boolean DoMainMenuControl(void)
 
 				/* MAKE SELECTION */
 		else
-		if (GetNewNeedState(kNeed_UIConfirm) || GetNewNeedState(kNeed_UIStart) || vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault)
+		if (GetNewNeedState(kNeed_UIConfirm) || GetNewNeedState(kNeed_UIStart) || vrcpp_GetDigitalActionData(vrJump, true))
 		{
 			gHideIconString = true;
 
@@ -1156,7 +1157,9 @@ static Boolean DoMainMenuControl(void)
 						gLevelNum = 0;							// start on Level 0 if not loading from saved game
 
 						if (GetKeyState(SDL_SCANCODE_F10) ||	// see if do Level cheat
-							(GetNeedState(kNeed_UIBack) && GetNeedState(kNeed_UIStart)))
+							(GetNeedState(kNeed_UIBack) && GetNeedState(kNeed_UIStart))
+							|| vrcpp_GetDigitalActionData(vrNextWeapon, false)
+							|| vrcpp_GetDigitalActionData(vrPreviousWeapon, false))
 						{
 							int cheatLevel = DoLevelCheatDialog(DrawMainMenuCallback);
 							if (cheatLevel < 0)

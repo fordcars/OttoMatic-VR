@@ -17,6 +17,7 @@ enum playerActions
 };
 
 #define VRminimumTriggerDefault 0.7f // How far the trigger has to be pulled for most trigger actions
+#define VRminimumThumbstickDefault 0.4f // How far you must move thumbstick for most menu actions
 
 typedef struct
 {

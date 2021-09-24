@@ -92,6 +92,8 @@ static int					gMouseHoverColumn = -1;
 static SDL_Cursor*			gHandCursor = NULL;
 static SDL_Cursor*			gStandardCursor = NULL;
 
+static int					frameCounter;
+
 /****************************/
 /*    MENU UTILITIES        */
 /****************************/
@@ -458,7 +460,9 @@ static void NavigateSettingEntriesMouseHover(void)
 
 static void NavigateAction(const MenuItem* entry)
 {
-	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT)))
+	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT))
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, true)
+		|| vrcpp_GetDigitalActionData(vrJump, true))
 	{
 		if (entry->action.callback != MenuCallback_Back)
 			PlayEffect(kSfxCycle);
@@ -473,7 +477,8 @@ static void NavigateAction(const MenuItem* entry)
 static void NavigatePick(const MenuItem* entry)
 {
 	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT))
-		|| vrcpp_GetAnalogActionData(vrShoot).x >= VRminimumTriggerDefault)
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, true)
+		|| vrcpp_GetDigitalActionData(vrJump, true))
 	{
 		gMenuPick = entry->pick;
 
@@ -483,7 +488,9 @@ static void NavigatePick(const MenuItem* entry)
 
 static void NavigateSubmenuButton(const MenuItem* entry)
 {
-	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT)))
+	if (GetNewNeedState(kNeed_UIConfirm) || (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT))
+		|| vrcpp_GetDigitalActionData(vrPunchOrPickUp, true)
+		|| vrcpp_GetDigitalActionData(vrJump, true))
 	{
 		if (gMenuStyle->playMenuChangeSounds)
 			PlayEffect(kSfxMenuChange);
@@ -497,19 +504,45 @@ static void NavigateSubmenuButton(const MenuItem* entry)
 static void NavigateCycler(const MenuItem* entry)
 {
 	int delta = 0;
+	float	minFramesBetweenActions = gFramesPerSecond / 3;
 
 	if (GetNewNeedState(kNeed_UILeft)
 		|| GetNewNeedState(kNeed_UIPrev)
-		|| (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_RIGHT)))
+		|| (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_RIGHT)) 
+		|| vrcpp_GetAnalogActionData(vrMoveXY).x <= -VRminimumThumbstickDefault
+		|| vrcpp_GetAnalogActionData(vrCameraXY).x <= -VRminimumThumbstickDefault) 
 	{
+		if (frameCounter >= minFramesBetweenActions || GetNewNeedState(kNeed_UILeft)
+			|| GetNewNeedState(kNeed_UIPrev)
+			|| (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_RIGHT)))
+		{
 		delta = -1;
+		frameCounter = 0;
+		}
 	}
 	else if (GetNewNeedState(kNeed_UIRight)
 		|| GetNewNeedState(kNeed_UINext)
 		|| GetNewNeedState(kNeed_UIConfirm)
-		|| (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT)))
+		|| (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT))
+		|| vrcpp_GetAnalogActionData(vrMoveXY).x >= VRminimumThumbstickDefault
+		|| vrcpp_GetAnalogActionData(vrCameraXY).x >= VRminimumThumbstickDefault)
 	{
-		delta = 1;
+		if (frameCounter >= minFramesBetweenActions || GetNewNeedState(kNeed_UIRight)
+			|| GetNewNeedState(kNeed_UINext)
+			|| GetNewNeedState(kNeed_UIConfirm)
+			|| (gMouseHoverValidRow && FlushMouseButtonPress(SDL_BUTTON_LEFT)))
+		{
+			delta = 1;
+			frameCounter = 0;
+		}
+	}
+
+	// Add 1 to the frame counter and cap it at the max reasonable fps
+	if (frameCounter >= minFramesBetweenActions * 2.5) {
+		frameCounter = minFramesBetweenActions * 2.5;
+	}
+	else {
+		frameCounter++;
 	}
 
 	if (delta != 0)
@@ -658,14 +691,38 @@ static void NavigateMenu(void)
 {
 	GAME_ASSERT(gMenuStyle->isInteractive);
 
-	if (GetNewNeedState(kNeed_UIBack) || vrcpp_GetDigitalActionData(vrEscapeMenu))
+	float	minFramesBetweenActions = gFramesPerSecond / 4;
+
+
+	if (GetNewNeedState(kNeed_UIBack) || vrcpp_GetDigitalActionData(vrEscapeMenu, true))
 		MenuCallback_Back();
 
-	if (GetNewNeedState(kNeed_UIUp) || vrcpp_GetDigitalActionData(vrPreviousWeapon))
-		NavigateSettingEntriesVertically(-1);
+	if (GetNewNeedState(kNeed_UIUp) || vrcpp_GetAnalogActionData(vrMoveXY).y >= VRminimumThumbstickDefault
+		|| vrcpp_GetAnalogActionData(vrCameraXY).y >= VRminimumThumbstickDefault)
+	{
+		if (frameCounter >= minFramesBetweenActions || GetNewNeedState(kNeed_UIUp)) {
+			NavigateSettingEntriesVertically(-1);
+			frameCounter = 0;
+		}
+	}
 
-	if (GetNewNeedState(kNeed_UIDown) || vrcpp_GetDigitalActionData(vrNextWeapon))
-		NavigateSettingEntriesVertically(1);
+	if (GetNewNeedState(kNeed_UIDown) || vrcpp_GetAnalogActionData(vrMoveXY).y <= -VRminimumThumbstickDefault
+		|| vrcpp_GetAnalogActionData(vrCameraXY).y <= -VRminimumThumbstickDefault)
+	{
+		if (frameCounter >= minFramesBetweenActions || GetNewNeedState(kNeed_UIDown)) {
+			NavigateSettingEntriesVertically(1);
+			frameCounter = 0;
+		}
+	}
+
+
+	// Add 1 to the frame counter and cap it at the max reasonable fps
+	if (frameCounter >= minFramesBetweenActions * 2.5) {
+		frameCounter = minFramesBetweenActions * 2.5;
+	}
+	else {
+		frameCounter++;
+	}
 
 	NavigateSettingEntriesMouseHover();
 
