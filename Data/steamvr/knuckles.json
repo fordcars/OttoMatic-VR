@@ -52,6 +52,15 @@
             },
             {
                "inputs" : {
+                  "click" : {
+                     "output" : "/actions/otto/in/escapemenu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/b"
+            },
+            {
+               "inputs" : {
                   "position" : {
                      "output" : "/actions/otto/in/movexy"
                   }

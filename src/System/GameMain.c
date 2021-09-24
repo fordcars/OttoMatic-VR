@@ -89,6 +89,8 @@ float				gBestCheckpointAim;
 
 u_long	gScore,gLoadedScore;
 
+Boolean gPlayerInMainMenu = false;
+
 
 
 
@@ -181,6 +183,7 @@ static void PlayGame(void)
 			/***********************/
 
 	gDoDeathExit = false;
+	gPlayerInMainMenu = false;
 
 	InitPlayerInfo_Game();					// init player info for entire game
 	InitHelpMessages();						// init all help messages
