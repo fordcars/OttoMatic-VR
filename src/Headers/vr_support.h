@@ -33,9 +33,10 @@ typedef struct
 #ifdef __cplusplus
 extern "C" {
 #endif
-	extern double vrpos_hmdRotX;
-	extern double vrpos_hmdRotY;
-	extern double vrpos_hmdRotZ;
+	extern double vrpos_hmdRotW; // Potentially useless
+	extern double vrpos_hmdPitch;
+	extern double vrpos_hmdYaw;
+	extern double vrpos_hmdRoll;
 
 	extern float vrpos_hmdPosX;
 	extern float vrpos_hmdPosY;

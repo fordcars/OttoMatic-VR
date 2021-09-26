@@ -1961,11 +1961,16 @@ Boolean				killed = false;
 	/*******************************/
 	/* DO PLAYER-RELATIVE CONTROLS */
 	/*******************************/
-
+	
+			/* VR MOVEMENT */
 	if (true) // (Gives better mouse control?) Seems to prevent player from turning when colliding 
 	{
 		float	mouseRotationPlayer;
 		float   VRpostionX;
+
+		// HMD rotation turns Otto:
+		theNode->Rot.y = vrpos_hmdYaw;
+		// For now this makes the thumbstick controls useless but it's ok
 
 		if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
 			// Only do mouse movement if not moving VR joystick

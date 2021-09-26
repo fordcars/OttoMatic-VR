@@ -400,33 +400,11 @@ int			firstPersonHeight = 100;
 	}
 	else {
 		// VR HMD Controlled view (untested)
-		to.y = playerObj->Coord.y + firstPersonHeight + vrpos_hmdRotX * 2;
-		to.x = vrpos_hmdRotX * 2 * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
-		to.z = vrpos_hmdRotX * 2 * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+		to.y = playerObj->Coord.y + firstPersonHeight + vrpos_hmdPitch;
+		to.x = cos(vrpos_hmdPitch) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
+		to.z = cos(vrpos_hmdPitch) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
 	}
 
-
-	printf("To.y incl playerObj = %f\n", to.y);
-	printf("mouseCameraAngleY (distance mouse moved) = %f\n", mouseCameraAngleY);
-	printf("sin(mouseCameraAngleY) = %f\n", sin(mouseCameraAngleY));
-	printf("2*vrpos_hmdRotX = %f\n\n\n", 2*vrpos_hmdRotX);
-
-
-	// Notes to help figure out VR HMD rotation vertical (look up / down)
-	// With mouse, mouseCameraAngleY goes up to PI/2 ish.
-	// Sin of mouseCameraAngleY is 0 when straight forward, then -1 or 1 for up / down
-	// vrpos_hmdRotX seems to be full up =0.5, full down = -0.5, straight 0, back 1.
-	// Which seems to mean that vrpos_hmdRotX *2 should work... but it is not linear. ??
-	// Also unclear what vrpos_hmdRotX vs Z is.. they both change with roll and pitch??
-	// Since they both equate to approx the same value, why not try dividing one by the other?
-	// For example full up 0.5 / 0.5 is 1. This could work? Technically it should
-	// But technically doing what I was doing (vrpos_hmdRotX * 2) should mean up is 1 too
-	// and it was not looking straight up at all.
-	// idiot
-	// I had to modified to.x and to.z as well to make it work, they both use cos(mouseCameraAngleY)
-	// Think of carls rocket taking off example. Of course I need to modify X and Z
-	// Only difference (I think) is that mouseCameraAngleY was a distance, now I have angles
-	// So should not need to use cos nor sin with vrpos_hmdRotX
 
 
 	// Test logging of mouseCameraAngleY breakpoint
