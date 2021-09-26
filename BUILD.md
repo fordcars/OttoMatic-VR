@@ -15,7 +15,7 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     - [CMake](https://cmake.org/download/) 3.20+
 1. Clone the repo **recursively**:
     ```
-    git clone --recurse-submodules https://github.com/jorio/OttoMatic-VR
+    git clone --recurse-submodules https://github.com/fordcars/OttoMatic-VR
     ```
 1. Download [SDL2-devel-2.0.16-VC.zip](http://libsdl.org/release/SDL2-devel-2.0.16-VC.zip) and extract the contents into the **extern** folder
 1. Prep the Visual Studio solution:
@@ -37,7 +37,7 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     - OpenGL development libraries (e.g. "libgl1-mesa-dev" on Ubuntu)
 1. Clone the repo **recursively**:
     ```
-    git clone --recurse-submodules https://github.com/jorio/OttoMatic-VR
+    git clone --recurse-submodules https://github.com/fordcars/OttoMatic-VR
     ```
 1. Build the game:
     ```
