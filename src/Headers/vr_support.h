@@ -37,6 +37,9 @@ extern "C" {
 	extern double vrpos_hmdPitch;
 	extern double vrpos_hmdYaw;
 	extern double vrpos_hmdRoll;
+	extern double vrpos_hmdPitchDelta;
+	extern double vrpos_hmdYawDelta;
+	extern double vrpos_hmdRollDelta;
 
 	extern float vrpos_hmdPosX;
 	extern float vrpos_hmdPosY;

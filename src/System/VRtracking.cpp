@@ -9,6 +9,11 @@ extern "C" double vrpos_hmdPitch = 0;
 extern "C" double vrpos_hmdYaw = 0;
 extern "C" double vrpos_hmdRoll = 0;
 
+extern "C" double vrpos_hmdPitchDelta = 0;
+extern "C" double vrpos_hmdYawDelta = 0;
+extern "C" double vrpos_hmdRollDelta = 0;
+
+
 extern "C" float vrpos_hmdPosX = 0;
 extern "C" float vrpos_hmdPosY = 0;
 extern "C" float vrpos_hmdPosZ = 0;
@@ -35,19 +40,25 @@ extern "C" void updateHMDposition(void)
 	q.x = sqrt(fmax(0, 1 + matrix.m[0][0] - matrix.m[1][1] - matrix.m[2][2])) / 2;
 	q.y = sqrt(fmax(0, 1 - matrix.m[0][0] + matrix.m[1][1] - matrix.m[2][2])) / 2;
 	q.z = sqrt(fmax(0, 1 - matrix.m[0][0] - matrix.m[1][1] + matrix.m[2][2])) / 2;
-	vrpos_hmdPitch = q.x = copysign(q.x, matrix.m[2][1] - matrix.m[1][2]);
-	vrpos_hmdYaw = q.y = copysign(q.y, matrix.m[0][2] - matrix.m[2][0]);
-	vrpos_hmdRoll = q.z = copysign(q.z, matrix.m[1][0] - matrix.m[0][1]);
+	q.x = copysign(q.x, matrix.m[2][1] - matrix.m[1][2]);
+	q.y = copysign(q.y, matrix.m[0][2] - matrix.m[2][0]);
+	q.z = copysign(q.z, matrix.m[1][0] - matrix.m[0][1]);
 
 
-	double heading = atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * pow(q.y,2) - 2 * pow(q.z,2)); // heading
-	double roll = asin(2 * q.x * q.y + 2 * q.z * q.w); // originally attitude
-	double pitch = atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * pow(q.x,2) - 2 * pow(q.z,2)); // originally bank
+	// Get the Euler angles from the last HMD update and remember them
+	double vrpos_hmdPitchSinceLastUpdate = vrpos_hmdPitch;
+	double vrpos_hmdYawSinceLastUpdate = vrpos_hmdYaw;
+	double vrpos_hmdRollSinceLastUpdate = vrpos_hmdRoll;
 
+	// Update the vrpos vars with headset rotation
+	vrpos_hmdPitch = atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * pow(q.x, 2) - 2 * pow(q.z, 2)); // originally bank
+	vrpos_hmdYaw = atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * pow(q.y, 2) - 2 * pow(q.z, 2));
+	vrpos_hmdRoll = asin(2 * q.x * q.y + 2 * q.z * q.w); // originally attitude
 
-	vrpos_hmdPitch = pitch;
-	vrpos_hmdYaw = heading;
-	vrpos_hmdRoll = roll;
+	// Calculate the difference between current and last HMD rotation to get delta
+	vrpos_hmdPitchDelta = vrpos_hmdPitchSinceLastUpdate - vrpos_hmdPitch;
+	vrpos_hmdYawDelta = vrpos_hmdYawSinceLastUpdate - vrpos_hmdYaw;
+	vrpos_hmdRollDelta = vrpos_hmdRollSinceLastUpdate - vrpos_hmdRoll;
 
 
 	// Logging for testing

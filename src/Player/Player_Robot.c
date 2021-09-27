@@ -1969,8 +1969,7 @@ Boolean				killed = false;
 		float   VRpostionX;
 
 		// HMD rotation turns Otto:
-		theNode->Rot.y = vrpos_hmdYaw;
-		// For now this makes the thumbstick controls useless but it's ok
+		theNode->Rot.y -= vrpos_hmdYawDelta;
 
 		if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
 			// Only do mouse movement if not moving VR joystick

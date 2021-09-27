@@ -386,8 +386,6 @@ int			firstPersonHeight = 100;
 		mouseCameraAngleY = limit;
 	if (mouseCameraAngleY < -limit)
 		mouseCameraAngleY = -limit;
-
-	// Mouse Y axis slows down at the top and bottom limits, à la SDL3D???
 	
 
 	// Basic FPS view, locked to robot facing-forward view:
@@ -480,6 +478,7 @@ int			firstPersonHeight = 100;
 	//}
 
 	printf("heading (yaw): %f\n", vrpos_hmdYaw);
+	printf("heading (yaw) SinceLastUpdate: %f\n", vrpos_hmdYawDelta);
 	printf("pitch: %f\n", vrpos_hmdPitch);
 	printf("roll: %f\n\n", vrpos_hmdRoll);
 
@@ -502,12 +501,12 @@ int			firstPersonHeight = 100;
 		calculatedUpVector.z = (cos(vrpos_hmdYaw - PI / 2)) * cos(vrpos_hmdRoll - PI / 2);
 		OGLVector3D_Normalize(&calculatedUpVector, &calculatedUpVector);
 		
-		printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);
-		printf("calculatedUpVector.y: %f\n", calculatedUpVector.y);
-		printf("calculatedUpVector.z: %f\n\n", calculatedUpVector.z);
-		printf("NcalculatedUpVector.x: %f\n", calculatedUpVector.x);
-		printf("NcalculatedUpVector.y: %f\n", calculatedUpVector.y);
-		printf("NcalculatedUpVector.z: %f\n\n\n", calculatedUpVector.z);
+		//printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);
+		//printf("calculatedUpVector.y: %f\n", calculatedUpVector.y);
+		//printf("calculatedUpVector.z: %f\n\n", calculatedUpVector.z);
+		//printf("NcalculatedUpVector.x: %f\n", calculatedUpVector.x);
+		//printf("NcalculatedUpVector.y: %f\n", calculatedUpVector.y);
+		//printf("NcalculatedUpVector.z: %f\n\n\n", calculatedUpVector.z);
 	}
 
 	OGL_UpdateCameraFromToUp(gGameViewInfoPtr, &from, &to, &calculatedUpVector);
