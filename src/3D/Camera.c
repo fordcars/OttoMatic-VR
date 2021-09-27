@@ -10,7 +10,6 @@
 /****************************/
 
 #include "game.h"
-#include "vr_support.h"
 
 /****************************/
 /*    PROTOTYPES            */
@@ -390,13 +389,22 @@ int			firstPersonHeight = 100;
 
 	// Mouse Y axis slows down at the top and bottom limits, à la SDL3D???
 	
+
+	// Basic FPS view, locked to robot facing-forward view:
+	to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
+	to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
+	to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+
 	bool vrHMDcontrol = true;
+	OGLVector3D calculatedUpVector;
+	OGLVector3D globalUp = { 0,1,0 };
 
 	if (!vrHMDcontrol) {
 		// Basic FPS view, locked to robot facing-forward view:
 		to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
 		to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
 		to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+		// default up vector for non-VR
 	}
 	else {
 		// VR HMD Controlled view (untested)
@@ -404,6 +412,7 @@ int			firstPersonHeight = 100;
 		to.x = cos(vrpos_hmdPitch) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
 		to.z = cos(vrpos_hmdPitch) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
 	}
+
 
 
 
@@ -470,8 +479,39 @@ int			firstPersonHeight = 100;
 	//	OGLPoint3D_Transform(&from, &m, &from);
 	//}
 
+	printf("heading (yaw): %f\n", vrpos_hmdYaw);
+	printf("pitch: %f\n", vrpos_hmdPitch);
+	printf("roll: %f\n\n", vrpos_hmdRoll);
 
-	OGL_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);
+
+	// For UP vector
+	// Pitch affects Y & Z
+	// Roll affects Y & X
+
+	if (!vrHMDcontrol) {
+		calculatedUpVector = globalUp;
+	}
+	else {
+		//OGLVector3D camVector = { from.x - to.x, from.y - to.y, from.z - to.z };
+		//OGLVector3D_Normalize(&camVector, &camVector);
+		//printf("camVector.x: %f\n", camVector.x);
+		//printf("camVector.y: %f\n", camVector.y);
+		//printf("camVector.z: %f\n\n", camVector.z);
+		calculatedUpVector.x = -cos(vrpos_hmdYaw) * cos(vrpos_hmdRoll - PI / 2);
+		calculatedUpVector.y = 1-sin(fabs(vrpos_hmdRoll));
+		calculatedUpVector.z = (cos(vrpos_hmdYaw - PI / 2)) * cos(vrpos_hmdRoll - PI / 2);
+		OGLVector3D_Normalize(&calculatedUpVector, &calculatedUpVector);
+		
+		printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);
+		printf("calculatedUpVector.y: %f\n", calculatedUpVector.y);
+		printf("calculatedUpVector.z: %f\n\n", calculatedUpVector.z);
+		printf("NcalculatedUpVector.x: %f\n", calculatedUpVector.x);
+		printf("NcalculatedUpVector.y: %f\n", calculatedUpVector.y);
+		printf("NcalculatedUpVector.z: %f\n\n\n", calculatedUpVector.z);
+	}
+
+	OGL_UpdateCameraFromToUp(gGameViewInfoPtr, &from, &to, &calculatedUpVector);
+	//OGL_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);
 
 
 				/* UPDATE PLAYER'S CAMERA INFO */

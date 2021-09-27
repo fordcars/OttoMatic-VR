@@ -55,7 +55,7 @@ extern "C" void updateHMDposition(void)
 	//std::cout << "POS Y: " << vrpos_hmdPosY << "  ";
 	//std::cout << "POS Z: " << vrpos_hmdPosZ << "\n\n";
 
-	std::cout << "heading (Y): " << heading << "\n";
-	std::cout << "roll: " << roll << "\n";
-	std::cout << "pitch: " << pitch << "\n\n\n";
+	//std::cout << "heading (yaw): " << heading << "\n";
+	//std::cout << "roll: " << roll << "\n";
+	//std::cout << "pitch: " << pitch << "\n\n\n";
 }
