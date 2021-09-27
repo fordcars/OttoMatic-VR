@@ -371,7 +371,8 @@ int			firstPersonHeight = 100;
 			/* CALC LOOK AT POINT */
 			/**********************/
 	
-	
+	float forwardDirection = 0;
+
 	float verticalSens = 0.5f; // Reduce vertical axis camera speed
 
 	gCameraControlDelta.y *= verticalSens;
@@ -389,6 +390,17 @@ int			firstPersonHeight = 100;
 	
 
 	// Basic FPS view, locked to robot facing-forward view:
+	
+
+	// We want the camera to always be able to yaw but it usually rotates the entire player
+	// If the game says the player should not move, moving the HMD should move the camera, NOT the player
+	if (playerObj->StatusBits & STATUS_BIT_NOMOVE) {
+		forwardDirection = vrpos_hmdYaw + PI;
+	}
+	else {
+		forwardDirection = playerObj->Rot.y + PI;
+	}
+
 	to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
 	to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
 	to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
@@ -402,13 +414,12 @@ int			firstPersonHeight = 100;
 		to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
 		to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
 		to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
-		// default up vector for non-VR
 	}
 	else {
-		// VR HMD Controlled view (untested)
+		// VR HMD Controlled view
 		to.y = playerObj->Coord.y + firstPersonHeight + vrpos_hmdPitch;
-		to.x = cos(vrpos_hmdPitch) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
-		to.z = cos(vrpos_hmdPitch) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+		to.x = cos(vrpos_hmdPitch) * sin(forwardDirection) + playerObj->Coord.x;
+		to.z = cos(vrpos_hmdPitch) * cos(forwardDirection) + playerObj->Coord.z;
 	}
 
 
@@ -487,6 +498,7 @@ int			firstPersonHeight = 100;
 	// Pitch affects Y & Z
 	// Roll affects Y & X
 
+	// Calculate up vector
 	if (!vrHMDcontrol) {
 		calculatedUpVector = globalUp;
 	}
