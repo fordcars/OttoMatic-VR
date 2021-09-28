@@ -103,6 +103,7 @@ void updateHMDposition(void);
 
 		/* EXTERNS */
 extern	BG3DFileContainer		*gBG3DContainerList[];
+extern  Boolean                 gInitVRYawAlignDone;
 extern	Boolean					gAllowAudioKeys;
 extern	Boolean					gAutoRotateCamera;
 extern	Boolean					gBrainBossDead;

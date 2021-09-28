@@ -173,6 +173,7 @@ void InitPlayersAtStartOfLevel(void)
 				InitPlayer_Robot(&gPlayerInfo.coord, gPlayerInfo.startRotY);
 
 				gPlayerInfo.objNode->StatusBits |= STATUS_BIT_NOMOVE;		// disable player's move function until ship has landed
+				gInitVRYawAlignDone = false; // Must be reset until player has control again
 	}
 
 	gBestCheckpointCoord.x = gPlayerInfo.coord.x;					// set first checkpoint @ starting location

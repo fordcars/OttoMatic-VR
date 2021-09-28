@@ -153,6 +153,8 @@ Boolean			gDoJumpJetAtApex = false;			// true if want to do jump jet when player
 
 #define	JumpJetEnginesOff		Flag[0]				// set by anim when jump jet acceleration turns off
 
+bool    gInitVRYawAlignDone = false; // Required to avoid view snap and VR motion glitch
+
 //
 // In order to let the player move faster than the max speed, we use a current and target value.
 // the target is what we want the max to normally be, and the current is what it currently is.
@@ -1966,13 +1968,13 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 
 	float	mouseRotationPlayer;
 	float   VRcameraJoyPostionX;
-	bool    initAlignDone = false; // Required to avoid view snap and VR motion glitch
+	
 
 
 	// Initial alignment
-	if (!initAlignDone) {
+	if (!gInitVRYawAlignDone) {
 		theNode->Rot.y = vrpos_hmdYaw;
-		initAlignDone = true;
+		gInitVRYawAlignDone = true;
 	}
 
 	// HMD rotation turns Otto:
