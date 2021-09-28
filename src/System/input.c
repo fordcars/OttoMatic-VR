@@ -318,20 +318,20 @@ void UpdateInput(void)
 
 
 			/* CHECK VR VECTOR INPUT */
-	float VRmoveJoypostionX = vrcpp_GetAnalogActionData(vrMoveXY).x; // Strafing
-	float VRmoveJoypositionY = vrcpp_GetAnalogActionData(vrMoveXY).y; // Fore / back
+	float VRmoveJoyPostionX = vrcpp_GetAnalogActionData(vrMoveXY).x; // Strafing
+	float VRmoveJoyPositionY = vrcpp_GetAnalogActionData(vrMoveXY).y; // Fore / back
 
 
-	if (VRmoveJoypostionX || VRmoveJoypositionY) // If joystick is not at 0, 0
+	if (VRmoveJoyPostionX || VRmoveJoyPositionY) // If joystick is not at 0, 0
 	{
 		// For better strafing, if really not moving forward or back much, make it 0
-		if (fabs(VRmoveJoypositionY) < 0.13)
-			VRmoveJoypositionY = 0;
+		if (fabs(VRmoveJoyPositionY) < 0.13)
+			VRmoveJoyPositionY = 0;
 
-		gPlayerInfo.analogControlZ = -VRmoveJoypositionY;
-		gPlayerInfo.strafeControlX = VRmoveJoypostionX;
-		printf("X (LEFT RIGHT): %f\n", VRmoveJoypostionX);
-		printf("Y (FORE BACK): %f\n", -VRmoveJoypositionY);
+		gPlayerInfo.analogControlZ = -VRmoveJoyPositionY;
+		gPlayerInfo.strafeControlX = VRmoveJoyPostionX;
+		printf("X (LEFT RIGHT): %f\n", VRmoveJoyPostionX);
+		printf("Y (FORE BACK): %f\n", -VRmoveJoyPositionY);
 	}
 
 

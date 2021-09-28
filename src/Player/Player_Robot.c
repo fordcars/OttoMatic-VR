@@ -1942,13 +1942,13 @@ float	tx,tz;
 
 static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Boolean useBBoxForTerrain)
 {
-float				fps = gFramesPerSecondFrac,oldFPS,oldFPSFrac,terrainY;
-OGLPoint3D			oldCoord;
-//OGLVector2D			aimVec,deltaVec, accVec;
-//OGLMatrix3x3		m;
-static OGLPoint2D origin = {0,0};
-int					numPasses,pass;
-Boolean				killed = false;
+	float				fps = gFramesPerSecondFrac, oldFPS, oldFPSFrac, terrainY;
+	OGLPoint3D			oldCoord;
+	//OGLVector2D			aimVec,deltaVec, accVec;
+	//OGLMatrix3x3		m;
+	static OGLPoint2D origin = { 0,0 };
+	int					numPasses, pass;
+	Boolean				killed = false;
 
 	if (gPlayerInfo.analogControlX || gPlayerInfo.analogControlZ || gPlayerInfo.strafeControlX)	// if player is attempting some control then reset this timer
 	{
@@ -1961,149 +1961,84 @@ Boolean				killed = false;
 	/*******************************/
 	/* DO PLAYER-RELATIVE CONTROLS */
 	/*******************************/
-	
+
 			/* VR MOVEMENT */
-	if (true) // (Gives better mouse control?) Seems to prevent player from turning when colliding 
-	{
-		float	mouseRotationPlayer;
-		float   VRpostionX;
 
-		// HMD rotation turns Otto:
-		theNode->Rot.y -= vrpos_hmdYawDelta;
-
-		if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
-			// Only do mouse movement if not moving VR joystick
-			// analogControlX is mouse only now, no keyboard (controls where player is looking / where he is facing)
-			mouseRotationPlayer = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN *0.5f;
-
-			theNode->Rot.y -= mouseRotationPlayer; // Set rotate view (view follows robot rot) with analogControl (mouse)
-		}
-		else {
-			// If here, VR joystick is moving
-			VRpostionX = vrcpp_GetAnalogActionData(vrCameraXY).x;
-			VRpostionX /= 30; // Reduce for sensitivty
-			theNode->Rot.y -= VRpostionX;
-			printf("ROTATE X: %f                  ", VRpostionX);
-		}
-
-		float	strafe = 0.0f, movement = 0.0f;
-
-		// We are using the A or D keys (strafing):
-		if (gPlayerInfo.strafeControlX) {
-			// We are only strafing (no forward nor backward):
-			if (gPlayerInfo.analogControlZ == 0) {
-				strafe = theNode->Rot.y + PI / 2;
-			}
-			// We are moving forward:
-			else if (gPlayerInfo.analogControlZ < 0) {
-				strafe = theNode->Rot.y - sin(gPlayerInfo.strafeControlX);
-			}
-			// We are moving backward:
-			else if (gPlayerInfo.analogControlZ > 0) {
-				strafe = theNode->Rot.y + sin(gPlayerInfo.strafeControlX);
-			}
-		}
-		// We are just moving with W or S, no strafing:
-		else {
-			strafe = theNode->Rot.y;
-		}
-
-		theNode->AccelVector.x = sin(strafe);
-		theNode->AccelVector.y = cos(strafe);
+	float	mouseRotationPlayer;
+	float   VRcameraJoyPostionX;
+	bool    initAlignDone = false; // Required to avoid view snap and VR motion glitch
 
 
-		if (!gPlayerInfo.analogControlZ) {
-			movement = gPlayerInfo.strafeControlX;
-		}
-		else {
-			movement = gPlayerInfo.analogControlZ;
-		}
-
-
-		if (theNode->StatusBits & STATUS_BIT_ONGROUND)
-		{
-			gDelta.x += theNode->AccelVector.x * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
-			gDelta.z += theNode->AccelVector.y * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
-		}
-		else
-		{
-			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
-			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
-		}
-
+	// Initial alignment
+	if (!initAlignDone) {
+		theNode->Rot.y = vrpos_hmdYaw;
+		initAlignDone = true;
 	}
 
-	/*******************************/
-	/* DO CAMERA-RELATIVE CONTROLS */
-	/*******************************/
-	//else // UNUSED for VR for now
-	//{
-	//	/* ROTATE ANALOG ACCELERATION VECTOR BASED ON CAMERA POS & APPLY TO DELTA */
+	// HMD rotation turns Otto:
+	theNode->Rot.y -= vrpos_hmdYawDelta;
 
-	//	if ((gPlayerInfo.analogControlX == 0.0f) && (gPlayerInfo.analogControlZ == 0.0f))	// see if not acceling
-	//	{
-	//		theNode->AccelVector.x = theNode->AccelVector.y = 0;
-	//	}
-	//	else
-	//	{
-	//		OGLMatrix3x3_SetRotateAboutPoint(&m, &origin, gPlayerToCameraAngle);			// make a 2D rotation matrix camera-rel
-	//		theNode->AccelVector.x = gPlayerInfo.analogControlX;
-	//		theNode->AccelVector.y = gPlayerInfo.analogControlZ;
-	//		//			OGLVector2D_Normalize(&theNode->AccelVector, &theNode->AccelVector);
-	//		OGLVector2D_Transform(&theNode->AccelVector, &m, &theNode->AccelVector);		// rotate the acceleration vector
+	if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
+		// Only do mouse movement if not moving VR joystick
+		// analogControlX is mouse only now, no keyboard (controls where player is looking / where he is facing)
+		mouseRotationPlayer = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN * 0.5f;
+
+		theNode->Rot.y -= mouseRotationPlayer; // Set rotate view (view follows robot rot) with analogControl (mouse)
+	}
+	else {
+		// If here, VR joystick is moving
+		VRcameraJoyPostionX = vrcpp_GetAnalogActionData(vrCameraXY).x;
+		VRcameraJoyPostionX /= 30; // Reduce for sensitivty
+		theNode->Rot.y -= VRcameraJoyPostionX;
+		printf("ROTATE X: %f                  ", VRcameraJoyPostionX);
+	}
+
+	float	strafe = 0.0f, movement = 0.0f;
+
+	// We are using the A or D keys (strafing):
+	if (gPlayerInfo.strafeControlX) {
+		// We are only strafing (no forward nor backward):
+		if (gPlayerInfo.analogControlZ == 0) {
+			strafe = theNode->Rot.y + PI / 2;
+		}
+		// We are moving forward:
+		else if (gPlayerInfo.analogControlZ < 0) {
+			strafe = theNode->Rot.y - sin(gPlayerInfo.strafeControlX);
+		}
+		// We are moving backward:
+		else if (gPlayerInfo.analogControlZ > 0) {
+			strafe = theNode->Rot.y + sin(gPlayerInfo.strafeControlX);
+		}
+	}
+	// We are just moving with W or S, no strafing:
+	else {
+		strafe = theNode->Rot.y;
+	}
+
+	theNode->AccelVector.x = sin(strafe);
+	theNode->AccelVector.y = cos(strafe);
 
 
-	//					/* APPLY ACCELERATION TO DELTAS */
-
-	//		if (theNode->StatusBits & STATUS_BIT_ONGROUND)
-	//		{
-	//			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
-	//			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
-	//		}
-	//		else
-	//		{
-	//			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR * fps);
-	//			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR * fps);
-	//		}
-	//	}
+	if (!gPlayerInfo.analogControlZ) {
+		movement = gPlayerInfo.strafeControlX;
+	}
+	else {
+		movement = gPlayerInfo.analogControlZ;
+	}
 
 
+	if (theNode->StatusBits & STATUS_BIT_ONGROUND)
+	{
+		gDelta.x += theNode->AccelVector.x * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
+		gDelta.z += theNode->AccelVector.y * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
+	}
+	else
+	{
+		gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
+		gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
+	}
 
-	//	/**********************************************************/
-	//	/* TURN PLAYER TO AIM DIRECTION OF ACCELERATION OR MOTION */
-	//	/**********************************************************/
-	//	//
-	//	// Depending on how slippery the terrain is, we aim toward the direction
-	//	// of motion or the direction of acceleration.  We'll use the gPlayerSlipperyFactor value
-	//	// to average an aim vector between the two.
-	//	//
 
-	//	if ((aimMode != AIM_MODE_NONE) && (theNode->Speed2D > 0.0f))
-	//	{
-	//		FastNormalizeVector2D(gDelta.x, gDelta.z, &deltaVec, true);
-	//		FastNormalizeVector2D(theNode->AccelVector.x, theNode->AccelVector.y, &accVec, true);
-
-	//		aimVec.x = deltaVec.x * (1.0f - gPlayerSlipperyFactor) + (accVec.x * gPlayerSlipperyFactor);
-	//		aimVec.y = deltaVec.y * (1.0f - gPlayerSlipperyFactor) + (accVec.y * gPlayerSlipperyFactor);
-
-	//		if (aimMode == AIM_MODE_REVERSE)
-	//			TurnObjectTowardTarget(theNode, &gCoord, gCoord.x - aimVec.x, gCoord.z - aimVec.y, 8.0f, false);
-	//		else
-	//			if (aimMode == AIM_MODE_NORMAL)
-	//			{
-	//				float	turnSpeed;
-
-	//				if (theNode->Speed2D > 400.0f)					// tweaked numbers for fpv
-	//					turnSpeed = 20;
-	//				else
-	//					turnSpeed = 7;
-
-	//				// Still have to figure out why it all goes crazy when player is standing still and turning on himself
-
-	//				TurnObjectTowardTarget(theNode, &gCoord, gCoord.x + aimVec.x, gCoord.z + aimVec.y, turnSpeed, false);
-	//			}
-	//	}
-	//}
 
 	/* CALC SPEED */
 
@@ -2162,7 +2097,7 @@ Boolean				killed = false;
 
 		if (theNode->MPlatform)						// see if factor in moving platform
 		{
-			ObjNode* plat = theNode->MPlatform;
+			ObjNode *plat = theNode->MPlatform;
 			dx += plat->Delta.x;
 			dy += plat->Delta.y;
 			dz += plat->Delta.z;
@@ -2174,6 +2109,33 @@ Boolean				killed = false;
 		gCoord.y += dy * fps;
 		gCoord.z += dz * fps;
 
+
+
+
+		/* DO VR HMD POSITION DELTA */
+
+		// Must do this last, because it is an addition to everything else,
+		// We want everything else to keep working (platforms etc) and just add this as a bonus
+
+		 /*gPlayerInfo stuff is in regards to the PLAYER, Z is always fore / back player, X is left / right player
+		 vrpos_hmdPos stuff is in regards to the ROOM, Z is fore/back ROOM, X is left/right ROOM
+		 BUT (as I just learned after 2 hours) since we are moving the player using gCoord which is in WORLD space
+		 No trigonometry is required, all we need to do is figure out how fast to walk / how many units per meter*/
+
+
+		gPlayerInfo.vrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
+		gPlayerInfo.vrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768;
+
+		
+
+		gCoord.x += gPlayerInfo.vrHMDPosMovedeltaWorldspace.x * fps;
+		gCoord.z += gPlayerInfo.vrHMDPosMovedeltaWorldspace.z * fps;
+
+		printf("heading (yaw): %f\n", vrpos_hmdYaw);
+		printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gPlayerInfo.vrHMDPosMovedeltaWorldspace.x * fps);
+		printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gPlayerInfo.vrHMDPosMovedeltaWorldspace.z * fps);
+		printf("gCoord.x: %f\n", gCoord.x);
+		printf("gCoord.z: %f\n\n", gCoord.z);
 
 		/******************************/
 		/* DO OBJECT COLLISION DETECT */

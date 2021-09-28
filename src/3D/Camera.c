@@ -401,9 +401,6 @@ int			firstPersonHeight = 100;
 		forwardDirection = playerObj->Rot.y + PI;
 	}
 
-	to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
-	to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
-	to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
 
 	bool vrHMDcontrol = true;
 	OGLVector3D calculatedUpVector;
@@ -488,10 +485,6 @@ int			firstPersonHeight = 100;
 	//	OGLPoint3D_Transform(&from, &m, &from);
 	//}
 
-	printf("heading (yaw): %f\n", vrpos_hmdYaw);
-	printf("heading (yaw) SinceLastUpdate: %f\n", vrpos_hmdYawDelta);
-	printf("pitch: %f\n", vrpos_hmdPitch);
-	printf("roll: %f\n\n", vrpos_hmdRoll);
 
 
 	// For UP vector

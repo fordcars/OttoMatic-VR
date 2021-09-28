@@ -44,6 +44,9 @@ extern "C" {
 	extern float vrpos_hmdPosX;
 	extern float vrpos_hmdPosY;
 	extern float vrpos_hmdPosZ;
+	extern float vrpos_hmdPosXDelta;
+	extern float vrpos_hmdPosYDelta;
+	extern float vrpos_hmdPosZDelta;
 #ifdef __cplusplus
 }
 #endif

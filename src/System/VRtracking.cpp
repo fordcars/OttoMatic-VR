@@ -3,20 +3,25 @@
 #include <iostream>
 #include <cstring>
 
-
+// Rotation vars
 extern "C" double vrpos_hmdRotW = 0;
 extern "C" double vrpos_hmdPitch = 0;
 extern "C" double vrpos_hmdYaw = 0;
 extern "C" double vrpos_hmdRoll = 0;
-
+// Rotation delta vars
 extern "C" double vrpos_hmdPitchDelta = 0;
 extern "C" double vrpos_hmdYawDelta = 0;
 extern "C" double vrpos_hmdRollDelta = 0;
 
 
+// Position vars
 extern "C" float vrpos_hmdPosX = 0;
 extern "C" float vrpos_hmdPosY = 0;
 extern "C" float vrpos_hmdPosZ = 0;
+// Position delta vars
+extern "C" float vrpos_hmdPosXDelta = 0;
+extern "C" float vrpos_hmdPosYDelta = 0;
+extern "C" float vrpos_hmdPosZDelta = 0;
 
 
 extern vr::IVRSystem *gIVRSystem;
@@ -30,10 +35,19 @@ extern "C" void updateHMDposition(void)
 
 	vr::HmdMatrix34_t matrix = trackedDevicePoseHMD.mDeviceToAbsoluteTracking;
 
+	double vrpos_hmdPosXSinceLastUpdate = vrpos_hmdPosX;
+	double vrpos_hmdPosYSinceLastUpdate = vrpos_hmdPosY;
+	double vrpos_hmdPosZSinceLastUpdate = vrpos_hmdPosZ;
+
 	vr::HmdVector3_t vector;
 	vrpos_hmdPosX = vector.v[0] = matrix.m[0][3];
 	vrpos_hmdPosY = vector.v[1] = matrix.m[1][3];
 	vrpos_hmdPosZ = vector.v[2] = matrix.m[2][3];
+
+	vrpos_hmdPosXDelta = -(vrpos_hmdPosXSinceLastUpdate - vrpos_hmdPosX);
+	vrpos_hmdPosYDelta = vrpos_hmdPosYSinceLastUpdate - vrpos_hmdPosY;
+	vrpos_hmdPosZDelta = -(vrpos_hmdPosZSinceLastUpdate - vrpos_hmdPosZ);
+
 
 	vr::HmdQuaternion_t q;
 	vrpos_hmdRotW = q.w = sqrt(fmax(0, 1 + matrix.m[0][0] + matrix.m[1][1] + matrix.m[2][2])) / 2;
@@ -69,4 +83,16 @@ extern "C" void updateHMDposition(void)
 	//std::cout << "heading (yaw): " << heading << "\n";
 	//std::cout << "roll: " << roll << "\n";
 	//std::cout << "pitch: " << pitch << "\n\n\n";
+
+	//printf("heading (yaw): %f\n", vrpos_hmdYaw);
+	//printf("heading (yaw) SinceLastUpdate: %f\n", vrpos_hmdYawDelta);
+	//printf("pitch: %f\n", vrpos_hmdPitch);
+	//printf("roll: %f\n\n", vrpos_hmdRoll);
+
+	//printf("vrpos_hmdPosX: %f\n", vrpos_hmdPosX);
+	//printf("vrpos_hmdPosY: %f\n", vrpos_hmdPosY);
+	//printf("vrpos_hmdPosZ: %f\n", vrpos_hmdPosZ);
+	//printf("vrpos_hmdPosXDelta: %f\n", vrpos_hmdPosXDelta);
+	//printf("vrpos_hmdPosYDelta: %f\n", vrpos_hmdPosYDelta);
+	//printf("vrpos_hmdPosZDelta: %f\n", vrpos_hmdPosZDelta);
 }
