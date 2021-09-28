@@ -414,6 +414,8 @@ int			firstPersonHeight = 100;
 	}
 	else {
 		// VR HMD Controlled view
+		// Set FPS height to VR height
+		firstPersonHeight = vrpos_hmdPosY * 100 - 100; // seems to give reasonable height
 		to.y = playerObj->Coord.y + firstPersonHeight + vrpos_hmdPitch;
 		to.x = cos(vrpos_hmdPitch) * sin(forwardDirection) + playerObj->Coord.x;
 		to.z = cos(vrpos_hmdPitch) * cos(forwardDirection) + playerObj->Coord.z;
@@ -459,6 +461,7 @@ int			firstPersonHeight = 100;
 		from.y = playerObj->Coord.y + firstPersonHeight;
 	}
 
+	printf("Player height: %i", firstPersonHeight);
 
 				/**********************/
 				/* UPDATE CAMERA INFO */
