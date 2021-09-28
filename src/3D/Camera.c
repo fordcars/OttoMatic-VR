@@ -388,8 +388,6 @@ int			firstPersonHeight = 100;
 	if (mouseCameraAngleY < -limit)
 		mouseCameraAngleY = -limit;
 	
-
-	// Basic FPS view, locked to robot facing-forward view:
 	
 
 	// We want the camera to always be able to yaw but it usually rotates the entire player
@@ -415,7 +413,8 @@ int			firstPersonHeight = 100;
 	else {
 		// VR HMD Controlled view
 		// Set FPS height to VR height
-		firstPersonHeight = vrpos_hmdPosY * 100 - 100; // seems to give reasonable height
+		firstPersonHeight = vrpos_hmdPosY * 100 - 100; // seems to give reasonable height 
+													   // SLIGHTLY too low when standing? but too high when touching floor. To adjust
 		to.y = playerObj->Coord.y + firstPersonHeight + vrpos_hmdPitch;
 		to.x = cos(vrpos_hmdPitch) * sin(forwardDirection) + playerObj->Coord.x;
 		to.z = cos(vrpos_hmdPitch) * cos(forwardDirection) + playerObj->Coord.z;
@@ -461,7 +460,7 @@ int			firstPersonHeight = 100;
 		from.y = playerObj->Coord.y + firstPersonHeight;
 	}
 
-	printf("Player height: %i", firstPersonHeight);
+	printf("playerObj->Coord.y: %f, Player height: %i\n", playerObj->Coord.y,firstPersonHeight);
 
 				/**********************/
 				/* UPDATE CAMERA INFO */
