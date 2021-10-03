@@ -2126,20 +2126,35 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		// We want everything else to keep working (platforms etc) and just add this as a bonus
 
 		 /*gPlayerInfo stuff is in regards to the PLAYER, Z is always fore / back player, X is left / right player
-		 vrpos_hmdPos stuff is in regards to the ROOM, Z is fore/back ROOM, X is left/right ROOM
-		 BUT (as I just learned after 2 hours) since we are moving the player using gCoord which is in WORLD space
-		 No trigonometry is required, all we need to do is figure out how fast to walk / how many units per meter*/
-
-
-		gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
-		gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768;
+		 vrpos_hmdPos stuff is in regards to the ROOM, Z is fore/back ROOM, X is left/right ROOM*/
 
 		
+		// This works with stick yaw only (HMD yaw breaks it):
+		// gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
+		// gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768;
+		// gCoord.x -= -sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected - PI / 2) * gVrHMDPosMovedeltaWorldspace.x * fps;
+		// gCoord.z -= sin(vrpos_hmdYawCorrected - PI/2) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.x * fps;
 
-		gCoord.x += sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected - PI / 2) * gVrHMDPosMovedeltaWorldspace.x * fps;
-		gCoord.z += sin(vrpos_hmdYawCorrected - PI/2) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.x * fps;
+		// This works with HMD yaw only (stick breaks it):
+		// gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
+		// gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768; 
+		// gCoord.x += gVrHMDPosMovedeltaWorldspace.x * fps;
+		// gCoord.z += gVrHMDPosMovedeltaWorldspace.z * fps;
+		
+
+		// Now to mix both together
+		// Figure out the gVrHMDPosMovedeltaWorldspace, which is how much the HMD moved with the X and Z axies
+		// corrected for the HMD rotation (including thumbstick)
+		gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768 * sin(vrpos_hmdYawCorrected - PI / 2 - vrpos_hmdYaw);
+		gVrHMDPosMovedeltaWorldspace.x += vrpos_hmdPosZDelta * 32768 * -sin(vrpos_hmdYawCorrected - vrpos_hmdYaw);
+		gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768 * sin(vrpos_hmdYawCorrected - PI / 2 - vrpos_hmdYaw);
+		gVrHMDPosMovedeltaWorldspace.z += vrpos_hmdPosXDelta * 32768 * sin(vrpos_hmdYawCorrected - vrpos_hmdYaw);
+		
+		gCoord.x -= gVrHMDPosMovedeltaWorldspace.x * fps;
+		gCoord.z -= gVrHMDPosMovedeltaWorldspace.z * fps;
 
 		printf("heading (yaw): %f\n", vrpos_hmdYaw);
+		printf("vrpos_hmdYawCorrected (yaw + stick): %f\n", vrpos_hmdYawCorrected);
 		printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gVrHMDPosMovedeltaWorldspace.x * fps);
 		printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gVrHMDPosMovedeltaWorldspace.z * fps);
 		printf("gCoord.x: %f\n", gCoord.x);
