@@ -153,7 +153,7 @@ Boolean			gDoJumpJetAtApex = false;			// true if want to do jump jet when player
 
 #define	JumpJetEnginesOff		Flag[0]				// set by anim when jump jet acceleration turns off
 
-bool    gInitVRYawAlignDone = false; // Required to avoid view snap and VR motion glitch
+Boolean    gInitVRYawAlignDone = false; // Required to avoid view snap and VR motion glitch
 
 //
 // In order to let the player move faster than the max speed, we use a current and target value.
@@ -163,6 +163,8 @@ bool    gInitVRYawAlignDone = false; // Required to avoid view snap and VR motio
 
 float	gTargetMaxSpeed = PLAYER_NORMAL_MAX_SPEED;
 float	gCurrentMaxSpeed = PLAYER_NORMAL_MAX_SPEED;
+
+OGLPoint3D gVrHMDPosMovedeltaWorldspace = {0,0};
 
 
 /*************************** INIT PLAYER: ROBOT ****************************/
@@ -1974,11 +1976,12 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 	// Initial alignment
 	if (!gInitVRYawAlignDone) {
 		theNode->Rot.y = vrpos_hmdYaw;
+		vrpos_hmdYawCorrected = vrpos_hmdYaw;
 		gInitVRYawAlignDone = true;
 	}
 
 	// HMD rotation turns Otto:
-	theNode->Rot.y -= vrpos_hmdYawDelta;
+	vrpos_hmdYawCorrected -= vrpos_hmdYawDelta;
 
 	if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
 		// Only do mouse movement if not moving VR joystick
@@ -1991,9 +1994,12 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		// If here, VR joystick is moving
 		VRcameraJoyPostionX = vrcpp_GetAnalogActionData(vrCameraXY).x;
 		VRcameraJoyPostionX /= 30; // Reduce for sensitivty
-		theNode->Rot.y -= VRcameraJoyPostionX;
+		vrpos_hmdYawCorrected -= VRcameraJoyPostionX;
 		printf("ROTATE X: %f                  ", VRcameraJoyPostionX);
 	}
+
+	// HMD rotation turns Otto:
+	theNode->Rot.y = vrpos_hmdYawCorrected;
 
 	float	strafe = 0.0f, movement = 0.0f;
 
@@ -2114,7 +2120,7 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 
 
 
-		/* DO VR HMD POSITION DELTA */
+		/* DO VR HMD POSITION DELTA   (move Otto when you physically walk)  */ 
 
 		// Must do this last, because it is an addition to everything else,
 		// We want everything else to keep working (platforms etc) and just add this as a bonus
@@ -2125,17 +2131,17 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		 No trigonometry is required, all we need to do is figure out how fast to walk / how many units per meter*/
 
 
-		gPlayerInfo.vrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
-		gPlayerInfo.vrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768;
+		gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
+		gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768;
 
 		
 
-		gCoord.x += gPlayerInfo.vrHMDPosMovedeltaWorldspace.x * fps;
-		gCoord.z += gPlayerInfo.vrHMDPosMovedeltaWorldspace.z * fps;
+		gCoord.x += sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected - PI / 2) * gVrHMDPosMovedeltaWorldspace.x * fps;
+		gCoord.z += sin(vrpos_hmdYawCorrected - PI/2) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.x * fps;
 
 		printf("heading (yaw): %f\n", vrpos_hmdYaw);
-		printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gPlayerInfo.vrHMDPosMovedeltaWorldspace.x * fps);
-		printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gPlayerInfo.vrHMDPosMovedeltaWorldspace.z * fps);
+		printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gVrHMDPosMovedeltaWorldspace.x * fps);
+		printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gVrHMDPosMovedeltaWorldspace.z * fps);
 		printf("gCoord.x: %f\n", gCoord.x);
 		printf("gCoord.z: %f\n\n", gCoord.z);
 

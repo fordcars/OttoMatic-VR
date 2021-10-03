@@ -40,6 +40,7 @@ extern "C" {
 	extern double vrpos_hmdPitchDelta;
 	extern double vrpos_hmdYawDelta;
 	extern double vrpos_hmdRollDelta;
+	extern double vrpos_hmdYawCorrected; // Corrects for camera thumbstick movement
 
 	extern float vrpos_hmdPosX;
 	extern float vrpos_hmdPosY;

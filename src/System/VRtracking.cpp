@@ -12,6 +12,8 @@ extern "C" double vrpos_hmdRoll = 0;
 extern "C" double vrpos_hmdPitchDelta = 0;
 extern "C" double vrpos_hmdYawDelta = 0;
 extern "C" double vrpos_hmdRollDelta = 0;
+// Rotation special
+extern "C" double vrpos_hmdYawCorrected = 0;
 
 
 // Position vars

@@ -195,6 +195,7 @@ extern	char					gTextInput[SDL_TEXTINPUTEVENT_TEXT_SIZE];
 extern	const KeyBinding		kDefaultKeyBindings[NUM_CONTROL_NEEDS];
 extern	const MenuStyle			kDefaultMenuStyle;
 extern	const OGLPoint3D		gPlayerMuzzleTipOff;
+extern  OGLPoint3D			    gVrHMDPosMovedeltaWorldspace;
 extern	const int				kLevelSoundBanks[NUM_LEVELS];
 extern	float					gSkyAltitudeY;
 extern	float					**gMapYCoords;

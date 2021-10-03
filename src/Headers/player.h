@@ -192,7 +192,6 @@ typedef struct
 	float				analogControlX,analogControlZ;
 	// Needs to be separate from analogControlX so mouse & strafe can be independant:
 	float				strafeControlX; 
-	OGLPoint3D			vrHMDPosMovedeltaWorldspace;
 
 	float				autoAimTimer;					// set when want player to auto-turn to aim at something
 	float				autoAimTargetX;
