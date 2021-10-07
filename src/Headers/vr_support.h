@@ -46,18 +46,19 @@ typedef struct
 
 typedef struct
 {
+	int deviceID;
+
 		/* ROTATION (pitch, yaw, roll) */
 	vrEuler rot; // Current actual rotation
 	vrEuler rotDelta; // Rotation delta (dif since last frame/last check)
 
-	// Rotation special
+		// Rotation special
 	double HMDYawCorrected; // Only useful for HMD, use to correct yaw from thumbstick rotation
 
 
 		/* POSITION (x, y, z) */
 	vrPostion pos; // Current actual position
 	vrPostion posDelta; // Position delta (dif since last frame/last check)
-
 }TrackedVrDeviceInfo;
 
 #ifdef __cplusplus

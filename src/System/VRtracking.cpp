@@ -3,33 +3,35 @@
 #include <iostream>
 #include <cstring>
 
-
-
 extern vr::IVRSystem *gIVRSystem;
 
 vr::TrackedDevicePose_t trackedDevicePoseHMD;
+vr::TrackedDevicePose_t trackedDevicePoseLeftHand;
+vr::TrackedDevicePose_t trackedDevicePoseRightHand;
+vr::TrackedDevicePose_t trackedDevices[vr::k_unMaxTrackedDeviceCount] = {};
+
+
 
 TrackedVrDeviceInfo vrInfoHMD;
+TrackedVrDeviceInfo vrInfoLeftHand;
+TrackedVrDeviceInfo vrInfoRightHand;
 
-extern "C" void updateHMDposition(void)
-{
-	gIVRSystem->GetDeviceToAbsoluteTrackingPose(
-		vr::TrackingUniverseStanding, 0, &trackedDevicePoseHMD, 1);
 
-	vr::HmdMatrix34_t matrix = trackedDevicePoseHMD.mDeviceToAbsoluteTracking;
+void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
+	vr::HmdMatrix34_t matrix = trackedDevices[deviceToParse->deviceID].mDeviceToAbsoluteTracking;
 
-	double vrpos_hmdPosXSinceLastUpdate = vrInfoHMD.pos.x;
-	double vrpos_hmdPosYSinceLastUpdate = vrInfoHMD.pos.y;
-	double vrpos_hmdPosZSinceLastUpdate = vrInfoHMD.pos.z;
+	double devicePosXSinceLastUpdate = deviceToParse->pos.x;
+	double devicePosYSinceLastUpdate = deviceToParse->pos.y;
+	double devicePosZSinceLastUpdate = deviceToParse->pos.z;
 
 	vr::HmdVector3_t vector;
-	vrInfoHMD.pos.x = vector.v[0] = matrix.m[0][3];
-	vrInfoHMD.pos.y = vector.v[1] = matrix.m[1][3];
-	vrInfoHMD.pos.z = vector.v[2] = matrix.m[2][3];
+	deviceToParse->pos.x = vector.v[0] = matrix.m[0][3];
+	deviceToParse->pos.y = vector.v[1] = matrix.m[1][3];
+	deviceToParse->pos.z = vector.v[2] = matrix.m[2][3];
 
-	vrInfoHMD.posDelta.x = -(vrpos_hmdPosXSinceLastUpdate - vrInfoHMD.pos.x);
-	vrInfoHMD.posDelta.y = vrpos_hmdPosYSinceLastUpdate - vrInfoHMD.pos.y;
-	vrInfoHMD.posDelta.z = -(vrpos_hmdPosZSinceLastUpdate - vrInfoHMD.pos.z);
+	deviceToParse->posDelta.x = -(devicePosXSinceLastUpdate - deviceToParse->pos.x);
+	deviceToParse->posDelta.y = devicePosYSinceLastUpdate - deviceToParse->pos.y;
+	deviceToParse->posDelta.z = -(devicePosZSinceLastUpdate - deviceToParse->pos.z);
 
 
 	vr::HmdQuaternion_t q;
@@ -43,39 +45,95 @@ extern "C" void updateHMDposition(void)
 
 
 	// Get the Euler angles from the last HMD update and remember them
-	double vrpos_hmdPitchSinceLastUpdate = vrInfoHMD.rot.pitch;
-	double vrpos_hmdYawSinceLastUpdate = vrInfoHMD.rot.yaw;
-	double vrpos_hmdRollSinceLastUpdate = vrInfoHMD.rot.roll;
+	double devicePitchSinceLastUpdate = deviceToParse->rot.pitch;
+	double deviceYawSinceLastUpdate = deviceToParse->rot.yaw;
+	double deviceRollSinceLastUpdate = deviceToParse->rot.roll;
 
 	// Update the vrpos vars with headset rotation
-	vrInfoHMD.rot.pitch = atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * pow(q.x, 2) - 2 * pow(q.z, 2)); // originally bank
-	vrInfoHMD.rot.yaw = atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * pow(q.y, 2) - 2 * pow(q.z, 2));
-	vrInfoHMD.rot.roll = asin(2 * q.x * q.y + 2 * q.z * q.w); // originally attitude
+	deviceToParse->rot.pitch = atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * pow(q.x, 2) - 2 * pow(q.z, 2)); // originally bank
+	deviceToParse->rot.yaw = atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * pow(q.y, 2) - 2 * pow(q.z, 2));
+	deviceToParse->rot.roll = asin(2 * q.x * q.y + 2 * q.z * q.w); // originally attitude
 
 	// Calculate the difference between current and last HMD rotation to get delta
-	vrInfoHMD.rotDelta.pitch = vrpos_hmdPitchSinceLastUpdate - vrInfoHMD.rot.pitch;
-	vrInfoHMD.rotDelta.yaw = vrpos_hmdYawSinceLastUpdate - vrInfoHMD.rot.yaw;
-	vrInfoHMD.rotDelta.roll = vrpos_hmdRollSinceLastUpdate - vrInfoHMD.rot.roll;
+	deviceToParse->rotDelta.pitch = devicePitchSinceLastUpdate - deviceToParse->rot.pitch;
+	deviceToParse->rotDelta.yaw = deviceYawSinceLastUpdate - deviceToParse->rot.yaw;
+	deviceToParse->rotDelta.roll = deviceRollSinceLastUpdate - deviceToParse->rot.roll;
+}
 
 
-	// Logging for testing
-	//std::cout << "POS X: " << vrInfoHMD.pos.x << "  ";
-	//std::cout << "POS Y: " << vrInfoHMD.pos.y << "  ";
-	//std::cout << "POS Z: " << vrInfoHMD.pos.z << "\n\n";
 
-	//std::cout << "heading (yaw): " << vrInfoHMD.rot.yaw << "\n";
-	//std::cout << "roll: " << vrInfoHMD.rot.roll << "\n";
-	//std::cout << "pitch: " << vrInfoHMD.rot.pitch << "\n\n\n";
+extern "C" void updateHMDposition(void)
+{
+	int numberOfTrackedDevices = 0;
+	// Check for all VR devices
+	for (int deviceID = 0; deviceID < vr::k_unMaxTrackedDeviceCount; deviceID++) {
+		vr::ETrackedDeviceClass deviceClass = gIVRSystem->GetTrackedDeviceClass(deviceID);
+		if (deviceClass != vr::TrackedDeviceClass_Invalid) {
+			// Count how many tracked devices we have
+			numberOfTrackedDevices++;
+		}
+		// We only care about HMD and controllers, so ignore trackers and references
+		if (deviceClass == vr::TrackedDeviceClass_Controller) {
+			// std::cout << "ID #" << deviceID << " is of type " << deviceClass << std::endl;
+			vr::ETrackedControllerRole role =
+				gIVRSystem->GetControllerRoleForTrackedDeviceIndex(deviceID);
+			if (role == vr::TrackedControllerRole_Invalid) {
+				// The controller is probably not visible to a base station.
+			}
+			else if (role == vr::TrackedControllerRole_LeftHand)
+			{
+				vrInfoLeftHand.deviceID = deviceID;
+			}
+			else if (role == vr::TrackedControllerRole_RightHand)
+			{
+				vrInfoRightHand.deviceID = deviceID;
+			}
+		}
+		else if (deviceClass == vr::TrackedDeviceClass_HMD) {
+			// std::cout << "ID #" << deviceID << " is of type " << deviceClass << std::endl;
+			vrInfoHMD.deviceID = deviceID;
+		}
+	}
 
-	//printf("heading (yaw): %f\n", vrInfoHMD.rot.yaw);
-	//printf("heading (yaw) SinceLastUpdate: %f\n", vrInfoHMD.rotDelta.yaw);
-	//printf("pitch: %f\n", vrInfoHMD.rot.pitch);
-	//printf("roll: %f\n\n", vrInfoHMD.rot.roll);
 
-	//printf("pos.x: %f\n", vrInfoHMD.pos.x);
-	//printf("pos.y: %f\n", vrInfoHMD.pos.y);
-	//printf("pos.z: %f\n", vrInfoHMD.pos.z);
-	//printf("posDelta.x: %f\n", vrInfoHMD.posDelta.x);
-	//printf("posDelta.y: %f\n", vrInfoHMD.posDelta.y);
-	//printf("posDelta.z: %f\n", vrInfoHMD.posDelta.z);
+	// Actually GET the position data
+	gIVRSystem->GetDeviceToAbsoluteTrackingPose(
+		vr::TrackingUniverseStanding, 0, trackedDevices, numberOfTrackedDevices);
+
+
+	// Parse it
+	parseTrackingData(&vrInfoHMD);
+	// Only parse controller data if controllers exist
+	if (vrInfoLeftHand.deviceID)
+		parseTrackingData(&vrInfoLeftHand);
+	if (vrInfoRightHand.deviceID)
+		parseTrackingData(&vrInfoRightHand);
+
+
+		/* Logging for testing */
+
+	//printf("HMD heading (yaw): %f\n", vrInfoHMD.rot.yaw);
+	//printf("HMD heading (yaw) SinceLastUpdate: %f\n", vrInfoHMD.rotDelta.yaw);
+	//printf("HMD pitch: %f\n", vrInfoHMD.rot.pitch);
+	//printf("HMD roll: %f\n\n", vrInfoHMD.rot.roll);
+
+	//printf("HMD pos.x: %f\n", vrInfoHMD.pos.x);
+	//printf("HMD pos.y: %f\n", vrInfoHMD.pos.y);
+	//printf("HMD pos.z: %f\n", vrInfoHMD.pos.z);
+	//printf("HMD posDelta.x: %f\n", vrInfoHMD.posDelta.x);
+	//printf("HMD posDelta.y: %f\n", vrInfoHMD.posDelta.y);
+	//printf("HMD posDelta.z: %f\n", vrInfoHMD.posDelta.z);
+
+	printf("LeftHand yaw: %f    RightHand yaw: %f\n", vrInfoLeftHand.rot.yaw, vrInfoRightHand.rot.yaw);
+	printf("LeftHand pitch: %f    RightHand pitch: %f\n", vrInfoLeftHand.rot.pitch, vrInfoRightHand.rot.pitch);
+	printf("LeftHand roll: %f    RightHand roll: %f\n\n", vrInfoLeftHand.rot.roll, vrInfoRightHand.rot.roll);
+
+	printf("LeftHand pos.x: %f    RightHand pos.x: %f\n", vrInfoLeftHand.pos.x, vrInfoRightHand.pos.x);
+	printf("LeftHand pos.y: %f    RightHand pos.y: %f\n", vrInfoLeftHand.pos.y, vrInfoRightHand.pos.y);
+	printf("LeftHand pos.z: %f    RightHand pos.z: %f\n\n", vrInfoLeftHand.pos.z, vrInfoRightHand.pos.z);
+
+	//printf("LeftHand posDelta.x: %f    RightHand posDelta.x: %f\n", vrInfoLeftHand.posDelta.x, vrInfoRightHand.posDelta.x);
+	//printf("LeftHand posDelta.y: %f    RightHand posDelta.y: %f\n", vrInfoLeftHand.posDelta.y, vrInfoRightHand.posDelta.y);
+	//printf("LeftHand posDelta.z: %f    RightHand posDelta.z: %f\n\n\n", vrInfoLeftHand.posDelta.z, vrInfoRightHand.posDelta.z);
+
 }
