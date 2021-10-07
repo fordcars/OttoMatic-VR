@@ -393,7 +393,7 @@ int			firstPersonHeight = 100;
 	// We want the camera to always be able to yaw but it usually rotates the entire player
 	// If the game says the player should not move, moving the HMD should move the camera, NOT the player
 	if (playerObj->StatusBits & STATUS_BIT_NOMOVE) {
-		forwardDirection = vrpos_hmdYaw + PI;
+		forwardDirection = vrInfoHMD.rot.yaw + PI;
 	}
 	else {
 		forwardDirection = playerObj->Rot.y + PI;
@@ -413,11 +413,11 @@ int			firstPersonHeight = 100;
 	else {
 		// VR HMD Controlled view
 		// Set FPS height to VR height
-		firstPersonHeight = vrpos_hmdPosY * 100 - 100; // seems to give reasonable height 
+		firstPersonHeight = vrInfoHMD.pos.y * 100 - 100; // seems to give reasonable height 
 													   // SLIGHTLY too low when standing? but too high when touching floor. To adjust
-		to.y = playerObj->Coord.y + firstPersonHeight + vrpos_hmdPitch;
-		to.x = cos(vrpos_hmdPitch) * sin(forwardDirection) + playerObj->Coord.x;
-		to.z = cos(vrpos_hmdPitch) * cos(forwardDirection) + playerObj->Coord.z;
+		to.y = playerObj->Coord.y + firstPersonHeight + vrInfoHMD.rot.pitch;
+		to.x = cos(vrInfoHMD.rot.pitch) * sin(forwardDirection) + playerObj->Coord.x;
+		to.z = cos(vrInfoHMD.rot.pitch) * cos(forwardDirection) + playerObj->Coord.z;
 	}
 
 
@@ -503,9 +503,9 @@ int			firstPersonHeight = 100;
 		//printf("camVector.x: %f\n", camVector.x);
 		//printf("camVector.y: %f\n", camVector.y);
 		//printf("camVector.z: %f\n\n", camVector.z);
-		calculatedUpVector.x = -cos(vrpos_hmdYaw) * cos(vrpos_hmdRoll - PI / 2);
-		calculatedUpVector.y = 1-sin(fabs(vrpos_hmdRoll));
-		calculatedUpVector.z = (cos(vrpos_hmdYaw - PI / 2)) * cos(vrpos_hmdRoll - PI / 2);
+		calculatedUpVector.x = -cos(vrInfoHMD.rot.yaw) * cos(vrInfoHMD.rot.roll - PI / 2);
+		calculatedUpVector.y = 1-sin(fabs(vrInfoHMD.rot.roll));
+		calculatedUpVector.z = (cos(vrInfoHMD.rot.yaw - PI / 2)) * cos(vrInfoHMD.rot.roll - PI / 2);
 		OGLVector3D_Normalize(&calculatedUpVector, &calculatedUpVector);
 		
 		//printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);

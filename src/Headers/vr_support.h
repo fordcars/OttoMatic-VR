@@ -27,27 +27,43 @@ typedef struct
 	float y;
 } vrJoyPos;
 
+typedef struct
+{
+	double pitch;
+	double yaw;
+	double roll;
+} vrEuler;
+
+typedef struct
+{
+	float x;
+	float y;
+	float z;
+} vrPostion;
+
 
 		// * TRACKING * //
+
+typedef struct
+{
+		/* ROTATION (pitch, yaw, roll) */
+	vrEuler rot; // Current actual rotation
+	vrEuler rotDelta; // Rotation delta (dif since last frame/last check)
+
+	// Rotation special
+	double HMDYawCorrected; // Only useful for HMD, use to correct yaw from thumbstick rotation
+
+
+		/* POSITION (x, y, z) */
+	vrPostion pos; // Current actual position
+	vrPostion posDelta; // Position delta (dif since last frame/last check)
+
+}TrackedVrDeviceInfo;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-	extern double vrpos_hmdRotW; // Potentially useless
-	extern double vrpos_hmdPitch;
-	extern double vrpos_hmdYaw;
-	extern double vrpos_hmdRoll;
-	extern double vrpos_hmdPitchDelta;
-	extern double vrpos_hmdYawDelta;
-	extern double vrpos_hmdRollDelta;
-	extern double vrpos_hmdYawCorrected; // Corrects for camera thumbstick movement
-
-	extern float vrpos_hmdPosX;
-	extern float vrpos_hmdPosY;
-	extern float vrpos_hmdPosZ;
-	extern float vrpos_hmdPosXDelta;
-	extern float vrpos_hmdPosYDelta;
-	extern float vrpos_hmdPosZDelta;
+	extern TrackedVrDeviceInfo vrInfoHMD;
 #ifdef __cplusplus
 }
 #endif

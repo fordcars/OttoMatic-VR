@@ -1975,13 +1975,13 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 
 	// Initial alignment
 	if (!gInitVRYawAlignDone) {
-		theNode->Rot.y = vrpos_hmdYaw;
-		vrpos_hmdYawCorrected = vrpos_hmdYaw;
+		theNode->Rot.y = vrInfoHMD.rot.yaw;
+		vrInfoHMD.HMDYawCorrected = vrInfoHMD.rot.yaw;
 		gInitVRYawAlignDone = true;
 	}
 
 	// HMD rotation turns Otto:
-	vrpos_hmdYawCorrected -= vrpos_hmdYawDelta;
+	vrInfoHMD.HMDYawCorrected -= vrInfoHMD.rotDelta.yaw;
 
 	if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
 		// Only do mouse movement if not moving VR joystick
@@ -1994,12 +1994,12 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		// If here, VR joystick is moving
 		VRcameraJoyPostionX = vrcpp_GetAnalogActionData(vrCameraXY).x;
 		VRcameraJoyPostionX /= 30; // Reduce for sensitivty
-		vrpos_hmdYawCorrected -= VRcameraJoyPostionX;
+		vrInfoHMD.HMDYawCorrected -= VRcameraJoyPostionX;
 		printf("ROTATE X: %f                  ", VRcameraJoyPostionX);
 	}
 
 	// HMD rotation turns Otto:
-	theNode->Rot.y = vrpos_hmdYawCorrected;
+	theNode->Rot.y = vrInfoHMD.HMDYawCorrected;
 
 	float	strafe = 0.0f, movement = 0.0f;
 
@@ -2130,31 +2130,31 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 
 		
 		// This works with stick yaw only (HMD yaw breaks it):
-		// gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
-		// gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768;
-		// gCoord.x -= -sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected - PI / 2) * gVrHMDPosMovedeltaWorldspace.x * fps;
-		// gCoord.z -= sin(vrpos_hmdYawCorrected - PI/2) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrpos_hmdYawCorrected) * gVrHMDPosMovedeltaWorldspace.x * fps;
+		 //gVrHMDPosMovedeltaWorldspace.x = vrInfoHMD.posDelta.x * 32768;
+		 //gVrHMDPosMovedeltaWorldspace.z = vrInfoHMD.posDelta.z * 32768;
+		 //gCoord.x -= -sin(vrInfoHMD.HMDYawCorrected) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrInfoHMD.HMDYawCorrected - PI / 2) * gVrHMDPosMovedeltaWorldspace.x * fps;
+		 //gCoord.z -= sin(vrInfoHMD.HMDYawCorrected - PI/2) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrInfoHMD.HMDYawCorrected) * gVrHMDPosMovedeltaWorldspace.x * fps;
 
 		// This works with HMD yaw only (stick breaks it):
-		// gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768;
-		// gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768; 
-		// gCoord.x += gVrHMDPosMovedeltaWorldspace.x * fps;
-		// gCoord.z += gVrHMDPosMovedeltaWorldspace.z * fps;
+		 //gVrHMDPosMovedeltaWorldspace.x = vrInfoHMD.posDelta.x * 32768;
+		 //gVrHMDPosMovedeltaWorldspace.z = vrInfoHMD.posDelta.z * 32768;
+		 //gCoord.x += gVrHMDPosMovedeltaWorldspace.x * fps;
+		 //gCoord.z += gVrHMDPosMovedeltaWorldspace.z * fps;
 		
 
 		// Now to mix both together
 		// Figure out the gVrHMDPosMovedeltaWorldspace, which is how much the HMD moved with the X and Z axies
 		// corrected for the HMD rotation (including thumbstick)
-		gVrHMDPosMovedeltaWorldspace.x = vrpos_hmdPosXDelta * 32768 * sin(vrpos_hmdYawCorrected - PI / 2 - vrpos_hmdYaw);
-		gVrHMDPosMovedeltaWorldspace.x += vrpos_hmdPosZDelta * 32768 * -sin(vrpos_hmdYawCorrected - vrpos_hmdYaw);
-		gVrHMDPosMovedeltaWorldspace.z = vrpos_hmdPosZDelta * 32768 * sin(vrpos_hmdYawCorrected - PI / 2 - vrpos_hmdYaw);
-		gVrHMDPosMovedeltaWorldspace.z += vrpos_hmdPosXDelta * 32768 * sin(vrpos_hmdYawCorrected - vrpos_hmdYaw);
+		gVrHMDPosMovedeltaWorldspace.x = vrInfoHMD.posDelta.x * 32768 * sin(vrInfoHMD.HMDYawCorrected - PI / 2 - vrInfoHMD.rot.yaw);
+		gVrHMDPosMovedeltaWorldspace.x += vrInfoHMD.posDelta.z * 32768 * -sin(vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw);
+		gVrHMDPosMovedeltaWorldspace.z = vrInfoHMD.posDelta.z * 32768 * sin(vrInfoHMD.HMDYawCorrected - PI / 2 - vrInfoHMD.rot.yaw);
+		gVrHMDPosMovedeltaWorldspace.z += vrInfoHMD.posDelta.x * 32768 * sin(vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw);
 		
 		gCoord.x -= gVrHMDPosMovedeltaWorldspace.x * fps;
 		gCoord.z -= gVrHMDPosMovedeltaWorldspace.z * fps;
 
-		printf("heading (yaw): %f\n", vrpos_hmdYaw);
-		printf("vrpos_hmdYawCorrected (yaw + stick): %f\n", vrpos_hmdYawCorrected);
+		printf("heading (yaw): %f\n", vrInfoHMD.rot.yaw);
+		printf("HMDYawCorrected (yaw + stick): %f\n", vrInfoHMD.HMDYawCorrected);
 		printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gVrHMDPosMovedeltaWorldspace.x * fps);
 		printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gVrHMDPosMovedeltaWorldspace.z * fps);
 		printf("gCoord.x: %f\n", gCoord.x);
