@@ -1,33 +1,5 @@
 # How to build Otto Matic
 
-Run the instructions below, then download [OpenVR SDK 1.16.8](https://github.com/ValveSoftware/openvr/archive/refs/tags/v1.16.8.zip) and extract the contents into the **extern** folder.
-
-## TL;DR: Automated build script
-
-Clone the repo **recursively**, then run `python3 build.py` to execute the build steps described in this document and package up the game.
-
-build.py is the script that is used by the CI setup to produce builds. If you want to build the game manually instead, read on.
-
-## How to build the game on macOS
-
-1. Install the prerequisites:
-    - Xcode 12+
-    - [CMake](https://formulae.brew.sh/formula/cmake) 3.20+
-1. Clone the repo **recursively**:
-    ```
-    git clone --recurse-submodules https://github.com/jorio/OttoMatic
-    ```
-1. Download [SDL2-2.0.16.dmg](http://libsdl.org/release/SDL2-2.0.16.dmg), open it, and copy **SDL2.framework** to the **extern** folder
-1. Prep the Xcode project:
-    ```
-    cmake -G Xcode -S . -B build
-    ```
-1. Now you can open `build/OttoMatic.xcodeproj` in Xcode, or you can just go ahead and build the game:
-    ```
-    cmake --build build --config Release
-    ```
-1. The game gets built in `build/Release/OttoMatic.app`. Enjoy!
-
 ## How to build the game on Windows
 
 1. Install the prerequisites:
@@ -35,9 +7,10 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     - [CMake](https://cmake.org/download/) 3.20+
 1. Clone the repo **recursively**:
     ```
-    git clone --recurse-submodules https://github.com/jorio/OttoMatic
+    git clone --recurse-submodules https://github.com/fordcars/OttoMatic-VR
     ```
 1. Download [SDL2-devel-2.0.16-VC.zip](http://libsdl.org/release/SDL2-devel-2.0.16-VC.zip) and extract the contents into the **extern** folder
+1. Download [OpenVR SDK 1.16.8](https://github.com/ValveSoftware/openvr/archive/refs/tags/v1.16.8.zip) and extract the contents into the **extern** folder.
 1. Prep the Visual Studio solution:
     ```
     cmake -G "Visual Studio 16 2019" -A x64 -S . -B build
@@ -57,7 +30,7 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     - OpenGL development libraries (e.g. "libgl1-mesa-dev" on Ubuntu)
 1. Clone the repo **recursively**:
     ```
-    git clone --recurse-submodules https://github.com/jorio/OttoMatic
+    git clone --recurse-submodules https://github.com/fordcars/OttoMatic-VR
     ```
 1. Build the game:
     ```
@@ -65,4 +38,10 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     cmake --build build
     ```
 1. The game gets built in `build/Release/OttoMatic`. Enjoy!
+
+## TL;DR: Automated build script (not tested for VR for now)
+
+~~Clone the repo **recursively**, then run `python3 build.py` to execute the build steps described in this document and package up the game.~~
+
+~~build.py is the script that is used by the CI setup to produce builds. If you want to build the game manually instead, read on.~~
 
