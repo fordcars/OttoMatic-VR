@@ -1771,11 +1771,34 @@ void UpdateRobotHands(ObjNode *theNode)
 	lhand->ColorFilter.a = rhand->ColorFilter.a = theNode->ColorFilter.a;	// match alpha fades
 	
 	if (playingInVr) {
-		// Temp, no fists no gun, just for testing tracking:
-		rhand->Type = GLOBAL_ObjType_OttoRightHand;
-		ResetDisplayGroupObject(rhand);
-		lhand->Type = GLOBAL_ObjType_OttoLeftHand;
-		ResetDisplayGroupObject(lhand);
+		// Figure out if hand model should be closed fist or open hand
+		if (vrcpp_GetAnalogActionData(vrFistRight).x >= 0.4f) {
+			rhand->Type = GLOBAL_ObjType_OttoRightFist;
+			ResetDisplayGroupObject(rhand);
+		} 
+		else {
+			rhand->Type = GLOBAL_ObjType_OttoRightHand;
+			ResetDisplayGroupObject(rhand);
+		}
+		
+		// Only change left hand model if not holding gun
+		if (holdingGun)
+		{
+			lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
+			ResetDisplayGroupObject(lhand);
+		} 
+		else {
+			if (vrcpp_GetAnalogActionData(vrFistLeft).x >= 0.4f) {
+				lhand->Type = GLOBAL_ObjType_OttoLeftFist;
+				ResetDisplayGroupObject(lhand);
+			} 
+			else {
+				lhand->Type = GLOBAL_ObjType_OttoLeftHand;
+				ResetDisplayGroupObject(lhand);
+			}
+		}
+		
+
 
 		// Temp, freeze hands at these coords for testing
 		lhand->Coord.x = theNode->Coord.x - 50;	
