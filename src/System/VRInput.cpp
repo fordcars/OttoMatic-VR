@@ -68,7 +68,7 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 		printf("GetActionHandle error.\n");
 	}
 	vr::VRInput()->GetActionHandle("/actions/otto/in/FistLeft", &vrActions.FistLeft);
-	vr::VRInput()->GetActionHandle("/actions/otto/in/FistLeft", &vrActions.FistRight);
+	vr::VRInput()->GetActionHandle("/actions/otto/in/FistRight", &vrActions.FistRight);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PunchOrPickup", &vrActions.PunchOrPickUp);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PreviousWeapon", &vrActions.PreviousWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/NextWeapon", &vrActions.NextWeapon);
