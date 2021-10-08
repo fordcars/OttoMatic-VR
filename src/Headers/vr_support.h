@@ -65,6 +65,8 @@ typedef struct
 extern "C" {
 #endif
 	extern TrackedVrDeviceInfo vrInfoHMD;
+	extern TrackedVrDeviceInfo vrInfoLeftHand;
+	extern TrackedVrDeviceInfo vrInfoRightHand;
 #ifdef __cplusplus
 }
 #endif
