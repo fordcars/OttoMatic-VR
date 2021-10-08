@@ -273,7 +273,7 @@ int		i;
 	gResetJumpJet = true;
 	gExplodePlayerAfterElectrocute = false;
 
-	// Make player invisble: 
+	// Make player invisible: 
 	newObj->StatusBits |= STATUS_BIT_HIDDEN;
 }
 
@@ -1733,9 +1733,10 @@ float fps = gFramesPerSecondFrac;
 
 void UpdateRobotHands(ObjNode *theNode)
 {
-ObjNode	*lhand,*rhand;
-Boolean	holdingGun;
-int		weaponType;
+	ObjNode *lhand, *rhand;
+	Boolean	holdingGun;
+	int		weaponType;
+	bool playingInVr = true; // For testing
 
 		/****************************/
 		/* DETERMINE IF HOLDING GUN */
@@ -1757,24 +1758,42 @@ int		weaponType;
 	if (theNode->Skeleton->AnimNum == PLAYER_ANIM_BUMPERCAR)		// don't show gun while driving bumper car
 		holdingGun = false;
 	else
-	if (theNode->Skeleton->AnimNum == PLAYER_ANIM_BUBBLE)			// don't show gun while riding bubble
-		holdingGun = false;
+		if (theNode->Skeleton->AnimNum == PLAYER_ANIM_BUBBLE)			// don't show gun while riding bubble
+			holdingGun = false;
 
-			/*****************************/
-			/* UPDATE GEOMETRY FOR HANDS */
-			/*****************************/
-
+		/*****************************/
+		/* UPDATE GEOMETRY FOR HANDS */
+		/*****************************/
+	
 	lhand = gPlayerInfo.leftHandObj;						// get hand objects
 	rhand = gPlayerInfo.rightHandObj;
 
 	lhand->ColorFilter.a = rhand->ColorFilter.a = theNode->ColorFilter.a;	// match alpha fades
+	
+	if (playingInVr) {
+		// Temp, no fists no gun, just for testing tracking:
+		rhand->Type = GLOBAL_ObjType_OttoRightHand;
+		ResetDisplayGroupObject(rhand);
+		lhand->Type = GLOBAL_ObjType_OttoLeftHand;
+		ResetDisplayGroupObject(lhand);
 
-	if (rhand && lhand)										// only update if both hands are legit
-	{
+		// Temp, freeze hands at these coords for testing
+		lhand->Coord.x = theNode->Coord.x - 50;	
+		lhand->Coord.y = theNode->Coord.y - 0;
+		lhand->Coord.z = theNode->Coord.z;
 
-		switch(theNode->Skeleton->AnimNum)
+		rhand->Coord.x = theNode->Coord.x + 50;
+		rhand->Coord.y = theNode->Coord.y - 0;
+		rhand->Coord.z = theNode->Coord.z;
+
+	}
+	else {
+		if (rhand && lhand)										// only update if both hands are legit
 		{
-					/* OPEN HANDS */
+
+			switch (theNode->Skeleton->AnimNum)
+			{
+				/* OPEN HANDS */
 
 			case	PLAYER_ANIM_STAND:
 			case	PLAYER_ANIM_STANDWITHGUN:
@@ -1783,69 +1802,70 @@ int		weaponType;
 			case	PLAYER_ANIM_BUBBLE:
 			case	PLAYER_ANIM_SITONLEDGE:
 			case	PLAYER_ANIM_DRILLED:
-					if (rhand->Type != GLOBAL_ObjType_OttoRightHand)
+				if (rhand->Type != GLOBAL_ObjType_OttoRightHand)
+				{
+					rhand->Type = GLOBAL_ObjType_OttoRightHand;
+					ResetDisplayGroupObject(rhand);
+				}
+
+				if (!holdingGun)
+				{
+					if (lhand->Type != GLOBAL_ObjType_OttoLeftHand)
 					{
-						rhand->Type = GLOBAL_ObjType_OttoRightHand;
-						ResetDisplayGroupObject(rhand);
+						lhand->Type = GLOBAL_ObjType_OttoLeftHand;
+						ResetDisplayGroupObject(lhand);
 					}
-
-					if (!holdingGun)
-					{
-						if (lhand->Type != GLOBAL_ObjType_OttoLeftHand)
-						{
-							lhand->Type = GLOBAL_ObjType_OttoLeftHand;
-							ResetDisplayGroupObject(lhand);
-						}
-					}
-					break;
+				}
+				break;
 
 
-					/* FISTS */
+				/* FISTS */
 
 			default:
-					if (rhand->Type != GLOBAL_ObjType_OttoRightFist)
+				if (rhand->Type != GLOBAL_ObjType_OttoRightFist)
+				{
+					rhand->Type = GLOBAL_ObjType_OttoRightFist;
+					ResetDisplayGroupObject(rhand);
+				}
+
+				if (!holdingGun)
+				{
+					if (lhand->Type != GLOBAL_ObjType_OttoLeftFist)
 					{
-						rhand->Type = GLOBAL_ObjType_OttoRightFist;
-						ResetDisplayGroupObject(rhand);
+						lhand->Type = GLOBAL_ObjType_OttoLeftFist;
+						ResetDisplayGroupObject(lhand);
 					}
-
-					if (!holdingGun)
-					{
-						if (lhand->Type != GLOBAL_ObjType_OttoLeftFist)
-						{
-							lhand->Type = GLOBAL_ObjType_OttoLeftFist;
-							ResetDisplayGroupObject(lhand);
-						}
-					}
-					break;
-		}
-
-				/* GUN IN LEFT HAND */
-
-		if (holdingGun)
-		{
-			if (lhand->Type != (GLOBAL_ObjType_PulseGunHand + weaponType))
-			{
-				lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
-				ResetDisplayGroupObject(lhand);
+				}
+				break;
 			}
-		}
+
+			/* GUN IN LEFT HAND */
+
+			if (holdingGun)
+			{
+				if (lhand->Type != (GLOBAL_ObjType_PulseGunHand + weaponType))
+				{
+					lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
+					ResetDisplayGroupObject(lhand);
+				}
+			}
 
 
 			/* UPDATE HAND MATRICES */
 
-		FindJointFullMatrix(theNode, PLAYER_JOINT_LEFTHAND, &lhand->BaseTransformMatrix);
-		SetObjectTransformMatrix(lhand);
-		FindJointFullMatrix(theNode, PLAYER_JOINT_RIGHTHAND, &rhand->BaseTransformMatrix);
-		SetObjectTransformMatrix(rhand);
+			FindJointFullMatrix(theNode, PLAYER_JOINT_LEFTHAND, &lhand->BaseTransformMatrix);
+			SetObjectTransformMatrix(lhand);
+			FindJointFullMatrix(theNode, PLAYER_JOINT_RIGHTHAND, &rhand->BaseTransformMatrix);
+			SetObjectTransformMatrix(rhand);
 
-		lhand->Coord.x = lhand->BaseTransformMatrix.value[M03];			// get coords from matrix
-		lhand->Coord.y = lhand->BaseTransformMatrix.value[M13];
-		lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
+			lhand->Coord.x = lhand->BaseTransformMatrix.value[M03];			// get coords from matrix
+			lhand->Coord.y = lhand->BaseTransformMatrix.value[M13];
+			lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
 
-		rhand->Coord.x = rhand->BaseTransformMatrix.value[M03];
-		rhand->Coord.y = rhand->BaseTransformMatrix.value[M13];
-		rhand->Coord.z = rhand->BaseTransformMatrix.value[M23];
+			rhand->Coord.x = rhand->BaseTransformMatrix.value[M03];
+			rhand->Coord.y = rhand->BaseTransformMatrix.value[M13];
+			rhand->Coord.z = rhand->BaseTransformMatrix.value[M23];
+		}
 	}
 }
 
