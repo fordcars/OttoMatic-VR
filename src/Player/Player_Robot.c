@@ -1797,20 +1797,28 @@ void UpdateRobotHands(ObjNode *theNode)
 				ResetDisplayGroupObject(lhand);
 			}
 		}
-		
 
 
-		// Temp, freeze hands at these coords for testing
-		lhand->Coord.x = theNode->Coord.x - 50;	
-		lhand->Coord.y = theNode->Coord.y - 0;
-		lhand->Coord.z = theNode->Coord.z;
+		// Very basic controller tracking (position only)
+		int scale = VRroomDistanceToGameDistanceScale;
+		lhand->Coord.x = theNode->Coord.x - vrInfoHMD.pos.x * scale + vrInfoLeftHand.pos.x * scale;
+		lhand->Coord.y = theNode->Coord.y - vrInfoHMD.pos.y * scale + vrInfoLeftHand.pos.y * scale;
+		lhand->Coord.z = theNode->Coord.z - vrInfoHMD.pos.z * scale + vrInfoLeftHand.pos.z * scale;
 
-		rhand->Coord.x = theNode->Coord.x + 50;
-		rhand->Coord.y = theNode->Coord.y - 0;
-		rhand->Coord.z = theNode->Coord.z;
+		rhand->Coord.x = theNode->Coord.x - vrInfoHMD.pos.x * scale + vrInfoRightHand.pos.x * scale;
+		rhand->Coord.y = theNode->Coord.y - vrInfoHMD.pos.y * scale + vrInfoRightHand.pos.y * scale;
+		rhand->Coord.z = theNode->Coord.z - vrInfoHMD.pos.z * scale + vrInfoRightHand.pos.z * scale;
+
+		printf("LeftHand pos.x: %f\n", lhand->Coord.x);
+		printf("LeftHand pos.y: %f\n", lhand->Coord.y);
+		printf("LeftHand pos.z: %f\n\n", lhand->Coord.z);
+
+		printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
+		printf("LeftController pos.y: %f\n", vrInfoLeftHand.pos.y);
+		printf("LeftController pos.z: %f\n\n", vrInfoLeftHand.pos.z);
 
 	}
-	else {
+	else { // Non VR, for testing only (should not be used in VR ever)
 		if (rhand && lhand)										// only update if both hands are legit
 		{
 
@@ -2196,12 +2204,12 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		gCoord.x -= gVrHMDPosMovedeltaWorldspace.x * fps;
 		gCoord.z -= gVrHMDPosMovedeltaWorldspace.z * fps;
 
-		printf("heading (yaw): %f\n", vrInfoHMD.rot.yaw);
-		printf("HMDYawCorrected (yaw + stick): %f\n", vrInfoHMD.HMDYawCorrected);
-		printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gVrHMDPosMovedeltaWorldspace.x * fps);
-		printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gVrHMDPosMovedeltaWorldspace.z * fps);
-		printf("gCoord.x: %f\n", gCoord.x);
-		printf("gCoord.z: %f\n\n", gCoord.z);
+		//printf("heading (yaw): %f\n", vrInfoHMD.rot.yaw);
+		//printf("HMDYawCorrected (yaw + stick): %f\n", vrInfoHMD.HMDYawCorrected);
+		//printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gVrHMDPosMovedeltaWorldspace.x * fps);
+		//printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gVrHMDPosMovedeltaWorldspace.z * fps);
+		//printf("gCoord.x: %f\n", gCoord.x);
+		//printf("gCoord.z: %f\n\n", gCoord.z);
 
 		/******************************/
 		/* DO OBJECT COLLISION DETECT */
