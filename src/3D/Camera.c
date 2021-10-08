@@ -413,7 +413,7 @@ int			firstPersonHeight = 100;
 	else {
 		// VR HMD Controlled view
 		// Set FPS height to VR height
-		firstPersonHeight = vrInfoHMD.pos.y * 100 - 100; // seems to give reasonable height 
+		firstPersonHeight = vrInfoHMD.pos.y * VRroomDistanceToGameDistanceScale - 100; // seems to give reasonable height 
 													   // SLIGHTLY too low when standing? but too high when touching floor. To adjust
 		to.y = playerObj->Coord.y + firstPersonHeight + vrInfoHMD.rot.pitch;
 		to.x = cos(vrInfoHMD.rot.pitch) * sin(forwardDirection) + playerObj->Coord.x;
@@ -460,7 +460,7 @@ int			firstPersonHeight = 100;
 		from.y = playerObj->Coord.y + firstPersonHeight;
 	}
 
-	printf("playerObj->Coord.y: %f, Player height: %i\n", playerObj->Coord.y,firstPersonHeight);
+	// printf("playerObj->Coord.y: %f, Player height: %i\n", playerObj->Coord.y,firstPersonHeight);
 
 				/**********************/
 				/* UPDATE CAMERA INFO */
