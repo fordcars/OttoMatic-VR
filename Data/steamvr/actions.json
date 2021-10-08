@@ -21,6 +21,16 @@
       "requirement": "optional",
       "type": "vector1"
     },
+	  {
+      "name": "/actions/otto/in/FistLeft",
+      "requirement": "optional",
+      "type": "vector1"
+    },
+	  {
+      "name": "/actions/otto/in/FistRight",
+      "requirement": "optional",
+      "type": "vector1"
+    },
     {
       "name": "/actions/otto/in/Jump",
       "requirement": "optional",
@@ -65,6 +75,8 @@
       "/actions/otto/in/CameraXY": "Camera Joystick",
       "/actions/otto/in/Jump": "Jump (double->Jet)",
       "/actions/otto/in/Shoot": "Shoot",
+	    "/actions/otto/in/FistLeft": "Left Grip",
+	    "/actions/otto/in/FistRight": "Right Grip",
       "/actions/otto/in/PunchOrPickUp": "Punch, pickup",
       "/actions/otto/in/PreviousWeapon": "Previous Weapon",
       "/actions/otto/in/NextWeapon": "Next Weapon",

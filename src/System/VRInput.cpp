@@ -11,6 +11,8 @@ struct VRActionHandlers // vrActions is an instance of this
 	vr::VRActionHandle_t CameraXY;
 	vr::VRActionHandle_t Shoot;
 	vr::VRActionHandle_t Jump;
+	vr::VRActionHandle_t FistLeft;
+	vr::VRActionHandle_t FistRight;
 	vr::VRActionHandle_t PunchOrPickUp;
 	vr::VRActionHandle_t PreviousWeapon;
 	vr::VRActionHandle_t NextWeapon;
@@ -31,6 +33,8 @@ static vr::VRActiveActionSet_t activeActionSet;
 static vr::InputAnalogActionData_t moveXYAction{};
 static vr::InputAnalogActionData_t cameraXYAction{};
 static vr::InputAnalogActionData_t shootAction{};
+static vr::InputAnalogActionData_t fistLeftAction{};
+static vr::InputAnalogActionData_t fistRightAction{};
 static vr::InputDigitalActionData_t jumpAction{};
 static vr::InputDigitalActionData_t punchOrPickupAction{};
 static vr::InputDigitalActionData_t nextWeaponAction{};
@@ -63,6 +67,8 @@ extern "C" void vrcpp_initSteamVRInput(void) {
 		std::cerr << "GetActionHandle error.\n";
 		printf("GetActionHandle error.\n");
 	}
+	vr::VRInput()->GetActionHandle("/actions/otto/in/FistLeft", &vrActions.FistLeft);
+	vr::VRInput()->GetActionHandle("/actions/otto/in/FistLeft", &vrActions.FistRight);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PunchOrPickup", &vrActions.PunchOrPickUp);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/PreviousWeapon", &vrActions.PreviousWeapon);
 	vr::VRInput()->GetActionHandle("/actions/otto/in/NextWeapon", &vrActions.NextWeapon);
@@ -103,6 +109,14 @@ extern "C" vrJoyPos vrcpp_GetAnalogActionData(int actionToDo) {
 	case playerActions::vrShoot:
 		actionHandler = vrActions.Shoot;
 		actionDataStruct = shootAction;
+		break;
+	case playerActions::vrFistLeft:
+		actionHandler = vrActions.FistLeft;
+		actionDataStruct = fistLeftAction;
+		break;
+	case playerActions::vrFistRight:
+		actionHandler = vrActions.FistRight;
+		actionDataStruct = fistRightAction;
 		break;
 	default:
 		printf("vrcpp_GetAnalogActionData called incorrectly");
