@@ -2231,7 +2231,7 @@ int					numPasses,pass;
 
 				/* CALC TURNING */
 
-	theNode->Rot.y -= gPlayerInfo.analogControlX * 1.5f * fps;
+	theNode->Rot.y -= gPlayerInfo.strafeControlX * fps;
 
 
 		/* CALC MOTION VECTOR BASED ON AIM OF JUMP-JET ANIM */
