@@ -1801,21 +1801,42 @@ void UpdateRobotHands(ObjNode *theNode)
 
 		// Very basic controller tracking (position only)
 		int scale = VRroomDistanceToGameDistanceScale;
-		lhand->Coord.x = theNode->Coord.x - vrInfoHMD.pos.x * scale + vrInfoLeftHand.pos.x * scale;
-		lhand->Coord.y = theNode->Coord.y - vrInfoHMD.pos.y * scale + vrInfoLeftHand.pos.y * scale;
-		lhand->Coord.z = theNode->Coord.z - vrInfoHMD.pos.z * scale + vrInfoLeftHand.pos.z * scale;
+		lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.pos.x - vrInfoHMD.pos.x) * scale;
+		lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+		lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.pos.z - vrInfoHMD.pos.z) * scale;
 
-		rhand->Coord.x = theNode->Coord.x - vrInfoHMD.pos.x * scale + vrInfoRightHand.pos.x * scale;
-		rhand->Coord.y = theNode->Coord.y - vrInfoHMD.pos.y * scale + vrInfoRightHand.pos.y * scale;
-		rhand->Coord.z = theNode->Coord.z - vrInfoHMD.pos.z * scale + vrInfoRightHand.pos.z * scale;
+		rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.pos.x - vrInfoHMD.pos.x) * scale;
+		rhand->Coord.y = theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
+		rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.pos.z - vrInfoHMD.pos.z) * scale;
 
-		printf("LeftHand pos.x: %f\n", lhand->Coord.x);
-		printf("LeftHand pos.y: %f\n", lhand->Coord.y);
-		printf("LeftHand pos.z: %f\n\n", lhand->Coord.z);
 
-		printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
-		printf("LeftController pos.y: %f\n", vrInfoLeftHand.pos.y);
-		printf("LeftController pos.z: %f\n\n", vrInfoLeftHand.pos.z);
+		// Rotation controller tracking
+		OGLPoint3D calcLeftControllerRot;
+		float gameYawIgnoringHMD = vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw;
+
+		// UNTESTED
+		calcLeftControllerRot.x = vrInfoLeftHand.rot.pitch * sin(gameYawIgnoringHMD - PI / 2);
+		calcLeftControllerRot.x += vrInfoLeftHand.rot.roll * sin(gameYawIgnoringHMD);
+		calcLeftControllerRot.z = vrInfoLeftHand.rot.pitch * sin(gameYawIgnoringHMD);
+		calcLeftControllerRot.z += vrInfoLeftHand.rot.roll * sin(gameYawIgnoringHMD - PI / 2);
+
+		lhand->Rot.x = calcLeftControllerRot.x;
+		lhand->Rot.z = calcLeftControllerRot.z;
+		lhand->Rot.y = vrInfoLeftHand.rot.yaw;
+		
+
+		// Rotation logging
+		printf("LeftController rot.pitch: %f\n", vrInfoLeftHand.rot.pitch);
+		printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
+		printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
+
+		// Position Logging
+		//printf("LeftHand pos.x: %f\n", lhand->Coord.x);
+		//printf("LeftHand pos.y: %f\n", lhand->Coord.y);
+		//printf("LeftHand pos.z: %f\n\n", lhand->Coord.z);
+		//printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
+		//printf("LeftController pos.y: %f\n", vrInfoLeftHand.pos.y);
+		//printf("LeftController pos.z: %f\n\n", vrInfoLeftHand.pos.z);
 
 	}
 	else { // Non VR, for testing only (should not be used in VR ever)
