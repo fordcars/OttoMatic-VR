@@ -1770,79 +1770,125 @@ void UpdateRobotHands(ObjNode *theNode)
 
 	lhand->ColorFilter.a = rhand->ColorFilter.a = theNode->ColorFilter.a;	// match alpha fades
 	
-	if (playingInVr) {
-		// Figure out if hand model should be closed fist or open hand
-		if (vrcpp_GetAnalogActionData(vrFistRight).x >= 0.4f) {
-			rhand->Type = GLOBAL_ObjType_OttoRightFist;
-			ResetDisplayGroupObject(rhand);
-		} 
-		else {
-			rhand->Type = GLOBAL_ObjType_OttoRightHand;
-			ResetDisplayGroupObject(rhand);
-		}
+	if (rhand && lhand) { // only update if both hands are legit
+		if (playingInVr) {
+			// Figure out if hand model should be closed fist or open hand
+			if (vrcpp_GetAnalogActionData(vrFistRight).x >= 0.4f) {
+				rhand->Type = GLOBAL_ObjType_OttoRightFist;
+				ResetDisplayGroupObject(rhand);
+			} 
+			else {
+				rhand->Type = GLOBAL_ObjType_OttoRightHand;
+				ResetDisplayGroupObject(rhand);
+			}
 		
-		// Only change left hand model if not holding gun
-		if (holdingGun)
-		{
-			lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
-			ResetDisplayGroupObject(lhand);
-		} 
-		else {
-			if (vrcpp_GetAnalogActionData(vrFistLeft).x >= 0.4f) {
-				lhand->Type = GLOBAL_ObjType_OttoLeftFist;
+			// Only change left hand model if not holding gun
+			if (holdingGun)
+			{
+				lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
 				ResetDisplayGroupObject(lhand);
 			} 
 			else {
-				lhand->Type = GLOBAL_ObjType_OttoLeftHand;
-				ResetDisplayGroupObject(lhand);
+				if (vrcpp_GetAnalogActionData(vrFistLeft).x >= 0.4f) {
+					lhand->Type = GLOBAL_ObjType_OttoLeftFist;
+					ResetDisplayGroupObject(lhand);
+				} 
+				else {
+					lhand->Type = GLOBAL_ObjType_OttoLeftHand;
+					ResetDisplayGroupObject(lhand);
+				}
 			}
-		}
+
+			
+	
+			// Very basic position controller tracking
+			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
+			updateGameSpacePositions();
+
+			int scale = VRroomDistanceToGameDistanceScale;
+			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+
+			rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			rhand->Coord.y = theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
+			rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 
-		// Very basic controller tracking (position only)
-		int scale = VRroomDistanceToGameDistanceScale;
-		lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.pos.x - vrInfoHMD.pos.x) * scale;
-		lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
-		lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.pos.z - vrInfoHMD.pos.z) * scale;
+				/* ROTATION CONTROLLER TRACKING */
 
-		rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.pos.x - vrInfoHMD.pos.x) * scale;
-		rhand->Coord.y = theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
-		rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.pos.z - vrInfoHMD.pos.z) * scale;
+			OGLVector3D calcLeftControllerRot;
 
+			
 
-		// Rotation controller tracking
-		OGLPoint3D calcLeftControllerRot;
-		float gameYawIgnoringHMD = vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw;
+			/* 
+			Okay THINK.If pointing to Yaw 0 Roll 0 and Pitch 0. Then we move the pitch.
+			Think of where the "direction vector" would point, NOT about which axis we are rotating.
+			The PITCH with all others 0 would make the dir vect point on the Y and Z axes;
+			The ROLL with all others 0 would would make the dir vect point on the X and Y axes;
 
-		// UNTESTED
-		calcLeftControllerRot.x = vrInfoLeftHand.rot.pitch * sin(gameYawIgnoringHMD - PI / 2);
-		calcLeftControllerRot.x += vrInfoLeftHand.rot.roll * sin(gameYawIgnoringHMD);
-		calcLeftControllerRot.z = vrInfoLeftHand.rot.pitch * sin(gameYawIgnoringHMD);
-		calcLeftControllerRot.z += vrInfoLeftHand.rot.roll * sin(gameYawIgnoringHMD - PI / 2);
+			PITCH on all 0: Z axe = cos(PITCH), y axe = sin (PITCH)
+			ROLL on all 0: X axe = cos(ROLL) y axe = sin (ROLL)
+			YAW on all 0: X axe = sin(YAW), Z axe = cos(YAW)
+			*/
 
-		lhand->Rot.x = calcLeftControllerRot.x;
-		lhand->Rot.z = calcLeftControllerRot.z;
-		lhand->Rot.y = vrInfoLeftHand.rot.yaw;
+			//vrInfoLeftHand.rot.pitch = vrInfoLeftHand.rot.pitch - PI / 2;
+
+			calcLeftControllerRot.x = vrInfoLeftHand.rot.pitch;
+
+			calcLeftControllerRot.y = vrInfoLeftHand.rot.yaw;
+
+			calcLeftControllerRot.z = vrInfoLeftHand.rot.roll;
+
+			//calcLeftControllerRot.x = vrInfoLeftHand.rot.pitch * sin(vrInfoLeftHand.rot.yaw);
+			//calcLeftControllerRot.x += vrInfoLeftHand.rot.roll * sin(vrInfoLeftHand.rot.yaw + PI / 2 );
+			//calcLeftControllerRot.x += vrInfoLeftHand.rot.yaw * sin(vrInfoLeftHand.rot.roll - PI / 2);
+
+			//calcLeftControllerRot.z = vrInfoLeftHand.rot.pitch * sin(vrInfoLeftHand.rot.yaw + PI / 2);
+			//calcLeftControllerRot.z += vrInfoLeftHand.rot.roll * sin(vrInfoLeftHand.rot.yaw);
+			//calcLeftControllerRot.z += vrInfoLeftHand.rot.yaw * sin(vrInfoLeftHand.rot.pitch - PI / 2);
+
+			//calcLeftControllerRot.y = vrInfoLeftHand.rot.yaw * sin(vrInfoLeftHand.rot.pitch - PI / 2) * sin(vrInfoLeftHand.rot.roll - PI / 2);
+			
+
+			//// NO ITS THE OPPOSITE!!!!! Along WHICH axis it rotates
+			//calcLeftControllerRot.x = cos(vrInfoLeftHand.rot.pitch) * sin(vrInfoLeftHand.rot.yaw) * cos(vrInfoLeftHand.rot.roll);
+
+			//calcLeftControllerRot.z = 0;
+
+			//calcLeftControllerRot.y = 0;
+			//// Or is it??? wtf
+
+			// lhand->Rot.x = 1.57; // seems to be facing forward normal with pitch = slightly less than vertical
+			//lhand->Rot.x = calcLeftControllerRot.x;
+			//lhand->Rot.y = calcLeftControllerRot.y;
+			//lhand->Rot.z = calcLeftControllerRot.z;
 		
 
-		// Rotation logging
-		printf("LeftController rot.pitch: %f\n", vrInfoLeftHand.rot.pitch);
-		printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
-		printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
+			// Rotation logging
+			printf("vrInfoHMD.HMDgameYawIgnoringHMD: %f\n", vrInfoHMD.HMDgameYawIgnoringHMD);
+			//printf("calcLeftControllerRot.x: %f\n", calcLeftControllerRot.x);
+			//printf("calcLeftControllerRot.y: %f\n", calcLeftControllerRot.y);
+			//printf("calcLeftControllerRot.z: %f\n", calcLeftControllerRot.z);
+			//printf("LeftController rot.pitch: %f\n", vrInfoLeftHand.rot.pitch);
+			//printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
+			//printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
 
-		// Position Logging
-		//printf("LeftHand pos.x: %f\n", lhand->Coord.x);
-		//printf("LeftHand pos.y: %f\n", lhand->Coord.y);
-		//printf("LeftHand pos.z: %f\n\n", lhand->Coord.z);
-		//printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
-		//printf("LeftController pos.y: %f\n", vrInfoLeftHand.pos.y);
-		//printf("LeftController pos.z: %f\n\n", vrInfoLeftHand.pos.z);
+			// Position Logging
+			printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
+			printf("LeftController pos.y: %f\n", vrInfoLeftHand.pos.y);
+			printf("LeftController pos.z: %f\n", vrInfoLeftHand.pos.z);
+			printf("gameAxesLeftHandPosX: %f\n", vrInfoLeftHand.posGameAxes.x);
+			printf("gameAxesLeftHandPosZ: %f\n", vrInfoLeftHand.posGameAxes.z);
+			printf("LeftHand pos.x: %f\n", lhand->Coord.x);
+			printf("LeftHand pos.y: %f\n", lhand->Coord.y);
+			printf("LeftHand pos.z: %f\n", lhand->Coord.z);
+			printf("theNode->Coord.x: %f\n", theNode->Coord.x);
+			printf("theNode->Coord.y: %f\n", theNode->Coord.y);
+			printf("theNode->Coord.z: %f\n\n", theNode->Coord.z);
 
-	}
-	else { // Non VR, for testing only (should not be used in VR ever)
-		if (rhand && lhand)										// only update if both hands are legit
-		{
-
+		}
+		else { // Non VR, for testing only (should not be used in VR ever)
 			switch (theNode->Skeleton->AnimNum)
 			{
 				/* OPEN HANDS */

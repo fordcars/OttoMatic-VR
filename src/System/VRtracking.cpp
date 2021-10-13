@@ -109,6 +109,9 @@ extern "C" void updateHMDposition(void)
 	if (vrInfoRightHand.deviceID)
 		parseTrackingData(&vrInfoRightHand);
 
+	// Update the HMD specific members
+	vrInfoHMD.HMDgameYawIgnoringHMD = vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw;
+
 
 		/* Logging for testing */
 
@@ -136,4 +139,21 @@ extern "C" void updateHMDposition(void)
 	//printf("LeftHand posDelta.y: %f    RightHand posDelta.y: %f\n", vrInfoLeftHand.posDelta.y, vrInfoRightHand.posDelta.y);
 	//printf("LeftHand posDelta.z: %f    RightHand posDelta.z: %f\n\n\n", vrInfoLeftHand.posDelta.z, vrInfoRightHand.posDelta.z);
 
+}
+
+extern "C" void updateGameSpacePositions() {
+	vrInfoHMD.posGameAxes.x =
+		vrInfoHMD.pos.x * cos(vrInfoHMD.HMDgameYawIgnoringHMD) + vrInfoHMD.pos.z * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.posGameAxes.z =
+		vrInfoHMD.pos.z * cos(vrInfoHMD.HMDgameYawIgnoringHMD) - vrInfoHMD.pos.x * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+
+	vrInfoLeftHand.posGameAxes.x =
+		vrInfoLeftHand.pos.x * cos(vrInfoHMD.HMDgameYawIgnoringHMD) + vrInfoLeftHand.pos.z * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoLeftHand.posGameAxes.z =
+		vrInfoLeftHand.pos.z * cos(vrInfoHMD.HMDgameYawIgnoringHMD) - vrInfoLeftHand.pos.x * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+
+	vrInfoRightHand.posGameAxes.x =
+		vrInfoRightHand.pos.x * cos(vrInfoHMD.HMDgameYawIgnoringHMD) + vrInfoRightHand.pos.z * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoRightHand.posGameAxes.z =
+		vrInfoRightHand.pos.z * cos(vrInfoHMD.HMDgameYawIgnoringHMD) - vrInfoRightHand.pos.x * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
 }

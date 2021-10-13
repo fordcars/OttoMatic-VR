@@ -60,11 +60,13 @@ typedef struct
 
 		// Rotation special
 	double HMDYawCorrected; // Only useful for HMD, use to correct yaw from thumbstick rotation
+	double HMDgameYawIgnoringHMD; // Corrects for the gameYaw (worldspace), the X & Z directions change with thumbstick
 
 
 		/* POSITION (x, y, z) */
 	vrPosition pos; // Current actual position
 	vrPosition posDelta; // Position delta (dif since last frame/last check)
+	vrPosition posGameAxes; // Position based in the game worldspace
 }TrackedVrDeviceInfo;
 
 #ifdef __cplusplus

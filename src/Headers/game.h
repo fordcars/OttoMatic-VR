@@ -98,6 +98,7 @@ void vrcpp_DoVibrationHaptics(int handToVibrate,
 
 
 void updateHMDposition(void);
+void updateGameSpacePositions(); // Updates the gameSpace coordinate members within the vrInfo Structs
 
 
 
