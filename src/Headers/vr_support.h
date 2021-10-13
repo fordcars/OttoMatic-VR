@@ -45,7 +45,7 @@ typedef struct
 	float x;
 	float y;
 	float z;
-} vrPostion;
+} vrPosition;
 
 
 		// * TRACKING * //
@@ -63,8 +63,8 @@ typedef struct
 
 
 		/* POSITION (x, y, z) */
-	vrPostion pos; // Current actual position
-	vrPostion posDelta; // Position delta (dif since last frame/last check)
+	vrPosition pos; // Current actual position
+	vrPosition posDelta; // Position delta (dif since last frame/last check)
 }TrackedVrDeviceInfo;
 
 #ifdef __cplusplus
