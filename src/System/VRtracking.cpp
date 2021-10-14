@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cstring>
 
+#define	PI					((float)3.1415926535898)
+
 extern vr::IVRSystem *gIVRSystem;
 
 vr::TrackedDevicePose_t trackedDevicePoseHMD;
@@ -109,8 +111,44 @@ extern "C" void updateHMDposition(void)
 	if (vrInfoRightHand.deviceID)
 		parseTrackingData(&vrInfoRightHand);
 
+
+	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!
+	// Spinning in front of you on the yaw axis while pointing forward
+	//{
+	//vrInfoHMD.pos.x = 0;
+	//vrInfoHMD.pos.y = 1.5;
+	//vrInfoHMD.pos.z = 1;
+
+	//vrInfoLeftHand.pos.x = 0;
+	//vrInfoLeftHand.pos.y = 2.5;
+	//vrInfoLeftHand.pos.z = 0;
+
+	//vrInfoLeftHand.rot.pitch = PI / 2;
+	//vrInfoLeftHand.rot.yaw += 0.01;
+	//vrInfoLeftHand.rot.roll = 0;
+	//}
+
+	// Spinning in front of you on the roll axis while pointing forward
+	//{
+	//	vrInfoHMD.pos.x = 0;
+	//	vrInfoHMD.pos.y = 1.5;
+	//	vrInfoHMD.pos.z = 1;
+
+	//	vrInfoLeftHand.pos.x = 0;
+	//	vrInfoLeftHand.pos.y = 2.5;
+	//	vrInfoLeftHand.pos.z = 0;
+
+	//	vrInfoLeftHand.rot.pitch = 0.01;
+	//	vrInfoLeftHand.rot.yaw = 0;
+	//	vrInfoLeftHand.rot.roll += 0.01;
+	//}
+	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!
+
 	// Update the HMD specific members
 	vrInfoHMD.HMDgameYawIgnoringHMD = vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw;
+
+
+
 
 
 		/* Logging for testing */
