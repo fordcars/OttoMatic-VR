@@ -47,12 +47,24 @@ typedef struct
 	float z;
 } vrPosition;
 
+typedef struct 
+{
+	float m[3][4];
+}vrMatrix34;
+
+typedef struct
+{
+	double w, x, y, z;
+}vrQuaternion;
+
 
 		// * TRACKING * //
 
 typedef struct
 {
 	int deviceID;
+	vrMatrix34 matrix;
+	vrQuaternion quat;
 
 		/* ROTATION (pitch, yaw, roll) */
 	vrEuler rot; // Current actual rotation
@@ -67,6 +79,7 @@ typedef struct
 	vrPosition pos; // Current actual position
 	vrPosition posDelta; // Position delta (dif since last frame/last check)
 	vrPosition posGameAxes; // Position based in the game worldspace
+	vrPosition posDeltaGameAxes; // Position based in the game worldspace delta
 }TrackedVrDeviceInfo;
 
 #ifdef __cplusplus

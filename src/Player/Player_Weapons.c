@@ -254,9 +254,9 @@ OGLMatrix4x4	m;
 	//printf("muzzleVector.y raw: %f\n", muzzleVector.y);
 	//printf("muzzleVector.z raw: %f\n", muzzleVector.z);
 
-	printf("muzzleCoord.x: %f\n", muzzleCoord.x);
-	printf("muzzleCoord.y: %f\n", muzzleCoord.y);
-	printf("muzzleCoord.z: %f\n", muzzleCoord.z);
+	//printf("muzzleCoord.x: %f\n", muzzleCoord.x);
+	//printf("muzzleCoord.y: %f\n", muzzleCoord.y);
+	//printf("muzzleCoord.z: %f\n", muzzleCoord.z);
 
 	OGLVector3D_Normalize(&muzzleVector, &muzzleVector);
 

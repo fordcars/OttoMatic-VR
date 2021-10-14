@@ -37,13 +37,13 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 
 
 	vr::HmdQuaternion_t q;
-	q.w = sqrt(fmax(0, 1 + matrix.m[0][0] + matrix.m[1][1] + matrix.m[2][2])) / 2;
-	q.x = sqrt(fmax(0, 1 + matrix.m[0][0] - matrix.m[1][1] - matrix.m[2][2])) / 2;
-	q.y = sqrt(fmax(0, 1 - matrix.m[0][0] + matrix.m[1][1] - matrix.m[2][2])) / 2;
-	q.z = sqrt(fmax(0, 1 - matrix.m[0][0] - matrix.m[1][1] + matrix.m[2][2])) / 2;
-	q.x = copysign(q.x, matrix.m[2][1] - matrix.m[1][2]);
-	q.y = copysign(q.y, matrix.m[0][2] - matrix.m[2][0]);
-	q.z = copysign(q.z, matrix.m[1][0] - matrix.m[0][1]);
+	deviceToParse->quat.w = q.w = sqrt(fmax(0, 1 + matrix.m[0][0] + matrix.m[1][1] + matrix.m[2][2])) / 2;
+	deviceToParse->quat.x = q.x = sqrt(fmax(0, 1 + matrix.m[0][0] - matrix.m[1][1] - matrix.m[2][2])) / 2;
+	deviceToParse->quat.y = q.y = sqrt(fmax(0, 1 - matrix.m[0][0] + matrix.m[1][1] - matrix.m[2][2])) / 2;
+	deviceToParse->quat.z = q.z = sqrt(fmax(0, 1 - matrix.m[0][0] - matrix.m[1][1] + matrix.m[2][2])) / 2;
+	deviceToParse->quat.x = q.x = copysign(q.x, matrix.m[2][1] - matrix.m[1][2]);
+	deviceToParse->quat.y = q.y = copysign(q.y, matrix.m[0][2] - matrix.m[2][0]);
+	deviceToParse->quat.z = q.z = copysign(q.z, matrix.m[1][0] - matrix.m[0][1]);
 
 
 	// Get the Euler angles from the last HMD update and remember them
@@ -60,6 +60,19 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 	deviceToParse->rotDelta.pitch = devicePitchSinceLastUpdate - deviceToParse->rot.pitch;
 	deviceToParse->rotDelta.yaw = deviceYawSinceLastUpdate - deviceToParse->rot.yaw;
 	deviceToParse->rotDelta.roll = deviceRollSinceLastUpdate - deviceToParse->rot.roll;
+
+	deviceToParse->matrix.m[0][0] = matrix.m[0][0];
+	deviceToParse->matrix.m[0][1] = matrix.m[0][1];
+	deviceToParse->matrix.m[0][2] = matrix.m[0][2];
+	deviceToParse->matrix.m[0][3] = matrix.m[0][3];
+	deviceToParse->matrix.m[1][0] = matrix.m[1][0];
+	deviceToParse->matrix.m[1][1] = matrix.m[1][1];
+	deviceToParse->matrix.m[1][2] = matrix.m[1][2];
+	deviceToParse->matrix.m[1][3] = matrix.m[1][3];
+	deviceToParse->matrix.m[2][0] = matrix.m[2][0];
+	deviceToParse->matrix.m[2][1] = matrix.m[2][1];
+	deviceToParse->matrix.m[2][2] = matrix.m[2][2];
+	deviceToParse->matrix.m[2][3] = matrix.m[2][3];
 }
 
 
@@ -114,7 +127,7 @@ extern "C" void updateHMDposition(void)
 
 	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!
 	// Spinning in front of you on the yaw axis while pointing forward
-	//{
+	{
 	//vrInfoHMD.pos.x = 0;
 	//vrInfoHMD.pos.y = 1.5;
 	//vrInfoHMD.pos.z = 1;
@@ -126,22 +139,22 @@ extern "C" void updateHMDposition(void)
 	//vrInfoLeftHand.rot.pitch = PI / 2;
 	//vrInfoLeftHand.rot.yaw += 0.01;
 	//vrInfoLeftHand.rot.roll = 0;
-	//}
+	}
 
 	// Spinning in front of you on the roll axis while pointing forward
-	//{
-	//	vrInfoHMD.pos.x = 0;
-	//	vrInfoHMD.pos.y = 1.5;
-	//	vrInfoHMD.pos.z = 1;
+	{
+		//vrInfoHMD.pos.x = 0;
+		//vrInfoHMD.pos.y = 1.5;
+		//vrInfoHMD.pos.z = 1;
 
-	//	vrInfoLeftHand.pos.x = 0;
-	//	vrInfoLeftHand.pos.y = 2.5;
-	//	vrInfoLeftHand.pos.z = 0;
+		//vrInfoLeftHand.pos.x = 0;
+		//vrInfoLeftHand.pos.y = 2.5;
+		//vrInfoLeftHand.pos.z = 0;
 
-	//	vrInfoLeftHand.rot.pitch = 0.01;
-	//	vrInfoLeftHand.rot.yaw = 0;
-	//	vrInfoLeftHand.rot.roll += 0.01;
-	//}
+		//vrInfoLeftHand.rot.pitch += 0.01;
+		//vrInfoLeftHand.rot.yaw = 0;
+		//vrInfoLeftHand.rot.roll = 0.01;
+	}
 	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!
 
 	// Update the HMD specific members
@@ -180,6 +193,14 @@ extern "C" void updateHMDposition(void)
 }
 
 extern "C" void updateGameSpacePositions() {
+	double HMDposGameAxesXSinceLastUpdate = vrInfoHMD.posGameAxes.x;
+	double HMDposGameAxesZSinceLastUpdate = vrInfoHMD.posGameAxes.z;
+	double LeftHandposGameAxesXSinceLastUpdate = vrInfoLeftHand.posGameAxes.x;
+	double LeftHandposGameAxesZSinceLastUpdate = vrInfoLeftHand.posGameAxes.z;
+	double RightHandposGameAxesXSinceLastUpdate = vrInfoRightHand.posGameAxes.x;
+	double RightHandposGameAxesZSinceLastUpdate = vrInfoRightHand.posGameAxes.z;
+	
+	
 	vrInfoHMD.posGameAxes.x =
 		vrInfoHMD.pos.x * cos(vrInfoHMD.HMDgameYawIgnoringHMD) + vrInfoHMD.pos.z * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
 	vrInfoHMD.posGameAxes.z =
@@ -194,4 +215,11 @@ extern "C" void updateGameSpacePositions() {
 		vrInfoRightHand.pos.x * cos(vrInfoHMD.HMDgameYawIgnoringHMD) + vrInfoRightHand.pos.z * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
 	vrInfoRightHand.posGameAxes.z =
 		vrInfoRightHand.pos.z * cos(vrInfoHMD.HMDgameYawIgnoringHMD) - vrInfoRightHand.pos.x * sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+
+	vrInfoHMD.posDeltaGameAxes.x = -(HMDposGameAxesXSinceLastUpdate - vrInfoHMD.posGameAxes.x);
+	vrInfoHMD.posDeltaGameAxes.z = -(HMDposGameAxesZSinceLastUpdate - vrInfoHMD.posGameAxes.z);
+	vrInfoLeftHand.posDeltaGameAxes.x = -(LeftHandposGameAxesXSinceLastUpdate - vrInfoLeftHand.posGameAxes.x);
+	vrInfoLeftHand.posDeltaGameAxes.z = -(LeftHandposGameAxesZSinceLastUpdate - vrInfoLeftHand.posGameAxes.z);
+	vrInfoRightHand.posDeltaGameAxes.x = -(RightHandposGameAxesXSinceLastUpdate - vrInfoRightHand.posGameAxes.x);
+	vrInfoRightHand.posDeltaGameAxes.z = -(RightHandposGameAxesZSinceLastUpdate - vrInfoRightHand.posGameAxes.z);
 }

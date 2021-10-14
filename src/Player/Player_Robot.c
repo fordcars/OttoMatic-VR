@@ -155,6 +155,9 @@ Boolean			gDoJumpJetAtApex = false;			// true if want to do jump jet when player
 
 Boolean    gInitVRYawAlignDone = false; // Required to avoid view snap and VR motion glitch
 
+bool subtractOnceDone = false;
+bool subtractTwiceDone = false;
+
 //
 // In order to let the player move faster than the max speed, we use a current and target value.
 // the target is what we want the max to normally be, and the current is what it currently is.
@@ -1806,9 +1809,9 @@ void UpdateRobotHands(ObjNode *theNode)
 			updateGameSpacePositions();
 
 			int scale = VRroomDistanceToGameDistanceScale;
-			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
-			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+			//lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			//lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			//lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 			rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
 			rhand->Coord.y = theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
@@ -1866,13 +1869,13 @@ void UpdateRobotHands(ObjNode *theNode)
 
 
 
-			lhand->Rot.x = vrInfoLeftHand.rot.pitch + 1;
-			lhand->Rot.y = vrInfoLeftHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
-			//lhand->Rot.z = vrInfoLeftHand.rot.roll;
+			//lhand->Rot.x = vrInfoLeftHand.rot.pitch + 1;
+			//lhand->Rot.y = vrInfoLeftHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
+			////lhand->Rot.z = vrInfoLeftHand.rot.roll;
 
-			rhand->Rot.x = vrInfoRightHand.rot.pitch + 1;
-			rhand->Rot.y = vrInfoRightHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
-			//rhand->Rot.z = vrInfoRightHand.rot.roll;
+			//rhand->Rot.x = vrInfoRightHand.rot.pitch + 1;
+			//rhand->Rot.y = vrInfoRightHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
+			////rhand->Rot.z = vrInfoRightHand.rot.roll;
 		
 
 
@@ -1886,6 +1889,106 @@ void UpdateRobotHands(ObjNode *theNode)
 			//printf("LeftController rot.pitch: %f\n", vrInfoLeftHand.rot.pitch);
 			//printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
 			//printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
+
+			// Matrix test
+			OGLMatrix4x4 yawCorrection = { 0 };
+			OGLMatrix4x4 LeftHandRotOnly;
+			LeftHandRotOnly.value[M00] = vrInfoLeftHand.matrix.m[0][0];
+			LeftHandRotOnly.value[M01] = vrInfoLeftHand.matrix.m[0][1];
+			LeftHandRotOnly.value[M02] = vrInfoLeftHand.matrix.m[0][2];
+			LeftHandRotOnly.value[M03] = (vrInfoLeftHand.posDeltaGameAxes.x - vrInfoHMD.posDeltaGameAxes.x) * scale; // Translation X
+			LeftHandRotOnly.value[M10] = vrInfoLeftHand.matrix.m[1][0];
+			LeftHandRotOnly.value[M11] = vrInfoLeftHand.matrix.m[1][1];
+			LeftHandRotOnly.value[M12] = vrInfoLeftHand.matrix.m[1][2];
+			LeftHandRotOnly.value[M13] = -(vrInfoLeftHand.posDelta.y - vrInfoHMD.posDelta.y) * scale; // Translation Y
+			LeftHandRotOnly.value[M20] = vrInfoLeftHand.matrix.m[2][0];
+			LeftHandRotOnly.value[M21] = vrInfoLeftHand.matrix.m[2][1];
+			LeftHandRotOnly.value[M22] = vrInfoLeftHand.matrix.m[2][2];
+			LeftHandRotOnly.value[M23] = (vrInfoLeftHand.posDeltaGameAxes.z - vrInfoHMD.posDeltaGameAxes.z) * scale; // Translation Z
+
+			LeftHandRotOnly.value[M30] = 0;
+			LeftHandRotOnly.value[M31] = 0;
+			LeftHandRotOnly.value[M32] = 0;
+			LeftHandRotOnly.value[M33] = 1;
+
+			
+			//yawCorrection.value[M00] = cos(vrInfoHMD.HMDgameYawIgnoringHMD);
+			//yawCorrection.value[M02] = -sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+			//yawCorrection.value[M20] = sin(vrInfoHMD.HMDgameYawIgnoringHMD);
+			//yawCorrection.value[M22] = cos(vrInfoHMD.HMDgameYawIgnoringHMD);
+			//yawCorrection.value[M11] = 1;
+			//yawCorrection.value[M33] = 1;
+
+
+			printf("PRElhand pos X m12: %f\n", LeftHandRotOnly.value[M03]);
+			printf("PRElhand pos Y m13: %f\n", LeftHandRotOnly.value[M13]);
+			printf("PRElhand pos Z m14: %f\n", LeftHandRotOnly.value[M23]);
+			printf("PRE BaseTransformMatrix pos X: %f\n", lhand->BaseTransformMatrix.value[M03]);
+			printf("PRE BaseTransformMatrix pos Y: %f\n", lhand->BaseTransformMatrix.value[M13]);
+			printf("PRE BaseTransformMatrix pos Z: %f\n\n", lhand->BaseTransformMatrix.value[M23]);
+			printf("NODE INIT Y: %f\n", theNode->InitCoord.y);
+			printf("NODE Y: %f\n", theNode->Coord.y);
+			printf("NODE OLD Y: %f\n", theNode->OldCoord.y);
+			printf("DIF: %f\n\n", theNode->Coord.y - theNode->OldCoord.y);
+			
+			OGLMatrix4x4_Multiply(&LeftHandRotOnly, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
+			//OGLMatrix4x4_Multiply(&lhand->BaseTransformMatrix, &yawCorrection, &lhand->BaseTransformMatrix);
+			
+			SetObjectTransformMatrix(lhand);
+
+
+			//float quantity1 = theNode->InitCoord.y;
+			//if (subtractOnceDone)
+			//	quantity1 = 0;
+			//float quantity2 = theNode->InitCoord.y - theNode->Coord.y;
+			//if (subtractTwiceDone)
+			//	quantity2 = 0;
+			//lhand->Coord.x = lhand->BaseTransformMatrix.value[M03];			// get coords from matrix
+			//lhand->Coord.y = lhand->BaseTransformMatrix.value[M13] + theNode->Coord.y - theNode->OldCoord.y;
+			//	lhand->Coord.y = lhand->BaseTransformMatrix.value[M13] + theNode->Coord.y - theNode->OldCoord.y - quantity2;
+			//	subtractTwiceDone = true;
+			//lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
+
+			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+
+
+			//theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			//theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			//theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+
+			//printf("X m0: %f\n", vrInfoLeftHand.matrix.m[0][0]);
+			//printf("X m1: %f\n", vrInfoLeftHand.matrix.m[0][1]);
+			//printf("X m2: %f\n", vrInfoLeftHand.matrix.m[0][2]);
+			//printf("Y m4: %f\n", vrInfoLeftHand.matrix.m[1][0]);
+			//printf("Y m5: %f\n", vrInfoLeftHand.matrix.m[1][1]);
+			//printf("Y m6: %f\n", vrInfoLeftHand.matrix.m[1][2]);
+			//printf("Z m7: %f\n", vrInfoLeftHand.matrix.m[2][0]);
+			//printf("Z m8: %f\n", vrInfoLeftHand.matrix.m[2][1]);
+			//printf("Z m9: %f\n\n", vrInfoLeftHand.matrix.m[2][2]);
+
+			//printf("lhand X m0: %f\n", lhand->BaseTransformMatrix.value[0]);
+			//printf("lhand X m1: %f\n", lhand->BaseTransformMatrix.value[1]);
+			//printf("lhand X m2: %f\n", lhand->BaseTransformMatrix.value[2]);
+			//printf("lhand Y m4: %f\n", lhand->BaseTransformMatrix.value[4]);
+			//printf("lhand Y m5: %f\n", lhand->BaseTransformMatrix.value[5]);
+			//printf("lhand Y m6: %f\n", lhand->BaseTransformMatrix.value[6]);
+			//printf("lhand Z m8: %f\n", lhand->BaseTransformMatrix.value[8]);
+			//printf("lhand Z m9: %f\n", lhand->BaseTransformMatrix.value[9]);
+			//printf("lhand Z m10: %f\n\n", lhand->BaseTransformMatrix.value[10]);
+
+			// position
+			printf("POSTlhand BaseTransformMatrix X m12 (M03) %f\n", lhand->BaseTransformMatrix.value[M03]);
+			printf("POSTlhand BaseTransformMatrix Y m13 (M13): %f\n", lhand->BaseTransformMatrix.value[M13]);
+			printf("POSTlhand BaseTransformMatrix Z m14 (M23): %f\n", lhand->BaseTransformMatrix.value[M23]);
+			printf("lhand pos X: %f\n", lhand->Coord.x);
+			printf("lhand pos Y: %f\n", lhand->Coord.y);
+			printf("lhand pos Z: %f\n", lhand->Coord.z);
+			printf("rhand pos X: %f\n", rhand->Coord.x);
+			printf("rhand pos Y: %f\n", rhand->Coord.y);
+			printf("rhand pos Z: %f\n\n\n", rhand->Coord.z);
+
 
 			// Position Logging
 			//printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
