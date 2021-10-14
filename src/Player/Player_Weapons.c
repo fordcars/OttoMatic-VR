@@ -227,6 +227,9 @@ OGLMatrix4x4	m;
 	gCameraUserRotY = 0;											// reset user rot see we can see where we're shooting
 	gForceCameraAlignment = true;
 
+	ObjNode *lhand = gPlayerInfo.leftHandObj;						// get hand objects
+	ObjNode *rhand = gPlayerInfo.rightHandObj;
+
 		/* CALC COORD & VECTOR OF MUZZLE */
 
 	if (gPlayerInfo.holdingGun)
@@ -235,6 +238,32 @@ OGLMatrix4x4	m;
 		OGLPoint3D_Transform(&gPlayerMuzzleTipOff, &m, &muzzleCoord);
 		OGLVector3D_Transform(&gPlayerMuzzleTipAim, &m, &muzzleVector);
 	}
+
+
+
+	// TEST - to adjust
+	muzzleCoord.x = lhand->Coord.x;
+	muzzleCoord.y = lhand->Coord.y;
+	muzzleCoord.z = lhand->Coord.z;
+
+	muzzleVector.x = -cos(lhand->Rot.y - PI/2);
+	muzzleVector.y = -cos(lhand->Rot.x); // x rotation (pitch) controls height of shot
+	muzzleVector.z = -cos(lhand->Rot.y);
+
+	//printf("muzzleVector.x raw: %f\n", muzzleVector.x);
+	//printf("muzzleVector.y raw: %f\n", muzzleVector.y);
+	//printf("muzzleVector.z raw: %f\n", muzzleVector.z);
+
+	printf("muzzleCoord.x: %f\n", muzzleCoord.x);
+	printf("muzzleCoord.y: %f\n", muzzleCoord.y);
+	printf("muzzleCoord.z: %f\n", muzzleCoord.z);
+
+	OGLVector3D_Normalize(&muzzleVector, &muzzleVector);
+
+	//printf("muzzleVector.x: %f\n", muzzleVector.x);
+	//printf("muzzleVector.y: %f\n", muzzleVector.y);
+	//printf("muzzleVector.z: %f\n\n", muzzleVector.z);
+
 
 			/* SHOOT APPROPRIATE WEAPON */
 

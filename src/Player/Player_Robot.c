@@ -1877,15 +1877,15 @@ void UpdateRobotHands(ObjNode *theNode)
 
 
 
-			printf("vrInfoHMD.HMDgameYawIgnoringHMD: %f\n", vrInfoHMD.HMDgameYawIgnoringHMD);
+			//printf("vrInfoHMD.HMDgameYawIgnoringHMD: %f\n", vrInfoHMD.HMDgameYawIgnoringHMD);
 
 			// Rotation logging
-			printf("lhand->Rot.x: %f\n", lhand->Rot.x);
-			printf("lhand->Rot.y: %f\n", lhand->Rot.y);
-			printf("lhand->Rot.z: %f\n", lhand->Rot.z);
-			printf("LeftController rot.pitch: %f\n", vrInfoLeftHand.rot.pitch);
-			printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
-			printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
+			//printf("lhand->Rot.x: %f\n", lhand->Rot.x);
+			//printf("lhand->Rot.y: %f\n", lhand->Rot.y);
+			//printf("lhand->Rot.z: %f\n", lhand->Rot.z);
+			//printf("LeftController rot.pitch: %f\n", vrInfoLeftHand.rot.pitch);
+			//printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
+			//printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
 
 			// Position Logging
 			//printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
