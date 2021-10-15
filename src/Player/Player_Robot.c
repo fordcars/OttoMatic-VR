@@ -1912,12 +1912,12 @@ void UpdateRobotHands(ObjNode *theNode)
 			LeftHandRotOnly.value[M33] = 1;
 
 			
-			//yawCorrection.value[M00] = cos(vrInfoHMD.HMDgameYawIgnoringHMD);
-			//yawCorrection.value[M02] = -sin(vrInfoHMD.HMDgameYawIgnoringHMD);
-			//yawCorrection.value[M20] = sin(vrInfoHMD.HMDgameYawIgnoringHMD);
-			//yawCorrection.value[M22] = cos(vrInfoHMD.HMDgameYawIgnoringHMD);
-			//yawCorrection.value[M11] = 1;
-			//yawCorrection.value[M33] = 1;
+			yawCorrection.value[M00] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
+			yawCorrection.value[M02] = -sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
+			yawCorrection.value[M20] = sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
+			yawCorrection.value[M22] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
+			yawCorrection.value[M11] = 1;
+			yawCorrection.value[M33] = 1;
 
 
 			printf("PRElhand pos X m12: %f\n", LeftHandRotOnly.value[M03]);
@@ -1930,9 +1930,9 @@ void UpdateRobotHands(ObjNode *theNode)
 			printf("NODE Y: %f\n", theNode->Coord.y);
 			printf("NODE OLD Y: %f\n", theNode->OldCoord.y);
 			printf("DIF: %f\n\n", theNode->Coord.y - theNode->OldCoord.y);
-			
+
+			OGLMatrix4x4_Multiply(&LeftHandRotOnly, &yawCorrection, &LeftHandRotOnly);
 			OGLMatrix4x4_Multiply(&LeftHandRotOnly, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
-			//OGLMatrix4x4_Multiply(&lhand->BaseTransformMatrix, &yawCorrection, &lhand->BaseTransformMatrix);
 			
 			SetObjectTransformMatrix(lhand);
 
