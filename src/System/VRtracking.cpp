@@ -5,6 +5,26 @@
 
 #define	PI					((float)3.1415926535898)
 
+enum
+{
+	M00 = 0,
+	M10,
+	M20,
+	M30,
+	M01,
+	M11,
+	M21,
+	M31,
+	M02,
+	M12,
+	M22,
+	M32,
+	M03,
+	M13,
+	M23,
+	M33
+};
+
 extern vr::IVRSystem *gIVRSystem;
 
 vr::TrackedDevicePose_t trackedDevicePoseHMD;
@@ -20,16 +40,16 @@ TrackedVrDeviceInfo vrInfoRightHand;
 
 
 void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
-	vr::HmdMatrix34_t matrix = trackedDevices[deviceToParse->deviceID].mDeviceToAbsoluteTracking;
+	vr::HmdMatrix34_t trackedDeviceMatrix = trackedDevices[deviceToParse->deviceID].mDeviceToAbsoluteTracking;
 
 	double devicePosXSinceLastUpdate = deviceToParse->pos.x;
 	double devicePosYSinceLastUpdate = deviceToParse->pos.y;
 	double devicePosZSinceLastUpdate = deviceToParse->pos.z;
 
 	vr::HmdVector3_t vector;
-	deviceToParse->pos.x = vector.v[0] = matrix.m[0][3];
-	deviceToParse->pos.y = vector.v[1] = matrix.m[1][3];
-	deviceToParse->pos.z = vector.v[2] = matrix.m[2][3];
+	deviceToParse->pos.x = vector.v[0] = trackedDeviceMatrix.m[0][3];
+	deviceToParse->pos.y = vector.v[1] = trackedDeviceMatrix.m[1][3];
+	deviceToParse->pos.z = vector.v[2] = trackedDeviceMatrix.m[2][3];
 
 	deviceToParse->posDelta.x = -(devicePosXSinceLastUpdate - deviceToParse->pos.x);
 	deviceToParse->posDelta.y = devicePosYSinceLastUpdate - deviceToParse->pos.y;
@@ -37,13 +57,13 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 
 
 	vr::HmdQuaternion_t q;
-	deviceToParse->quat.w = q.w = sqrt(fmax(0, 1 + matrix.m[0][0] + matrix.m[1][1] + matrix.m[2][2])) / 2;
-	deviceToParse->quat.x = q.x = sqrt(fmax(0, 1 + matrix.m[0][0] - matrix.m[1][1] - matrix.m[2][2])) / 2;
-	deviceToParse->quat.y = q.y = sqrt(fmax(0, 1 - matrix.m[0][0] + matrix.m[1][1] - matrix.m[2][2])) / 2;
-	deviceToParse->quat.z = q.z = sqrt(fmax(0, 1 - matrix.m[0][0] - matrix.m[1][1] + matrix.m[2][2])) / 2;
-	deviceToParse->quat.x = q.x = copysign(q.x, matrix.m[2][1] - matrix.m[1][2]);
-	deviceToParse->quat.y = q.y = copysign(q.y, matrix.m[0][2] - matrix.m[2][0]);
-	deviceToParse->quat.z = q.z = copysign(q.z, matrix.m[1][0] - matrix.m[0][1]);
+	deviceToParse->quat.w = q.w = sqrt(fmax(0, 1 + trackedDeviceMatrix.m[0][0] + trackedDeviceMatrix.m[1][1] + trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse->quat.x = q.x = sqrt(fmax(0, 1 + trackedDeviceMatrix.m[0][0] - trackedDeviceMatrix.m[1][1] - trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse->quat.y = q.y = sqrt(fmax(0, 1 - trackedDeviceMatrix.m[0][0] + trackedDeviceMatrix.m[1][1] - trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse->quat.z = q.z = sqrt(fmax(0, 1 - trackedDeviceMatrix.m[0][0] - trackedDeviceMatrix.m[1][1] + trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse->quat.x = q.x = copysign(q.x, trackedDeviceMatrix.m[2][1] - trackedDeviceMatrix.m[1][2]);
+	deviceToParse->quat.y = q.y = copysign(q.y, trackedDeviceMatrix.m[0][2] - trackedDeviceMatrix.m[2][0]);
+	deviceToParse->quat.z = q.z = copysign(q.z, trackedDeviceMatrix.m[1][0] - trackedDeviceMatrix.m[0][1]);
 
 
 	// Get the Euler angles from the last HMD update and remember them
@@ -61,18 +81,35 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 	deviceToParse->rotDelta.yaw = deviceYawSinceLastUpdate - deviceToParse->rot.yaw;
 	deviceToParse->rotDelta.roll = deviceRollSinceLastUpdate - deviceToParse->rot.roll;
 
-	deviceToParse->matrix.m[0][0] = matrix.m[0][0];
-	deviceToParse->matrix.m[0][1] = matrix.m[0][1];
-	deviceToParse->matrix.m[0][2] = matrix.m[0][2];
-	deviceToParse->matrix.m[0][3] = matrix.m[0][3];
-	deviceToParse->matrix.m[1][0] = matrix.m[1][0];
-	deviceToParse->matrix.m[1][1] = matrix.m[1][1];
-	deviceToParse->matrix.m[1][2] = matrix.m[1][2];
-	deviceToParse->matrix.m[1][3] = matrix.m[1][3];
-	deviceToParse->matrix.m[2][0] = matrix.m[2][0];
-	deviceToParse->matrix.m[2][1] = matrix.m[2][1];
-	deviceToParse->matrix.m[2][2] = matrix.m[2][2];
-	deviceToParse->matrix.m[2][3] = matrix.m[2][3];
+	deviceToParse->rawVRmatrix.m[0][0] = trackedDeviceMatrix.m[0][0];
+	deviceToParse->rawVRmatrix.m[0][1] = trackedDeviceMatrix.m[0][1];
+	deviceToParse->rawVRmatrix.m[0][2] = trackedDeviceMatrix.m[0][2];
+	deviceToParse->rawVRmatrix.m[0][3] = trackedDeviceMatrix.m[0][3];
+	deviceToParse->rawVRmatrix.m[1][0] = trackedDeviceMatrix.m[1][0];
+	deviceToParse->rawVRmatrix.m[1][1] = trackedDeviceMatrix.m[1][1];
+	deviceToParse->rawVRmatrix.m[1][2] = trackedDeviceMatrix.m[1][2];
+	deviceToParse->rawVRmatrix.m[1][3] = trackedDeviceMatrix.m[1][3];
+	deviceToParse->rawVRmatrix.m[2][0] = trackedDeviceMatrix.m[2][0];
+	deviceToParse->rawVRmatrix.m[2][1] = trackedDeviceMatrix.m[2][1];
+	deviceToParse->rawVRmatrix.m[2][2] = trackedDeviceMatrix.m[2][2];
+	deviceToParse->rawVRmatrix.m[2][3] = trackedDeviceMatrix.m[2][3];
+
+	deviceToParse->transformationMatrix.value[M00] = deviceToParse->rawVRmatrix.m[0][0];
+	deviceToParse->transformationMatrix.value[M01] = deviceToParse->rawVRmatrix.m[0][1];
+	deviceToParse->transformationMatrix.value[M02] = deviceToParse->rawVRmatrix.m[0][2];
+	deviceToParse->transformationMatrix.value[M03] = 0; // Unused -> Translation X
+	deviceToParse->transformationMatrix.value[M10] = deviceToParse->rawVRmatrix.m[1][0];
+	deviceToParse->transformationMatrix.value[M11] = deviceToParse->rawVRmatrix.m[1][1];
+	deviceToParse->transformationMatrix.value[M12] = deviceToParse->rawVRmatrix.m[1][2];
+	deviceToParse->transformationMatrix.value[M13] = 0; // Unused -> Translation Y
+	deviceToParse->transformationMatrix.value[M20] = deviceToParse->rawVRmatrix.m[2][0];
+	deviceToParse->transformationMatrix.value[M21] = deviceToParse->rawVRmatrix.m[2][1];
+	deviceToParse->transformationMatrix.value[M22] = deviceToParse->rawVRmatrix.m[2][2];
+	deviceToParse->transformationMatrix.value[M23] = 0; // Unused -> Translation Z
+	deviceToParse->transformationMatrix.value[M30] = 0;
+	deviceToParse->transformationMatrix.value[M31] = 0;
+	deviceToParse->transformationMatrix.value[M32] = 0;
+	deviceToParse->transformationMatrix.value[M33] = 1;
 }
 
 
@@ -157,10 +194,17 @@ extern "C" void updateHMDposition(void)
 	}
 	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!
 
+
 	// Update the HMD specific members
 	vrInfoHMD.HMDgameYawIgnoringHMD = vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw;
 
-
+	vrInfoHMD.HMDgameYawCorrectionMatrix = { 0 };
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M00] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M02] = -sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M20] = sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M22] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M11] = 1;
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M33] = 1;
 
 
 

@@ -1802,83 +1802,40 @@ void UpdateRobotHands(ObjNode *theNode)
 				}
 			}
 
-			
-	
-			// Very basic position controller tracking
+
+				/* ROTATION CONTROLLER TRACKING */
+
+			// For both hands:
+			// Multiply controller orientation with the gameYaw correction to make the hand rotate with the player when using thumbsticks
+			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoLeftHand.transformationMatrixCorrected);
+			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoRightHand.transformationMatrixCorrected);
+
+			// Multiply corrected controller orientation with the hands BaseTransformMatrix
+			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrixCorrected, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
+			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrixCorrected, &rhand->BaseTransformMatrix, &rhand->BaseTransformMatrix);
+
+			// Apply rotations to hands
+			SetObjectTransformMatrix(lhand);
+			SetObjectTransformMatrix(rhand);
+
+
+
+				/* POSITION CONTROLLER TRACKING */
+
 			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
 			updateGameSpacePositions();
 
 			int scale = VRroomDistanceToGameDistanceScale;
-			//lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			//lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
-			//lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 			rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
 			rhand->Coord.y = theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
 			rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 
-				/* ROTATION CONTROLLER TRACKING */
-			// NOTES WHILE WORKING ON ROTATION, FOR NOW FINDINGS ARE THAT WE HAVE A GIMBAL LOCK PROBLEM
-			// TEMPORARY SOLUTION IS TO IGNORE THE ROLL AXIS COMPLETELY. IT SUCKS BUT FOR NOW THATS ALL
-			// I CAN FIGURE OUT. MAYBE ONE DAY WE CAN WORK WITH QUATERNION
-
-			/* 
-			Okay THINK.If pointing to Yaw 0 Roll 0 and Pitch 0. Then we move the pitch.
-			Think of where the "direction vector" would point, NOT about which axis we are rotating.
-			The PITCH with all others 0 would make the dir vect point on the Y and Z axes;
-			The ROLL with all others 0 would would make the dir vect point on the X and Y axes;
-
-			PITCH on all 0: Z axe = cos(PITCH), y axe = sin (PITCH)
-			ROLL on all 0: X axe = cos(ROLL) y axe = sin (ROLL)
-			YAW on all 0: X axe = sin(YAW), Z axe = cos(YAW)
-			*/
-
-			//vrInfoLeftHand.rot.pitch = vrInfoLeftHand.rot.pitch - PI / 2;
-
-			//calcLeftControllerRot.x = vrInfoLeftHand.rot.pitch * sin(vrInfoLeftHand.rot.yaw);
-			//calcLeftControllerRot.x += vrInfoLeftHand.rot.roll * sin(vrInfoLeftHand.rot.yaw + PI / 2 );
-			//calcLeftControllerRot.x += vrInfoLeftHand.rot.yaw * sin(vrInfoLeftHand.rot.roll - PI / 2);
-
-			//calcLeftControllerRot.z = vrInfoLeftHand.rot.pitch * sin(vrInfoLeftHand.rot.yaw + PI / 2);
-			//calcLeftControllerRot.z += vrInfoLeftHand.rot.roll * sin(vrInfoLeftHand.rot.yaw);
-			//calcLeftControllerRot.z += vrInfoLeftHand.rot.yaw * sin(vrInfoLeftHand.rot.pitch - PI / 2);
-
-			//calcLeftControllerRot.y = vrInfoLeftHand.rot.yaw * sin(vrInfoLeftHand.rot.pitch - PI / 2) * sin(vrInfoLeftHand.rot.roll - PI / 2);
 			
-
-			//// NO ITS THE OPPOSITE!!!!! Along WHICH axis it rotates
-			//calcLeftControllerRot.x = cos(vrInfoLeftHand.rot.pitch) * sin(vrInfoLeftHand.rot.yaw) * cos(vrInfoLeftHand.rot.roll);
-
-			//calcLeftControllerRot.z = 0;
-
-			//calcLeftControllerRot.y = 0;
-			//// Or is it??? wtf
-
-			// *hand->Rot.x = 1; // seems to be facing forward normal with pitch = slightly less than vertical
-			//lhand->Rot.x = (vrInfoLeftHand.rot.pitch) * sin(vrInfoHMD.HMDgameYawIgnoringHMD - PI / 2) + vrInfoLeftHand.rot.roll * cos(vrInfoHMD.HMDgameYawIgnoringHMD - PI / 2);
-			//lhand->Rot.y = vrInfoLeftHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
-			//lhand->Rot.z = vrInfoLeftHand.rot.roll * sin(vrInfoHMD.HMDgameYawIgnoringHMD - PI / 2) - (vrInfoLeftHand.rot.pitch) * cos(vrInfoHMD.HMDgameYawIgnoringHMD - PI / 2);
-
-			//lhand->Rot.x = vrInfoLeftHand.rot.pitch;
-			//lhand->Rot.x = vrInfoLeftHand.rot.pitch - vrInfoLeftHand.rot.roll * cos(lhand->Rot.y - PI/2);
-			//lhand->Rot.x = lhand->Rot.x + 0.01;
-			//lhand->Rot.z = lhand->Rot.z + 0.01;
-			//lhand->Rot.y = vrInfoLeftHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
-
-
-
-
-			//lhand->Rot.x = vrInfoLeftHand.rot.pitch + 1;
-			//lhand->Rot.y = vrInfoLeftHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
-			////lhand->Rot.z = vrInfoLeftHand.rot.roll;
-
-			//rhand->Rot.x = vrInfoRightHand.rot.pitch + 1;
-			//rhand->Rot.y = vrInfoRightHand.rot.yaw + vrInfoHMD.HMDgameYawIgnoringHMD;
-			////rhand->Rot.z = vrInfoRightHand.rot.roll;
-		
-
-
 
 			//printf("vrInfoHMD.HMDgameYawIgnoringHMD: %f\n", vrInfoHMD.HMDgameYawIgnoringHMD);
 
@@ -1890,39 +1847,11 @@ void UpdateRobotHands(ObjNode *theNode)
 			//printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
 			//printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
 
-			// Matrix test
-			OGLMatrix4x4 yawCorrection = { 0 };
-			OGLMatrix4x4 LeftHandRotOnly;
-			LeftHandRotOnly.value[M00] = vrInfoLeftHand.matrix.m[0][0];
-			LeftHandRotOnly.value[M01] = vrInfoLeftHand.matrix.m[0][1];
-			LeftHandRotOnly.value[M02] = vrInfoLeftHand.matrix.m[0][2];
-			LeftHandRotOnly.value[M03] = (vrInfoLeftHand.posDeltaGameAxes.x - vrInfoHMD.posDeltaGameAxes.x) * scale; // Translation X
-			LeftHandRotOnly.value[M10] = vrInfoLeftHand.matrix.m[1][0];
-			LeftHandRotOnly.value[M11] = vrInfoLeftHand.matrix.m[1][1];
-			LeftHandRotOnly.value[M12] = vrInfoLeftHand.matrix.m[1][2];
-			LeftHandRotOnly.value[M13] = -(vrInfoLeftHand.posDelta.y - vrInfoHMD.posDelta.y) * scale; // Translation Y
-			LeftHandRotOnly.value[M20] = vrInfoLeftHand.matrix.m[2][0];
-			LeftHandRotOnly.value[M21] = vrInfoLeftHand.matrix.m[2][1];
-			LeftHandRotOnly.value[M22] = vrInfoLeftHand.matrix.m[2][2];
-			LeftHandRotOnly.value[M23] = (vrInfoLeftHand.posDeltaGameAxes.z - vrInfoHMD.posDeltaGameAxes.z) * scale; // Translation Z
+		
 
-			LeftHandRotOnly.value[M30] = 0;
-			LeftHandRotOnly.value[M31] = 0;
-			LeftHandRotOnly.value[M32] = 0;
-			LeftHandRotOnly.value[M33] = 1;
-
-			
-			yawCorrection.value[M00] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
-			yawCorrection.value[M02] = -sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
-			yawCorrection.value[M20] = sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
-			yawCorrection.value[M22] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
-			yawCorrection.value[M11] = 1;
-			yawCorrection.value[M33] = 1;
-
-
-			printf("PRElhand pos X m12: %f\n", LeftHandRotOnly.value[M03]);
-			printf("PRElhand pos Y m13: %f\n", LeftHandRotOnly.value[M13]);
-			printf("PRElhand pos Z m14: %f\n", LeftHandRotOnly.value[M23]);
+			printf("PRElhand pos X m12: %f\n", vrInfoLeftHand.transformationMatrix.value[M03]);
+			printf("PRElhand pos Y m13: %f\n", vrInfoLeftHand.transformationMatrix.value[M13]);
+			printf("PRElhand pos Z m14: %f\n", vrInfoLeftHand.transformationMatrix.value[M23]);
 			printf("PRE BaseTransformMatrix pos X: %f\n", lhand->BaseTransformMatrix.value[M03]);
 			printf("PRE BaseTransformMatrix pos Y: %f\n", lhand->BaseTransformMatrix.value[M13]);
 			printf("PRE BaseTransformMatrix pos Z: %f\n\n", lhand->BaseTransformMatrix.value[M23]);
@@ -1931,10 +1860,7 @@ void UpdateRobotHands(ObjNode *theNode)
 			printf("NODE OLD Y: %f\n", theNode->OldCoord.y);
 			printf("DIF: %f\n\n", theNode->Coord.y - theNode->OldCoord.y);
 
-			OGLMatrix4x4_Multiply(&LeftHandRotOnly, &yawCorrection, &LeftHandRotOnly);
-			OGLMatrix4x4_Multiply(&LeftHandRotOnly, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
-			
-			SetObjectTransformMatrix(lhand);
+
 
 
 			//float quantity1 = theNode->InitCoord.y;
@@ -1948,10 +1874,6 @@ void UpdateRobotHands(ObjNode *theNode)
 			//	lhand->Coord.y = lhand->BaseTransformMatrix.value[M13] + theNode->Coord.y - theNode->OldCoord.y - quantity2;
 			//	subtractTwiceDone = true;
 			//lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
-
-			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
-			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 
 			//theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
