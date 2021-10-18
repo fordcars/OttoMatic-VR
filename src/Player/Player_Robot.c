@@ -1805,7 +1805,11 @@ void UpdateRobotHands(ObjNode *theNode)
 
 				/* ROTATION CONTROLLER TRACKING */
 
-			// For both hands:
+			// For both hands, disable translation (for now we don't use this:
+			vrInfoLeftHand.transformationMatrix.value[M03] = 0;
+			vrInfoLeftHand.transformationMatrix.value[M13] = 0;
+			vrInfoLeftHand.transformationMatrix.value[M23] = 0;
+
 			// Multiply controller orientation with the gameYaw correction to make the hand rotate with the player when using thumbsticks
 			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoLeftHand.transformationMatrixCorrected);
 			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoRightHand.transformationMatrixCorrected);
@@ -1849,16 +1853,16 @@ void UpdateRobotHands(ObjNode *theNode)
 
 		
 
-			printf("PRElhand pos X m12: %f\n", vrInfoLeftHand.transformationMatrix.value[M03]);
-			printf("PRElhand pos Y m13: %f\n", vrInfoLeftHand.transformationMatrix.value[M13]);
-			printf("PRElhand pos Z m14: %f\n", vrInfoLeftHand.transformationMatrix.value[M23]);
-			printf("PRE BaseTransformMatrix pos X: %f\n", lhand->BaseTransformMatrix.value[M03]);
-			printf("PRE BaseTransformMatrix pos Y: %f\n", lhand->BaseTransformMatrix.value[M13]);
-			printf("PRE BaseTransformMatrix pos Z: %f\n\n", lhand->BaseTransformMatrix.value[M23]);
-			printf("NODE INIT Y: %f\n", theNode->InitCoord.y);
-			printf("NODE Y: %f\n", theNode->Coord.y);
-			printf("NODE OLD Y: %f\n", theNode->OldCoord.y);
-			printf("DIF: %f\n\n", theNode->Coord.y - theNode->OldCoord.y);
+			//printf("PRElhand pos X m12: %f\n", vrInfoLeftHand.transformationMatrix.value[M03]);
+			//printf("PRElhand pos Y m13: %f\n", vrInfoLeftHand.transformationMatrix.value[M13]);
+			//printf("PRElhand pos Z m14: %f\n", vrInfoLeftHand.transformationMatrix.value[M23]);
+			//printf("PRE BaseTransformMatrix pos X: %f\n", lhand->BaseTransformMatrix.value[M03]);
+			//printf("PRE BaseTransformMatrix pos Y: %f\n", lhand->BaseTransformMatrix.value[M13]);
+			//printf("PRE BaseTransformMatrix pos Z: %f\n\n", lhand->BaseTransformMatrix.value[M23]);
+			//printf("NODE INIT Y: %f\n", theNode->InitCoord.y);
+			//printf("NODE Y: %f\n", theNode->Coord.y);
+			//printf("NODE OLD Y: %f\n", theNode->OldCoord.y);
+			//printf("DIF: %f\n\n", theNode->Coord.y - theNode->OldCoord.y);
 
 
 
@@ -1901,15 +1905,15 @@ void UpdateRobotHands(ObjNode *theNode)
 			//printf("lhand Z m10: %f\n\n", lhand->BaseTransformMatrix.value[10]);
 
 			// position
-			printf("POSTlhand BaseTransformMatrix X m12 (M03) %f\n", lhand->BaseTransformMatrix.value[M03]);
-			printf("POSTlhand BaseTransformMatrix Y m13 (M13): %f\n", lhand->BaseTransformMatrix.value[M13]);
-			printf("POSTlhand BaseTransformMatrix Z m14 (M23): %f\n", lhand->BaseTransformMatrix.value[M23]);
-			printf("lhand pos X: %f\n", lhand->Coord.x);
-			printf("lhand pos Y: %f\n", lhand->Coord.y);
-			printf("lhand pos Z: %f\n", lhand->Coord.z);
-			printf("rhand pos X: %f\n", rhand->Coord.x);
-			printf("rhand pos Y: %f\n", rhand->Coord.y);
-			printf("rhand pos Z: %f\n\n\n", rhand->Coord.z);
+			//printf("POSTlhand BaseTransformMatrix X m12 (M03) %f\n", lhand->BaseTransformMatrix.value[M03]);
+			//printf("POSTlhand BaseTransformMatrix Y m13 (M13): %f\n", lhand->BaseTransformMatrix.value[M13]);
+			//printf("POSTlhand BaseTransformMatrix Z m14 (M23): %f\n", lhand->BaseTransformMatrix.value[M23]);
+			//printf("lhand pos X: %f\n", lhand->Coord.x);
+			//printf("lhand pos Y: %f\n", lhand->Coord.y);
+			//printf("lhand pos Z: %f\n", lhand->Coord.z);
+			//printf("rhand pos X: %f\n", rhand->Coord.x);
+			//printf("rhand pos Y: %f\n", rhand->Coord.y);
+			//printf("rhand pos Z: %f\n\n\n", rhand->Coord.z);
 
 
 			// Position Logging

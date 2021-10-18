@@ -1499,6 +1499,9 @@ OGLLightDefType	*lights;
 			&setupInfo->cameraPlacement.cameraLocation,
 			&setupInfo->cameraPlacement.pointOfInterest,
 			&setupInfo->cameraPlacement.upVector);
+	//OGLMatrix4x4 tempMat;
+	//OGLcompatible44toOGLMatrix4x4(&vrInfoHMD.transformationMatrix,&tempMat);
+	//OGLMatrix4x4_Multiply(&gWorldToViewMatrix, &tempMat, &gWorldToViewMatrix);
 	glLoadMatrixf((const GLfloat*) &gWorldToViewMatrix.value[0]);
 
 

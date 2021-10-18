@@ -1,5 +1,9 @@
 #include "openvr.h"
-#include "vr_support.h"
+#include "Pomme.h"
+#include "PommeInit.h"
+#include "PommeFiles.h"
+#include "PommeGraphics.h"
+#include "game.h"
 #include <iostream>
 #include <cstring>
 #include <SDL_filesystem.h>

@@ -1,29 +1,17 @@
 #include "openvr.h"
-#include "vr_support.h"
 #include <iostream>
 #include <cstring>
+#include "Pomme.h"
+#include "PommeInit.h"
+#include "PommeFiles.h"
+#include "PommeGraphics.h"
+#include "game.h"
 
-#define	PI					((float)3.1415926535898)
+extern "C" {
+#include "ogl_support.h"
+#include "SDL_opengl.h"
+}
 
-enum
-{
-	M00 = 0,
-	M10,
-	M20,
-	M30,
-	M01,
-	M11,
-	M21,
-	M31,
-	M02,
-	M12,
-	M22,
-	M32,
-	M03,
-	M13,
-	M23,
-	M33
-};
 
 extern vr::IVRSystem *gIVRSystem;
 
@@ -97,15 +85,15 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 	deviceToParse->transformationMatrix.value[M00] = deviceToParse->rawVRmatrix.m[0][0];
 	deviceToParse->transformationMatrix.value[M01] = deviceToParse->rawVRmatrix.m[0][1];
 	deviceToParse->transformationMatrix.value[M02] = deviceToParse->rawVRmatrix.m[0][2];
-	deviceToParse->transformationMatrix.value[M03] = 0; // Unused -> Translation X
+	deviceToParse->transformationMatrix.value[M03] = deviceToParse->rawVRmatrix.m[0][3]; // Unused for controllers -> Translation X
 	deviceToParse->transformationMatrix.value[M10] = deviceToParse->rawVRmatrix.m[1][0];
 	deviceToParse->transformationMatrix.value[M11] = deviceToParse->rawVRmatrix.m[1][1];
 	deviceToParse->transformationMatrix.value[M12] = deviceToParse->rawVRmatrix.m[1][2];
-	deviceToParse->transformationMatrix.value[M13] = 0; // Unused -> Translation Y
+	deviceToParse->transformationMatrix.value[M13] = deviceToParse->rawVRmatrix.m[1][3]; // Unused for controllers -> Translation Y
 	deviceToParse->transformationMatrix.value[M20] = deviceToParse->rawVRmatrix.m[2][0];
 	deviceToParse->transformationMatrix.value[M21] = deviceToParse->rawVRmatrix.m[2][1];
 	deviceToParse->transformationMatrix.value[M22] = deviceToParse->rawVRmatrix.m[2][2];
-	deviceToParse->transformationMatrix.value[M23] = 0; // Unused -> Translation Z
+	deviceToParse->transformationMatrix.value[M23] = deviceToParse->rawVRmatrix.m[2][3]; // Unused for controllers -> Translation Z
 	deviceToParse->transformationMatrix.value[M30] = 0;
 	deviceToParse->transformationMatrix.value[M31] = 0;
 	deviceToParse->transformationMatrix.value[M32] = 0;
@@ -266,4 +254,18 @@ extern "C" void updateGameSpacePositions() {
 	vrInfoLeftHand.posDeltaGameAxes.z = -(LeftHandposGameAxesZSinceLastUpdate - vrInfoLeftHand.posGameAxes.z);
 	vrInfoRightHand.posDeltaGameAxes.x = -(RightHandposGameAxesXSinceLastUpdate - vrInfoRightHand.posGameAxes.x);
 	vrInfoRightHand.posDeltaGameAxes.z = -(RightHandposGameAxesZSinceLastUpdate - vrInfoRightHand.posGameAxes.z);
+}
+
+
+extern "C" void getXYZforCamera() {
+	TrackedVrDeviceInfo deviceToParse = vrInfoHMD;
+	vrMatrix34 trackedDeviceMatrix = vrInfoHMD.rawVRmatrix;
+	vr::HmdQuaternion_t q;
+	deviceToParse.quat.w = q.w = sqrt(fmax(0, 1 + trackedDeviceMatrix.m[0][0] + trackedDeviceMatrix.m[1][1] + trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse.quat.x = q.x = sqrt(fmax(0, 1 + trackedDeviceMatrix.m[0][0] - trackedDeviceMatrix.m[1][1] - trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse.quat.y = q.y = sqrt(fmax(0, 1 - trackedDeviceMatrix.m[0][0] + trackedDeviceMatrix.m[1][1] - trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse.quat.z = q.z = sqrt(fmax(0, 1 - trackedDeviceMatrix.m[0][0] - trackedDeviceMatrix.m[1][1] + trackedDeviceMatrix.m[2][2])) / 2;
+	deviceToParse.quat.x = q.x = copysign(q.x, trackedDeviceMatrix.m[2][1] - trackedDeviceMatrix.m[1][2]);
+	deviceToParse.quat.y = q.y = copysign(q.y, trackedDeviceMatrix.m[0][2] - trackedDeviceMatrix.m[2][0]);
+	deviceToParse.quat.z = q.z = copysign(q.z, trackedDeviceMatrix.m[1][0] - trackedDeviceMatrix.m[0][1]);
 }

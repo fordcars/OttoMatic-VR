@@ -52,10 +52,6 @@ typedef struct
 	float m[3][4];
 }vrMatrix34;
 
-typedef struct
-{
-	float value[16];
-}OGLcompatibleMatrix44;
 
 typedef struct
 {
@@ -75,13 +71,13 @@ typedef struct
 		/* ROTATION EULER (pitch, yaw, roll) (Probably should not use this, gimbal lock) */
 	vrEuler rot; // Current actual rotation
 	vrEuler rotDelta; // Rotation delta (dif since last frame/last check)
-	OGLcompatibleMatrix44 transformationMatrix; // ROT ONLY - no translation for now, NOT corrected for gameYaw
-	OGLcompatibleMatrix44 transformationMatrixCorrected; // ROT ONLY - no translation for now, CORRECTED for gameYaw
+	OGLMatrix4x4 transformationMatrix; // ROT ONLY - no translation for now, NOT corrected for gameYaw
+	OGLMatrix4x4 transformationMatrixCorrected; // ROT ONLY - no translation for now, CORRECTED for gameYaw
 
 		// Rotation special
 	double HMDYawCorrected; // Only useful for HMD, use to correct yaw from thumbstick rotation
 	double HMDgameYawIgnoringHMD; // Corrects for the gameYaw (worldspace), the X & Z directions change with thumbstick
-	OGLcompatibleMatrix44 HMDgameYawCorrectionMatrix; // ROT ONLY - no translation for now
+	OGLMatrix4x4 HMDgameYawCorrectionMatrix; // ROT ONLY - no translation for now
 
 
 		/* POSITION (x, y, z) */
