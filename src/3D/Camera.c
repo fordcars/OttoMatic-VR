@@ -333,6 +333,23 @@ SkeletonObjDataType	*skeleton;
 float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPointOfInterestY;
 int			firstPersonHeight = 100;
 
+// Calculate the HMD's corrected matrix
+OGLMatrix4x4_Multiply(&vrInfoHMD.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoHMD.transformationMatrixCorrected);
+OGLMatrix4x4 rotOnly = vrInfoHMD.transformationMatrixCorrected;
+OGLMatrix4x4 transOnly = { 0 };
+rotOnly.value[M03] = 0;
+rotOnly.value[M13] = 0;
+rotOnly.value[M23] = 0;
+
+transOnly.value[M03] = vrInfoHMD.transformationMatrix.value[M03];
+transOnly.value[M13] = vrInfoHMD.transformationMatrix.value[M13];
+transOnly.value[M23] = vrInfoHMD.transformationMatrix.value[M23];
+transOnly.value[M33] = 1;
+transOnly.value[M22] = 1;
+transOnly.value[M11] = 1;
+transOnly.value[M00] = 1;
+
+
 	if (!playerObj)
 		return;
 
@@ -415,9 +432,18 @@ int			firstPersonHeight = 100;
 		// Set FPS height to VR height
 		firstPersonHeight = vrInfoHMD.pos.y * VRroomDistanceToGameDistanceScale - 100; // seems to give reasonable height 
 													   // SLIGHTLY too low when standing? but too high when touching floor. To adjust
-		to.y = playerObj->Coord.y + firstPersonHeight + vrInfoHMD.rot.pitch;
-		to.x = cos(vrInfoHMD.rot.pitch) * sin(forwardDirection) + playerObj->Coord.x;
-		to.z = cos(vrInfoHMD.rot.pitch) * cos(forwardDirection) + playerObj->Coord.z;
+		// firstPersonHeight to be tested / not sure where to apply this now
+		// Set initial to.xyz pos, x & y should be 0, and z -1 * "rotation resolution"
+		// Higher negative numbers (-10 or -100 or -1000) seem to provide way smoother rotation than -1
+		to.x = 0;
+		to.y = 0;
+		to.z = -1000;
+
+		OGLPoint3D_Transform(&to, &rotOnly, &to);
+
+		to.x += playerObj->Coord.x;
+		to.y += playerObj->Coord.y;
+		to.z += playerObj->Coord.z;
 	}
 
 
@@ -460,54 +486,22 @@ int			firstPersonHeight = 100;
 		from.y = playerObj->Coord.y + firstPersonHeight;
 	}
 
+	// OGLPoint3D_Transform(&from, &transOnly, &from); // To test but can probably delete this line, handled from player_robot.c
+	OGLPoint3D_Transform(&to, &transOnly, &to);
+
+
 	// printf("playerObj->Coord.y: %f, Player height: %i\n", playerObj->Coord.y,firstPersonHeight);
 
-				/**********************/
-				/* UPDATE CAMERA INFO */
-				/**********************/
-	/*
-	if (gGamePrefs.snappyCameraControl
-		&& gCameraControlDelta.x != 0
-		&& !gAutoRotateCamera)
-	{
-		gTimeSinceLastThrust = -1000;
-		gForceCameraAlignment = false;
-
-		OGLMatrix4x4	m;
-		float			r = gCameraControlDelta.x * fps * 2.5f;
-		OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);
-		OGLPoint3D_Transform(&from, &m, &from);
-	}
-	*/
-
-	//if (gAutoRotateCamera && gFreezeCameraFromXZ)				// special auto-rot for frozen xz condition
-	//{
-	//	OGLMatrix4x4	m;
-	//	OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, fps * gAutoRotateCameraSpeed, 0);
-	//	OGLPoint3D_Transform(&from, &m, &from);
-	//}
-
-
-
-	// For UP vector
-	// Pitch affects Y & Z
-	// Roll affects Y & X
 
 	// Calculate up vector
 	if (!vrHMDcontrol) {
 		calculatedUpVector = globalUp;
 	}
 	else {
-		//OGLVector3D camVector = { from.x - to.x, from.y - to.y, from.z - to.z };
-		//OGLVector3D_Normalize(&camVector, &camVector);
-		//printf("camVector.x: %f\n", camVector.x);
-		//printf("camVector.y: %f\n", camVector.y);
-		//printf("camVector.z: %f\n\n", camVector.z);
-		calculatedUpVector.x = -cos(vrInfoHMD.rot.yaw) * cos(vrInfoHMD.rot.roll - PI / 2);
-		calculatedUpVector.y = 1-sin(fabs(vrInfoHMD.rot.roll));
-		calculatedUpVector.z = (cos(vrInfoHMD.rot.yaw - PI / 2)) * cos(vrInfoHMD.rot.roll - PI / 2);
-		OGLVector3D_Normalize(&calculatedUpVector, &calculatedUpVector);
-		
+		calculatedUpVector.x = vrInfoHMD.transformationMatrixCorrected.value[M01];
+		calculatedUpVector.y = vrInfoHMD.transformationMatrixCorrected.value[M11];
+		calculatedUpVector.z = vrInfoHMD.transformationMatrixCorrected.value[M21];
+
 		//printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);
 		//printf("calculatedUpVector.y: %f\n", calculatedUpVector.y);
 		//printf("calculatedUpVector.z: %f\n\n", calculatedUpVector.z);
@@ -517,8 +511,25 @@ int			firstPersonHeight = 100;
 	}
 
 	OGL_UpdateCameraFromToUp(gGameViewInfoPtr, &from, &to, &calculatedUpVector);
-	//OGL_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);
 
+
+	printf("rotOnly X-X (M00): %f\n", rotOnly.value[M00]);
+	printf("rotOnly X-Y (M10): %f\n", rotOnly.value[M10]);
+	printf("rotOnly X-Z (M20): %f\n", rotOnly.value[M20]);
+	printf("rotOnly Y-X (M01): %f\n", rotOnly.value[M01]);
+	printf("rotOnly Y-Y (M11): %f\n", rotOnly.value[M11]);
+	printf("rotOnly Y-Z (M21): %f\n", rotOnly.value[M21]);
+	printf("rotOnly Z-X (M02): %f\n", rotOnly.value[M02]);
+	printf("rotOnly Z-Y (M12): %f\n", rotOnly.value[M12]);
+	printf("rotOnly Z-Z (M22): %f\n\n", rotOnly.value[M22]);
+
+	printf("FROM cameraLocation.x: %f\n", from.x);
+	printf("FROM cameraLocation.y: %f\n", from.y);
+	printf("FROM cameraLocation.z: %f\n\n", from.z);
+
+	printf("TO cameraLocation.x: %f\n", to.x);
+	printf("TO cameraLocation.y: %f\n", to.y);
+	printf("TO cameraLocation.z: %f\n\n\n", to.z);
 
 				/* UPDATE PLAYER'S CAMERA INFO */
 
