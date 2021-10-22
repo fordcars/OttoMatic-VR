@@ -97,8 +97,14 @@ void vrcpp_DoVibrationHaptics(int handToVibrate,
 	float fDurationSeconds, float fFrequency, float fAmplitude);
 
 
+void updateHMDposition(void);
+void updateGameSpacePositions(); // Updates the gameSpace coordinate members within the vrInfo Structs
+
+
+
 		/* EXTERNS */
 extern	BG3DFileContainer		*gBG3DContainerList[];
+extern  Boolean                 gInitVRYawAlignDone;
 extern	Boolean					gAllowAudioKeys;
 extern	Boolean					gAutoRotateCamera;
 extern	Boolean					gBrainBossDead;
@@ -190,6 +196,7 @@ extern	char					gTextInput[SDL_TEXTINPUTEVENT_TEXT_SIZE];
 extern	const KeyBinding		kDefaultKeyBindings[NUM_CONTROL_NEEDS];
 extern	const MenuStyle			kDefaultMenuStyle;
 extern	const OGLPoint3D		gPlayerMuzzleTipOff;
+extern  OGLPoint3D			    gVrHMDPosMovedeltaWorldspace;
 extern	const int				kLevelSoundBanks[NUM_LEVELS];
 extern	float					gSkyAltitudeY;
 extern	float					**gMapYCoords;

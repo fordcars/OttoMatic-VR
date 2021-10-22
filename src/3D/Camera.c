@@ -333,6 +333,12 @@ SkeletonObjDataType	*skeleton;
 float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPointOfInterestY;
 int			firstPersonHeight = 100;
 
+// Calculate the HMD's corrected matrix
+OGLMatrix4x4 rotOnly = vrInfoHMD.rotationMatrixCorrected;
+OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
+
+
+
 	if (!playerObj)
 		return;
 
@@ -371,7 +377,8 @@ int			firstPersonHeight = 100;
 			/* CALC LOOK AT POINT */
 			/**********************/
 	
-	
+	float forwardDirection = 0;
+
 	float verticalSens = 0.5f; // Reduce vertical axis camera speed
 
 	gCameraControlDelta.y *= verticalSens;
@@ -386,81 +393,111 @@ int			firstPersonHeight = 100;
 		mouseCameraAngleY = limit;
 	if (mouseCameraAngleY < -limit)
 		mouseCameraAngleY = -limit;
-
-	// Mouse Y axis slows down at the top and bottom limits, à la SDL3D???
 	
-	// Basic FPS view, locked to robot facing-forward view:
-	to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
-	to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
-	to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+	
+
+	// We want the camera to always be able to yaw but it usually rotates the entire player
+	// If the game says the player should not move, moving the HMD should move the camera, NOT the player
+
+	bool vrHMDcontrol = true;
+	OGLVector3D calculatedUpVector;
+	OGLVector3D globalUp = { 0,1,0 };
 
 
-	// Test logging of mouseCameraAngleY breakpoint
-	if ((int)fps % 144) {
-		//mouseCameraAngleY = mouseCameraAngleY;
+	if (!vrHMDcontrol) {
+		// Basic FPS view, locked to robot facing-forward view:
+		to.y = playerObj->Coord.y + firstPersonHeight - sin(mouseCameraAngleY);
+		to.x = cos(mouseCameraAngleY) * sin(playerObj->Rot.y + PI) + playerObj->Coord.x;
+		to.z = cos(mouseCameraAngleY) * cos(playerObj->Rot.y + PI) + playerObj->Coord.z;
+	}
+	else {
+		// VR HMD Controlled view
+		// Set FPS height to VR height
+		firstPersonHeight = vrInfoHMD.pos.y * VRroomDistanceToGameDistanceScale - 100; // seems to give reasonable height 
+													   // SLIGHTLY too low when standing? but too high when touching floor. To adjust
+		// firstPersonHeight to be tested / not sure where to apply this now
+		// Set initial to.xyz pos, x & y should be 0, and z -1 * "rotation resolution"
+		// Higher negative numbers (-10 or -100 or -1000) seem to provide way smoother rotation than -1
+		to.x = 0;
+		to.y = 0;
+		to.z = -1000;
+
+		OGLPoint3D_Transform(&to, &rotOnly, &to);
+
+		to.x += playerObj->Coord.x;
+		to.y += playerObj->Coord.y;
+		to.z += playerObj->Coord.z;
+
+		OGLPoint3D_Transform(&to, &transOnly, &to);
+
+		if (playerObj->StatusBits & STATUS_BIT_NOMOVE) {
+			//playerObj->StatusBits &= ~(STATUS_BIT_NOMOVE);
+		}
 	}
 
+	// HMD rotation turns Otto:
+	vrInfoHMD.HMDYawCorrected -= vrInfoHMD.rotDelta.yaw;
 
+	// HMD rotation turns Otto:
+	playerObj->Rot.y = vrInfoHMD.HMDYawCorrected;
 
 			/*************************************/
 			/* CALC FROM (camera location) POINT */
 			/*************************************/
 
-	if (gFreezeCameraFromXZ) // Rocket scene -> Not working properly for now, to fix
-	{
-		from.x = target.x = oldCamX;
-		from.z = target.x = oldCamZ;
+
+	from.x = playerObj->Coord.x; // ( + a few hundred if needed to see body for testing )
+	from.z = playerObj->Coord.z;	
+	from.y = playerObj->Coord.y + firstPersonHeight;
+
+	// OGLPoint3D_Transform(&from, &transOnly, &from); // To test but can probably delete this line, handled from player_robot.c
+
+
+
+	// printf("playerObj->Coord.y: %f, Player height: %i\n", playerObj->Coord.y,firstPersonHeight);
+
+
+	// Calculate up vector
+	if (!vrHMDcontrol) {
+		calculatedUpVector = globalUp;
 	}
-	else
-	{
-		from.x = playerObj->Coord.x; // ( + a few hundred if needed to see body for testing )
-		from.z = playerObj->Coord.z;	
+	else {
+		calculatedUpVector.x = vrInfoHMD.transformationMatrixCorrected.value[M01];
+		calculatedUpVector.y = vrInfoHMD.transformationMatrixCorrected.value[M11];
+		calculatedUpVector.z = vrInfoHMD.transformationMatrixCorrected.value[M21];
+
+		//printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);
+		//printf("calculatedUpVector.y: %f\n", calculatedUpVector.y);
+		//printf("calculatedUpVector.z: %f\n\n", calculatedUpVector.z);
+		//printf("NcalculatedUpVector.x: %f\n", calculatedUpVector.x);
+		//printf("NcalculatedUpVector.y: %f\n", calculatedUpVector.y);
+		//printf("NcalculatedUpVector.z: %f\n\n\n", calculatedUpVector.z);
 	}
 
+	OGL_UpdateCameraFromToUp(gGameViewInfoPtr, &from, &to, &calculatedUpVector);
 
 
-		/***************/
-		/* CALC FROM Y */
-		/***************/
+	//printf("rotOnly X-X (M00): %f\n", rotOnly.value[M00]);
+	//printf("rotOnly X-Y (M10): %f\n", rotOnly.value[M10]);
+	//printf("rotOnly X-Z (M20): %f\n", rotOnly.value[M20]);
+	//printf("rotOnly Y-X (M01): %f\n", rotOnly.value[M01]);
+	//printf("rotOnly Y-Y (M11): %f\n", rotOnly.value[M11]);
+	//printf("rotOnly Y-Z (M21): %f\n", rotOnly.value[M21]);
+	//printf("rotOnly Z-X (M02): %f\n", rotOnly.value[M02]);
+	//printf("rotOnly Z-Y (M12): %f\n", rotOnly.value[M12]);
+	//printf("rotOnly Z-Z (M22): %f\n\n", rotOnly.value[M22]);
 
-	if (gFreezeCameraFromY)
-	{
-		from.y = oldCamY;
-	}
-	else
-	{
-		from.y = playerObj->Coord.y + firstPersonHeight;
-	}
+	//printf("playerObj->Rot.x: %f\n", playerObj->Rot.x);
+	//printf("playerObj->Rot.y: %f\n", playerObj->Rot.y);
+	//printf("playerObj->Rot.z: %f\n\n", playerObj->Rot.z);
 
+	//printf("FROM cameraLocation.x: %f\n", from.x);
+	//printf("FROM cameraLocation.y: %f\n", from.y);
+	//printf("FROM cameraLocation.z: %f\n\n", from.z);
 
-				/**********************/
-				/* UPDATE CAMERA INFO */
-				/**********************/
-	/*
-	if (gGamePrefs.snappyCameraControl
-		&& gCameraControlDelta.x != 0
-		&& !gAutoRotateCamera)
-	{
-		gTimeSinceLastThrust = -1000;
-		gForceCameraAlignment = false;
-
-		OGLMatrix4x4	m;
-		float			r = gCameraControlDelta.x * fps * 2.5f;
-		OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);
-		OGLPoint3D_Transform(&from, &m, &from);
-	}
-	*/
-
-	//if (gAutoRotateCamera && gFreezeCameraFromXZ)				// special auto-rot for frozen xz condition
-	//{
-	//	OGLMatrix4x4	m;
-	//	OGLMatrix4x4_SetRotateAboutPoint(&m, &to, 0, fps * gAutoRotateCameraSpeed, 0);
-	//	OGLPoint3D_Transform(&from, &m, &from);
-	//}
-
-
-	OGL_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);
-
+	//printf("TO cameraLocation.x: %f\n", to.x);
+	//printf("TO cameraLocation.y: %f\n", to.y);
+	//printf("TO cameraLocation.z: %f\n\n\n", to.z);
 
 				/* UPDATE PLAYER'S CAMERA INFO */
 

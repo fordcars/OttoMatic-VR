@@ -17,6 +17,7 @@
 #include "game.h"
 
 #include "openvr.h"
+#include "vr_support.h"
 extern vr::IVRSystem *gIVRSystem;
 
 /****************************/
@@ -518,6 +519,12 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 	OGL_DrawEye(setupInfo, drawRoutine);
 	setupInfo->renderLeftEye = false;
 	OGL_DrawEye(setupInfo, drawRoutine);
+
+
+
+	updateHMDposition();
+
+
 
 	if(glGetError() != GL_NO_ERROR)
 		throw std::runtime_error("GL ERROR AFTER CALLLL");
@@ -1492,6 +1499,9 @@ OGLLightDefType	*lights;
 			&setupInfo->cameraPlacement.cameraLocation,
 			&setupInfo->cameraPlacement.pointOfInterest,
 			&setupInfo->cameraPlacement.upVector);
+	//OGLMatrix4x4 tempMat;
+	//OGLcompatible44toOGLMatrix4x4(&vrInfoHMD.transformationMatrix,&tempMat);
+	//OGLMatrix4x4_Multiply(&gWorldToViewMatrix, &tempMat, &gWorldToViewMatrix);
 	glLoadMatrixf((const GLfloat*) &gWorldToViewMatrix.value[0]);
 
 

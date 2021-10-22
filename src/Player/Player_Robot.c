@@ -153,6 +153,11 @@ Boolean			gDoJumpJetAtApex = false;			// true if want to do jump jet when player
 
 #define	JumpJetEnginesOff		Flag[0]				// set by anim when jump jet acceleration turns off
 
+Boolean    gInitVRYawAlignDone = false; // Required to avoid view snap and VR motion glitch
+
+bool subtractOnceDone = false;
+bool subtractTwiceDone = false;
+
 //
 // In order to let the player move faster than the max speed, we use a current and target value.
 // the target is what we want the max to normally be, and the current is what it currently is.
@@ -161,6 +166,8 @@ Boolean			gDoJumpJetAtApex = false;			// true if want to do jump jet when player
 
 float	gTargetMaxSpeed = PLAYER_NORMAL_MAX_SPEED;
 float	gCurrentMaxSpeed = PLAYER_NORMAL_MAX_SPEED;
+
+OGLPoint3D gVrHMDPosMovedeltaWorldspace = {0,0};
 
 
 /*************************** INIT PLAYER: ROBOT ****************************/
@@ -269,7 +276,7 @@ int		i;
 	gResetJumpJet = true;
 	gExplodePlayerAfterElectrocute = false;
 
-	// Make player invisble: 
+	// Make player invisible: 
 	newObj->StatusBits |= STATUS_BIT_HIDDEN;
 }
 
@@ -1729,9 +1736,10 @@ float fps = gFramesPerSecondFrac;
 
 void UpdateRobotHands(ObjNode *theNode)
 {
-ObjNode	*lhand,*rhand;
-Boolean	holdingGun;
-int		weaponType;
+	ObjNode *lhand, *rhand;
+	Boolean	holdingGun;
+	int		weaponType;
+	bool playingInVr = true; // For testing
 
 		/****************************/
 		/* DETERMINE IF HOLDING GUN */
@@ -1753,24 +1761,179 @@ int		weaponType;
 	if (theNode->Skeleton->AnimNum == PLAYER_ANIM_BUMPERCAR)		// don't show gun while driving bumper car
 		holdingGun = false;
 	else
-	if (theNode->Skeleton->AnimNum == PLAYER_ANIM_BUBBLE)			// don't show gun while riding bubble
-		holdingGun = false;
+		if (theNode->Skeleton->AnimNum == PLAYER_ANIM_BUBBLE)			// don't show gun while riding bubble
+			holdingGun = false;
 
-			/*****************************/
-			/* UPDATE GEOMETRY FOR HANDS */
-			/*****************************/
-
+		/*****************************/
+		/* UPDATE GEOMETRY FOR HANDS */
+		/*****************************/
+	
 	lhand = gPlayerInfo.leftHandObj;						// get hand objects
 	rhand = gPlayerInfo.rightHandObj;
 
 	lhand->ColorFilter.a = rhand->ColorFilter.a = theNode->ColorFilter.a;	// match alpha fades
+	
+	if (rhand && lhand) { // only update if both hands are legit
+		if (playingInVr) {
+			// Figure out if hand model should be closed fist or open hand
+			if (vrcpp_GetAnalogActionData(vrFistRight).x >= 0.4f) {
+				rhand->Type = GLOBAL_ObjType_OttoRightFist;
+				ResetDisplayGroupObject(rhand);
+			} 
+			else {
+				rhand->Type = GLOBAL_ObjType_OttoRightHand;
+				ResetDisplayGroupObject(rhand);
+			}
+		
+			// Only change left hand model if not holding gun
+			if (holdingGun)
+			{
+				lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
+				ResetDisplayGroupObject(lhand);
+			} 
+			else {
+				if (vrcpp_GetAnalogActionData(vrFistLeft).x >= 0.4f) {
+					lhand->Type = GLOBAL_ObjType_OttoLeftFist;
+					ResetDisplayGroupObject(lhand);
+				} 
+				else {
+					lhand->Type = GLOBAL_ObjType_OttoLeftHand;
+					ResetDisplayGroupObject(lhand);
+				}
+			}
 
-	if (rhand && lhand)										// only update if both hands are legit
-	{
 
-		switch(theNode->Skeleton->AnimNum)
-		{
-					/* OPEN HANDS */
+				/* ROTATION CONTROLLER TRACKING */
+
+			// For both hands, disable translation (for now we don't use this:
+			vrInfoLeftHand.transformationMatrix.value[M03] = 0;
+			vrInfoLeftHand.transformationMatrix.value[M13] = 0;
+			vrInfoLeftHand.transformationMatrix.value[M23] = 0;
+
+			// Multiply controller orientation with the gameYaw correction to make the hand rotate with the player when using thumbsticks
+			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoLeftHand.transformationMatrixCorrected);
+			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoRightHand.transformationMatrixCorrected);
+
+			// Multiply corrected controller orientation with the hands BaseTransformMatrix
+			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrixCorrected, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
+			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrixCorrected, &rhand->BaseTransformMatrix, &rhand->BaseTransformMatrix);
+
+			// Apply rotations to hands
+			SetObjectTransformMatrix(lhand);
+			SetObjectTransformMatrix(rhand);
+
+
+
+				/* POSITION CONTROLLER TRACKING */
+
+			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
+			updateGameSpacePositions();
+
+			int scale = VRroomDistanceToGameDistanceScale;
+			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+
+			rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			rhand->Coord.y = theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
+			rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+
+
+			
+
+			//printf("vrInfoHMD.HMDgameYawIgnoringHMD: %f\n", vrInfoHMD.HMDgameYawIgnoringHMD);
+
+			// Rotation logging
+			//printf("lhand->Rot.x: %f\n", lhand->Rot.x);
+			//printf("lhand->Rot.y: %f\n", lhand->Rot.y);
+			//printf("lhand->Rot.z: %f\n", lhand->Rot.z);
+			//printf("LeftController rot.pitch: %f\n", vrInfoLeftHand.rot.pitch);
+			//printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
+			//printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
+
+		
+
+			//printf("PRElhand pos X m12: %f\n", vrInfoLeftHand.transformationMatrix.value[M03]);
+			//printf("PRElhand pos Y m13: %f\n", vrInfoLeftHand.transformationMatrix.value[M13]);
+			//printf("PRElhand pos Z m14: %f\n", vrInfoLeftHand.transformationMatrix.value[M23]);
+			//printf("PRE BaseTransformMatrix pos X: %f\n", lhand->BaseTransformMatrix.value[M03]);
+			//printf("PRE BaseTransformMatrix pos Y: %f\n", lhand->BaseTransformMatrix.value[M13]);
+			//printf("PRE BaseTransformMatrix pos Z: %f\n\n", lhand->BaseTransformMatrix.value[M23]);
+			//printf("NODE INIT Y: %f\n", theNode->InitCoord.y);
+			//printf("NODE Y: %f\n", theNode->Coord.y);
+			//printf("NODE OLD Y: %f\n", theNode->OldCoord.y);
+			//printf("DIF: %f\n\n", theNode->Coord.y - theNode->OldCoord.y);
+
+
+
+
+			//float quantity1 = theNode->InitCoord.y;
+			//if (subtractOnceDone)
+			//	quantity1 = 0;
+			//float quantity2 = theNode->InitCoord.y - theNode->Coord.y;
+			//if (subtractTwiceDone)
+			//	quantity2 = 0;
+			//lhand->Coord.x = lhand->BaseTransformMatrix.value[M03];			// get coords from matrix
+			//lhand->Coord.y = lhand->BaseTransformMatrix.value[M13] + theNode->Coord.y - theNode->OldCoord.y;
+			//	lhand->Coord.y = lhand->BaseTransformMatrix.value[M13] + theNode->Coord.y - theNode->OldCoord.y - quantity2;
+			//	subtractTwiceDone = true;
+			//lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
+
+
+			//theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
+			//theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			//theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+
+			//printf("X m0: %f\n", vrInfoLeftHand.matrix.m[0][0]);
+			//printf("X m1: %f\n", vrInfoLeftHand.matrix.m[0][1]);
+			//printf("X m2: %f\n", vrInfoLeftHand.matrix.m[0][2]);
+			//printf("Y m4: %f\n", vrInfoLeftHand.matrix.m[1][0]);
+			//printf("Y m5: %f\n", vrInfoLeftHand.matrix.m[1][1]);
+			//printf("Y m6: %f\n", vrInfoLeftHand.matrix.m[1][2]);
+			//printf("Z m7: %f\n", vrInfoLeftHand.matrix.m[2][0]);
+			//printf("Z m8: %f\n", vrInfoLeftHand.matrix.m[2][1]);
+			//printf("Z m9: %f\n\n", vrInfoLeftHand.matrix.m[2][2]);
+
+			//printf("lhand X m0: %f\n", lhand->BaseTransformMatrix.value[0]);
+			//printf("lhand X m1: %f\n", lhand->BaseTransformMatrix.value[1]);
+			//printf("lhand X m2: %f\n", lhand->BaseTransformMatrix.value[2]);
+			//printf("lhand Y m4: %f\n", lhand->BaseTransformMatrix.value[4]);
+			//printf("lhand Y m5: %f\n", lhand->BaseTransformMatrix.value[5]);
+			//printf("lhand Y m6: %f\n", lhand->BaseTransformMatrix.value[6]);
+			//printf("lhand Z m8: %f\n", lhand->BaseTransformMatrix.value[8]);
+			//printf("lhand Z m9: %f\n", lhand->BaseTransformMatrix.value[9]);
+			//printf("lhand Z m10: %f\n\n", lhand->BaseTransformMatrix.value[10]);
+
+			// position
+			//printf("POSTlhand BaseTransformMatrix X m12 (M03) %f\n", lhand->BaseTransformMatrix.value[M03]);
+			//printf("POSTlhand BaseTransformMatrix Y m13 (M13): %f\n", lhand->BaseTransformMatrix.value[M13]);
+			//printf("POSTlhand BaseTransformMatrix Z m14 (M23): %f\n", lhand->BaseTransformMatrix.value[M23]);
+			//printf("lhand pos X: %f\n", lhand->Coord.x);
+			//printf("lhand pos Y: %f\n", lhand->Coord.y);
+			//printf("lhand pos Z: %f\n", lhand->Coord.z);
+			//printf("rhand pos X: %f\n", rhand->Coord.x);
+			//printf("rhand pos Y: %f\n", rhand->Coord.y);
+			//printf("rhand pos Z: %f\n\n\n", rhand->Coord.z);
+
+
+			// Position Logging
+			//printf("LeftController pos.x: %f\n", vrInfoLeftHand.pos.x);
+			//printf("LeftController pos.y: %f\n", vrInfoLeftHand.pos.y);
+			//printf("LeftController pos.z: %f\n", vrInfoLeftHand.pos.z);
+			//printf("gameAxesLeftHandPosX: %f\n", vrInfoLeftHand.posGameAxes.x);
+			//printf("gameAxesLeftHandPosZ: %f\n", vrInfoLeftHand.posGameAxes.z);
+			//printf("LeftHand pos.x: %f\n", lhand->Coord.x);
+			//printf("LeftHand pos.y: %f\n", lhand->Coord.y);
+			//printf("LeftHand pos.z: %f\n", lhand->Coord.z);
+			//printf("theNode->Coord.x: %f\n", theNode->Coord.x);
+			//printf("theNode->Coord.y: %f\n", theNode->Coord.y);
+			//printf("theNode->Coord.z: %f\n\n", theNode->Coord.z);
+
+		}
+		else { // Non VR, for testing only (should not be used in VR ever)
+			switch (theNode->Skeleton->AnimNum)
+			{
+				/* OPEN HANDS */
 
 			case	PLAYER_ANIM_STAND:
 			case	PLAYER_ANIM_STANDWITHGUN:
@@ -1779,69 +1942,70 @@ int		weaponType;
 			case	PLAYER_ANIM_BUBBLE:
 			case	PLAYER_ANIM_SITONLEDGE:
 			case	PLAYER_ANIM_DRILLED:
-					if (rhand->Type != GLOBAL_ObjType_OttoRightHand)
+				if (rhand->Type != GLOBAL_ObjType_OttoRightHand)
+				{
+					rhand->Type = GLOBAL_ObjType_OttoRightHand;
+					ResetDisplayGroupObject(rhand);
+				}
+
+				if (!holdingGun)
+				{
+					if (lhand->Type != GLOBAL_ObjType_OttoLeftHand)
 					{
-						rhand->Type = GLOBAL_ObjType_OttoRightHand;
-						ResetDisplayGroupObject(rhand);
+						lhand->Type = GLOBAL_ObjType_OttoLeftHand;
+						ResetDisplayGroupObject(lhand);
 					}
-
-					if (!holdingGun)
-					{
-						if (lhand->Type != GLOBAL_ObjType_OttoLeftHand)
-						{
-							lhand->Type = GLOBAL_ObjType_OttoLeftHand;
-							ResetDisplayGroupObject(lhand);
-						}
-					}
-					break;
+				}
+				break;
 
 
-					/* FISTS */
+				/* FISTS */
 
 			default:
-					if (rhand->Type != GLOBAL_ObjType_OttoRightFist)
+				if (rhand->Type != GLOBAL_ObjType_OttoRightFist)
+				{
+					rhand->Type = GLOBAL_ObjType_OttoRightFist;
+					ResetDisplayGroupObject(rhand);
+				}
+
+				if (!holdingGun)
+				{
+					if (lhand->Type != GLOBAL_ObjType_OttoLeftFist)
 					{
-						rhand->Type = GLOBAL_ObjType_OttoRightFist;
-						ResetDisplayGroupObject(rhand);
+						lhand->Type = GLOBAL_ObjType_OttoLeftFist;
+						ResetDisplayGroupObject(lhand);
 					}
-
-					if (!holdingGun)
-					{
-						if (lhand->Type != GLOBAL_ObjType_OttoLeftFist)
-						{
-							lhand->Type = GLOBAL_ObjType_OttoLeftFist;
-							ResetDisplayGroupObject(lhand);
-						}
-					}
-					break;
-		}
-
-				/* GUN IN LEFT HAND */
-
-		if (holdingGun)
-		{
-			if (lhand->Type != (GLOBAL_ObjType_PulseGunHand + weaponType))
-			{
-				lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
-				ResetDisplayGroupObject(lhand);
+				}
+				break;
 			}
-		}
+
+			/* GUN IN LEFT HAND */
+
+			if (holdingGun)
+			{
+				if (lhand->Type != (GLOBAL_ObjType_PulseGunHand + weaponType))
+				{
+					lhand->Type = GLOBAL_ObjType_PulseGunHand + weaponType;
+					ResetDisplayGroupObject(lhand);
+				}
+			}
 
 
 			/* UPDATE HAND MATRICES */
 
-		FindJointFullMatrix(theNode, PLAYER_JOINT_LEFTHAND, &lhand->BaseTransformMatrix);
-		SetObjectTransformMatrix(lhand);
-		FindJointFullMatrix(theNode, PLAYER_JOINT_RIGHTHAND, &rhand->BaseTransformMatrix);
-		SetObjectTransformMatrix(rhand);
+			FindJointFullMatrix(theNode, PLAYER_JOINT_LEFTHAND, &lhand->BaseTransformMatrix);
+			SetObjectTransformMatrix(lhand);
+			FindJointFullMatrix(theNode, PLAYER_JOINT_RIGHTHAND, &rhand->BaseTransformMatrix);
+			SetObjectTransformMatrix(rhand);
 
-		lhand->Coord.x = lhand->BaseTransformMatrix.value[M03];			// get coords from matrix
-		lhand->Coord.y = lhand->BaseTransformMatrix.value[M13];
-		lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
+			lhand->Coord.x = lhand->BaseTransformMatrix.value[M03];			// get coords from matrix
+			lhand->Coord.y = lhand->BaseTransformMatrix.value[M13];
+			lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
 
-		rhand->Coord.x = rhand->BaseTransformMatrix.value[M03];
-		rhand->Coord.y = rhand->BaseTransformMatrix.value[M13];
-		rhand->Coord.z = rhand->BaseTransformMatrix.value[M23];
+			rhand->Coord.x = rhand->BaseTransformMatrix.value[M03];
+			rhand->Coord.y = rhand->BaseTransformMatrix.value[M13];
+			rhand->Coord.z = rhand->BaseTransformMatrix.value[M23];
+		}
 	}
 }
 
@@ -1942,13 +2106,13 @@ float	tx,tz;
 
 static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Boolean useBBoxForTerrain)
 {
-float				fps = gFramesPerSecondFrac,oldFPS,oldFPSFrac,terrainY;
-OGLPoint3D			oldCoord;
-//OGLVector2D			aimVec,deltaVec, accVec;
-//OGLMatrix3x3		m;
-static OGLPoint2D origin = {0,0};
-int					numPasses,pass;
-Boolean				killed = false;
+	float				fps = gFramesPerSecondFrac, oldFPS, oldFPSFrac, terrainY;
+	OGLPoint3D			oldCoord;
+	//OGLVector2D			aimVec,deltaVec, accVec;
+	//OGLMatrix3x3		m;
+	static OGLPoint2D origin = { 0,0 };
+	int					numPasses, pass;
+	Boolean				killed = false;
 
 	if (gPlayerInfo.analogControlX || gPlayerInfo.analogControlZ || gPlayerInfo.strafeControlX)	// if player is attempting some control then reset this timer
 	{
@@ -1962,144 +2126,87 @@ Boolean				killed = false;
 	/* DO PLAYER-RELATIVE CONTROLS */
 	/*******************************/
 
-	if (true) // (Gives better mouse control?) Seems to prevent player from turning when colliding 
-	{
-		float	mouseRotationPlayer;
-		float   VRpostionX;
+			/* VR MOVEMENT */
 
-		if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
-			// Only do mouse movement if not moving VR joystick
-			// analogControlX is mouse only now, no keyboard (controls where player is looking / where he is facing)
-			mouseRotationPlayer = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN *0.5f;
-
-			theNode->Rot.y -= mouseRotationPlayer; // Set rotate view (view follows robot rot) with analogControl (mouse)
-		}
-		else {
-			// If here, VR joystick is moving
-			VRpostionX = vrcpp_GetAnalogActionData(vrCameraXY).x;
-			VRpostionX /= 30; // Reduce for sensitivty
-			theNode->Rot.y -= VRpostionX;
-			printf("ROTATE X: %f                  ", VRpostionX);
-		}
-
-		float	strafe = 0.0f, movement = 0.0f;
-
-		// We are using the A or D keys (strafing):
-		if (gPlayerInfo.strafeControlX) {
-			// We are only strafing (no forward nor backward):
-			if (gPlayerInfo.analogControlZ == 0) {
-				strafe = theNode->Rot.y + PI / 2;
-			}
-			// We are moving forward:
-			else if (gPlayerInfo.analogControlZ < 0) {
-				strafe = theNode->Rot.y - sin(gPlayerInfo.strafeControlX);
-			}
-			// We are moving backward:
-			else if (gPlayerInfo.analogControlZ > 0) {
-				strafe = theNode->Rot.y + sin(gPlayerInfo.strafeControlX);
-			}
-		}
-		// We are just moving with W or S, no strafing:
-		else {
-			strafe = theNode->Rot.y;
-		}
-
-		theNode->AccelVector.x = sin(strafe);
-		theNode->AccelVector.y = cos(strafe);
+	float	mouseRotationPlayer;
+	float   VRcameraJoyPostionX;
+	
 
 
-		if (!gPlayerInfo.analogControlZ) {
-			movement = gPlayerInfo.strafeControlX;
-		}
-		else {
-			movement = gPlayerInfo.analogControlZ;
-		}
+	//// Initial alignment
+	//if (!gInitVRYawAlignDone) {
+	//	theNode->Rot.y = vrInfoHMD.rot.yaw;
+	//	vrInfoHMD.HMDYawCorrected = vrInfoHMD.rot.yaw;
+	//	gInitVRYawAlignDone = true;
+	//}
 
+	//// HMD rotation turns Otto:
+	//vrInfoHMD.HMDYawCorrected -= vrInfoHMD.rotDelta.yaw;
 
-		if (theNode->StatusBits & STATUS_BIT_ONGROUND)
-		{
-			gDelta.x += theNode->AccelVector.x * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
-			gDelta.z += theNode->AccelVector.y * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
-		}
-		else
-		{
-			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
-			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
-		}
+	if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
+		// Only do mouse movement if not moving VR joystick
+		// analogControlX is mouse only now, no keyboard (controls where player is looking / where he is facing)
+		mouseRotationPlayer = gPlayerInfo.analogControlX * fps * CONTROL_SENSITIVITY_PR_TURN * 0.5f;
 
+		theNode->Rot.y -= mouseRotationPlayer; // Set rotate view (view follows robot rot) with analogControl (mouse)
+	}
+	else {
+		// If here, VR joystick is moving
+		VRcameraJoyPostionX = vrcpp_GetAnalogActionData(vrCameraXY).x;
+		VRcameraJoyPostionX /= 30; // Reduce for sensitivty
+		vrInfoHMD.HMDYawCorrected -= VRcameraJoyPostionX;
+		printf("ROTATE X: %f                  ", VRcameraJoyPostionX);
 	}
 
-	/*******************************/
-	/* DO CAMERA-RELATIVE CONTROLS */
-	/*******************************/
-	//else // UNUSED for VR for now
-	//{
-	//	/* ROTATE ANALOG ACCELERATION VECTOR BASED ON CAMERA POS & APPLY TO DELTA */
+	//// HMD rotation turns Otto:
+	//theNode->Rot.y = vrInfoHMD.HMDYawCorrected;
 
-	//	if ((gPlayerInfo.analogControlX == 0.0f) && (gPlayerInfo.analogControlZ == 0.0f))	// see if not acceling
-	//	{
-	//		theNode->AccelVector.x = theNode->AccelVector.y = 0;
-	//	}
-	//	else
-	//	{
-	//		OGLMatrix3x3_SetRotateAboutPoint(&m, &origin, gPlayerToCameraAngle);			// make a 2D rotation matrix camera-rel
-	//		theNode->AccelVector.x = gPlayerInfo.analogControlX;
-	//		theNode->AccelVector.y = gPlayerInfo.analogControlZ;
-	//		//			OGLVector2D_Normalize(&theNode->AccelVector, &theNode->AccelVector);
-	//		OGLVector2D_Transform(&theNode->AccelVector, &m, &theNode->AccelVector);		// rotate the acceleration vector
+	float	strafe = 0.0f, movement = 0.0f;
 
+	// We are using the A or D keys (strafing):
+	if (gPlayerInfo.strafeControlX) {
+		// We are only strafing (no forward nor backward):
+		if (gPlayerInfo.analogControlZ == 0) {
+			strafe = theNode->Rot.y + PI / 2;
+		}
+		// We are moving forward:
+		else if (gPlayerInfo.analogControlZ < 0) {
+			strafe = theNode->Rot.y - sin(gPlayerInfo.strafeControlX);
+		}
+		// We are moving backward:
+		else if (gPlayerInfo.analogControlZ > 0) {
+			strafe = theNode->Rot.y + sin(gPlayerInfo.strafeControlX);
+		}
+	}
+	// We are just moving with W or S, no strafing:
+	else {
+		strafe = theNode->Rot.y;
+	}
 
-	//					/* APPLY ACCELERATION TO DELTAS */
-
-	//		if (theNode->StatusBits & STATUS_BIT_ONGROUND)
-	//		{
-	//			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
-	//			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY * (1.1f - gPlayerSlipperyFactor) * fps);
-	//		}
-	//		else
-	//		{
-	//			gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR * fps);
-	//			gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR * fps);
-	//		}
-	//	}
+	theNode->AccelVector.x = sin(strafe);
+	theNode->AccelVector.y = cos(strafe);
 
 
+	if (!gPlayerInfo.analogControlZ) {
+		movement = gPlayerInfo.strafeControlX;
+	}
+	else {
+		movement = gPlayerInfo.analogControlZ;
+	}
 
-	//	/**********************************************************/
-	//	/* TURN PLAYER TO AIM DIRECTION OF ACCELERATION OR MOTION */
-	//	/**********************************************************/
-	//	//
-	//	// Depending on how slippery the terrain is, we aim toward the direction
-	//	// of motion or the direction of acceleration.  We'll use the gPlayerSlipperyFactor value
-	//	// to average an aim vector between the two.
-	//	//
 
-	//	if ((aimMode != AIM_MODE_NONE) && (theNode->Speed2D > 0.0f))
-	//	{
-	//		FastNormalizeVector2D(gDelta.x, gDelta.z, &deltaVec, true);
-	//		FastNormalizeVector2D(theNode->AccelVector.x, theNode->AccelVector.y, &accVec, true);
+	if (theNode->StatusBits & STATUS_BIT_ONGROUND)
+	{
+		gDelta.x += theNode->AccelVector.x * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
+		gDelta.z += theNode->AccelVector.y * ((CONTROL_SENSITIVITY_PR * movement) * (1.1f - gPlayerSlipperyFactor) * fps);
+	}
+	else
+	{
+		gDelta.x += theNode->AccelVector.x * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
+		gDelta.z += theNode->AccelVector.y * (CONTROL_SENSITIVITY_AIR_PR * movement * fps);
+	}
 
-	//		aimVec.x = deltaVec.x * (1.0f - gPlayerSlipperyFactor) + (accVec.x * gPlayerSlipperyFactor);
-	//		aimVec.y = deltaVec.y * (1.0f - gPlayerSlipperyFactor) + (accVec.y * gPlayerSlipperyFactor);
 
-	//		if (aimMode == AIM_MODE_REVERSE)
-	//			TurnObjectTowardTarget(theNode, &gCoord, gCoord.x - aimVec.x, gCoord.z - aimVec.y, 8.0f, false);
-	//		else
-	//			if (aimMode == AIM_MODE_NORMAL)
-	//			{
-	//				float	turnSpeed;
-
-	//				if (theNode->Speed2D > 400.0f)					// tweaked numbers for fpv
-	//					turnSpeed = 20;
-	//				else
-	//					turnSpeed = 7;
-
-	//				// Still have to figure out why it all goes crazy when player is standing still and turning on himself
-
-	//				TurnObjectTowardTarget(theNode, &gCoord, gCoord.x + aimVec.x, gCoord.z + aimVec.y, turnSpeed, false);
-	//			}
-	//	}
-	//}
 
 	/* CALC SPEED */
 
@@ -2158,7 +2265,7 @@ Boolean				killed = false;
 
 		if (theNode->MPlatform)						// see if factor in moving platform
 		{
-			ObjNode* plat = theNode->MPlatform;
+			ObjNode *plat = theNode->MPlatform;
 			dx += plat->Delta.x;
 			dy += plat->Delta.y;
 			dz += plat->Delta.z;
@@ -2170,6 +2277,48 @@ Boolean				killed = false;
 		gCoord.y += dy * fps;
 		gCoord.z += dz * fps;
 
+
+
+
+		/* DO VR HMD POSITION DELTA   (move Otto when you physically walk)  */ 
+
+		// Must do this last, because it is an addition to everything else,
+		// We want everything else to keep working (platforms etc) and just add this as a bonus
+
+		 /*gPlayerInfo stuff is in regards to the PLAYER, Z is always fore / back player, X is left / right player
+		 vrpos_hmdPos stuff is in regards to the ROOM, Z is fore/back ROOM, X is left/right ROOM*/
+
+		
+		// This works with stick yaw only (HMD yaw breaks it):
+		 //gVrHMDPosMovedeltaWorldspace.x = vrInfoHMD.posDelta.x * 32768;
+		 //gVrHMDPosMovedeltaWorldspace.z = vrInfoHMD.posDelta.z * 32768;
+		 //gCoord.x -= -sin(vrInfoHMD.HMDYawCorrected) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrInfoHMD.HMDYawCorrected - PI / 2) * gVrHMDPosMovedeltaWorldspace.x * fps;
+		 //gCoord.z -= sin(vrInfoHMD.HMDYawCorrected - PI/2) * gVrHMDPosMovedeltaWorldspace.z * fps + sin(vrInfoHMD.HMDYawCorrected) * gVrHMDPosMovedeltaWorldspace.x * fps;
+
+		// This works with HMD yaw only (stick breaks it):
+		 //gVrHMDPosMovedeltaWorldspace.x = vrInfoHMD.posDelta.x * 32768;
+		 //gVrHMDPosMovedeltaWorldspace.z = vrInfoHMD.posDelta.z * 32768;
+		 //gCoord.x += gVrHMDPosMovedeltaWorldspace.x * fps;
+		 //gCoord.z += gVrHMDPosMovedeltaWorldspace.z * fps;
+		
+
+		// Now to mix both together
+		// Figure out the gVrHMDPosMovedeltaWorldspace, which is how much the HMD moved with the X and Z axies
+		// corrected for the HMD rotation (including thumbstick)
+		gVrHMDPosMovedeltaWorldspace.x = vrInfoHMD.posDelta.x * 32768 * sin(vrInfoHMD.HMDYawCorrected - PI / 2 - vrInfoHMD.rot.yaw);
+		gVrHMDPosMovedeltaWorldspace.x += vrInfoHMD.posDelta.z * 32768 * -sin(vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw);
+		gVrHMDPosMovedeltaWorldspace.z = vrInfoHMD.posDelta.z * 32768 * sin(vrInfoHMD.HMDYawCorrected - PI / 2 - vrInfoHMD.rot.yaw);
+		gVrHMDPosMovedeltaWorldspace.z += vrInfoHMD.posDelta.x * 32768 * sin(vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw);
+		
+		gCoord.x -= gVrHMDPosMovedeltaWorldspace.x * fps;
+		gCoord.z -= gVrHMDPosMovedeltaWorldspace.z * fps;
+
+		//printf("heading (yaw): %f\n", vrInfoHMD.rot.yaw);
+		//printf("HMDYawCorrected (yaw + stick): %f\n", vrInfoHMD.HMDYawCorrected);
+		//printf("vrHMDPosMovedeltaWorldspace.x: %f\n", gVrHMDPosMovedeltaWorldspace.x * fps);
+		//printf("vrHMDPosMovedeltaWorldspace.z: %f\n", gVrHMDPosMovedeltaWorldspace.z * fps);
+		//printf("gCoord.x: %f\n", gCoord.x);
+		//printf("gCoord.z: %f\n\n", gCoord.z);
 
 		/******************************/
 		/* DO OBJECT COLLISION DETECT */
