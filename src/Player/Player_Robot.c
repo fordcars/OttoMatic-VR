@@ -2133,15 +2133,15 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 	
 
 
-	// Initial alignment
-	if (!gInitVRYawAlignDone) {
-		theNode->Rot.y = vrInfoHMD.rot.yaw;
-		vrInfoHMD.HMDYawCorrected = vrInfoHMD.rot.yaw;
-		gInitVRYawAlignDone = true;
-	}
+	//// Initial alignment
+	//if (!gInitVRYawAlignDone) {
+	//	theNode->Rot.y = vrInfoHMD.rot.yaw;
+	//	vrInfoHMD.HMDYawCorrected = vrInfoHMD.rot.yaw;
+	//	gInitVRYawAlignDone = true;
+	//}
 
-	// HMD rotation turns Otto:
-	vrInfoHMD.HMDYawCorrected -= vrInfoHMD.rotDelta.yaw;
+	//// HMD rotation turns Otto:
+	//vrInfoHMD.HMDYawCorrected -= vrInfoHMD.rotDelta.yaw;
 
 	if (vrcpp_GetAnalogActionData(vrCameraXY).x == 0) {
 		// Only do mouse movement if not moving VR joystick
@@ -2158,8 +2158,8 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		printf("ROTATE X: %f                  ", VRcameraJoyPostionX);
 	}
 
-	// HMD rotation turns Otto:
-	theNode->Rot.y = vrInfoHMD.HMDYawCorrected;
+	//// HMD rotation turns Otto:
+	//theNode->Rot.y = vrInfoHMD.HMDYawCorrected;
 
 	float	strafe = 0.0f, movement = 0.0f;
 

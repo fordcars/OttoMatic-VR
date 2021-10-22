@@ -409,17 +409,11 @@ transOnly.value[M00] = 1;
 
 	// We want the camera to always be able to yaw but it usually rotates the entire player
 	// If the game says the player should not move, moving the HMD should move the camera, NOT the player
-	if (playerObj->StatusBits & STATUS_BIT_NOMOVE) {
-		forwardDirection = vrInfoHMD.rot.yaw + PI;
-	}
-	else {
-		forwardDirection = playerObj->Rot.y + PI;
-	}
-
 
 	bool vrHMDcontrol = true;
 	OGLVector3D calculatedUpVector;
 	OGLVector3D globalUp = { 0,1,0 };
+
 
 	if (!vrHMDcontrol) {
 		// Basic FPS view, locked to robot facing-forward view:
@@ -444,50 +438,31 @@ transOnly.value[M00] = 1;
 		to.x += playerObj->Coord.x;
 		to.y += playerObj->Coord.y;
 		to.z += playerObj->Coord.z;
+
+		OGLPoint3D_Transform(&to, &transOnly, &to);
+
+		if (playerObj->StatusBits & STATUS_BIT_NOMOVE) {
+			//playerObj->StatusBits &= ~(STATUS_BIT_NOMOVE);
+		}
 	}
 
+	// HMD rotation turns Otto:
+	vrInfoHMD.HMDYawCorrected -= vrInfoHMD.rotDelta.yaw;
 
-
-
-	// Test logging of mouseCameraAngleY breakpoint
-	if ((int)fps % 144) {
-		//mouseCameraAngleY = mouseCameraAngleY;
-	}
-
-
+	// HMD rotation turns Otto:
+	playerObj->Rot.y = vrInfoHMD.HMDYawCorrected;
 
 			/*************************************/
 			/* CALC FROM (camera location) POINT */
 			/*************************************/
 
-	if (gFreezeCameraFromXZ) // Rocket scene -> Not working properly for now, to fix
-	{
-		from.x = target.x = oldCamX;
-		from.z = target.x = oldCamZ;
-	}
-	else
-	{
-		from.x = playerObj->Coord.x; // ( + a few hundred if needed to see body for testing )
-		from.z = playerObj->Coord.z;	
-	}
 
-
-
-		/***************/
-		/* CALC FROM Y */
-		/***************/
-
-	if (gFreezeCameraFromY)
-	{
-		from.y = oldCamY;
-	}
-	else
-	{
-		from.y = playerObj->Coord.y + firstPersonHeight;
-	}
+	from.x = playerObj->Coord.x; // ( + a few hundred if needed to see body for testing )
+	from.z = playerObj->Coord.z;	
+	from.y = playerObj->Coord.y + firstPersonHeight;
 
 	// OGLPoint3D_Transform(&from, &transOnly, &from); // To test but can probably delete this line, handled from player_robot.c
-	OGLPoint3D_Transform(&to, &transOnly, &to);
+
 
 
 	// printf("playerObj->Coord.y: %f, Player height: %i\n", playerObj->Coord.y,firstPersonHeight);
@@ -513,15 +488,19 @@ transOnly.value[M00] = 1;
 	OGL_UpdateCameraFromToUp(gGameViewInfoPtr, &from, &to, &calculatedUpVector);
 
 
-	printf("rotOnly X-X (M00): %f\n", rotOnly.value[M00]);
-	printf("rotOnly X-Y (M10): %f\n", rotOnly.value[M10]);
-	printf("rotOnly X-Z (M20): %f\n", rotOnly.value[M20]);
-	printf("rotOnly Y-X (M01): %f\n", rotOnly.value[M01]);
-	printf("rotOnly Y-Y (M11): %f\n", rotOnly.value[M11]);
-	printf("rotOnly Y-Z (M21): %f\n", rotOnly.value[M21]);
-	printf("rotOnly Z-X (M02): %f\n", rotOnly.value[M02]);
-	printf("rotOnly Z-Y (M12): %f\n", rotOnly.value[M12]);
-	printf("rotOnly Z-Z (M22): %f\n\n", rotOnly.value[M22]);
+	//printf("rotOnly X-X (M00): %f\n", rotOnly.value[M00]);
+	//printf("rotOnly X-Y (M10): %f\n", rotOnly.value[M10]);
+	//printf("rotOnly X-Z (M20): %f\n", rotOnly.value[M20]);
+	//printf("rotOnly Y-X (M01): %f\n", rotOnly.value[M01]);
+	//printf("rotOnly Y-Y (M11): %f\n", rotOnly.value[M11]);
+	//printf("rotOnly Y-Z (M21): %f\n", rotOnly.value[M21]);
+	//printf("rotOnly Z-X (M02): %f\n", rotOnly.value[M02]);
+	//printf("rotOnly Z-Y (M12): %f\n", rotOnly.value[M12]);
+	//printf("rotOnly Z-Z (M22): %f\n\n", rotOnly.value[M22]);
+
+	printf("playerObj->Rot.x: %f\n", playerObj->Rot.x);
+	printf("playerObj->Rot.y: %f\n", playerObj->Rot.y);
+	printf("playerObj->Rot.z: %f\n\n", playerObj->Rot.z);
 
 	printf("FROM cameraLocation.x: %f\n", from.x);
 	printf("FROM cameraLocation.y: %f\n", from.y);
