@@ -334,20 +334,9 @@ float			oldCamX,oldCamZ,oldCamY,oldPointOfInterestX,oldPointOfInterestZ,oldPoint
 int			firstPersonHeight = 100;
 
 // Calculate the HMD's corrected matrix
-OGLMatrix4x4_Multiply(&vrInfoHMD.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoHMD.transformationMatrixCorrected);
-OGLMatrix4x4 rotOnly = vrInfoHMD.transformationMatrixCorrected;
-OGLMatrix4x4 transOnly = { 0 };
-rotOnly.value[M03] = 0;
-rotOnly.value[M13] = 0;
-rotOnly.value[M23] = 0;
+OGLMatrix4x4 rotOnly = vrInfoHMD.rotationMatrixCorrected;
+OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 
-transOnly.value[M03] = vrInfoHMD.transformationMatrix.value[M03];
-transOnly.value[M13] = vrInfoHMD.transformationMatrix.value[M13];
-transOnly.value[M23] = vrInfoHMD.transformationMatrix.value[M23];
-transOnly.value[M33] = 1;
-transOnly.value[M22] = 1;
-transOnly.value[M11] = 1;
-transOnly.value[M00] = 1;
 
 
 	if (!playerObj)
@@ -498,17 +487,17 @@ transOnly.value[M00] = 1;
 	//printf("rotOnly Z-Y (M12): %f\n", rotOnly.value[M12]);
 	//printf("rotOnly Z-Z (M22): %f\n\n", rotOnly.value[M22]);
 
-	printf("playerObj->Rot.x: %f\n", playerObj->Rot.x);
-	printf("playerObj->Rot.y: %f\n", playerObj->Rot.y);
-	printf("playerObj->Rot.z: %f\n\n", playerObj->Rot.z);
+	//printf("playerObj->Rot.x: %f\n", playerObj->Rot.x);
+	//printf("playerObj->Rot.y: %f\n", playerObj->Rot.y);
+	//printf("playerObj->Rot.z: %f\n\n", playerObj->Rot.z);
 
-	printf("FROM cameraLocation.x: %f\n", from.x);
-	printf("FROM cameraLocation.y: %f\n", from.y);
-	printf("FROM cameraLocation.z: %f\n\n", from.z);
+	//printf("FROM cameraLocation.x: %f\n", from.x);
+	//printf("FROM cameraLocation.y: %f\n", from.y);
+	//printf("FROM cameraLocation.z: %f\n\n", from.z);
 
-	printf("TO cameraLocation.x: %f\n", to.x);
-	printf("TO cameraLocation.y: %f\n", to.y);
-	printf("TO cameraLocation.z: %f\n\n\n", to.z);
+	//printf("TO cameraLocation.x: %f\n", to.x);
+	//printf("TO cameraLocation.y: %f\n", to.y);
+	//printf("TO cameraLocation.z: %f\n\n\n", to.z);
 
 				/* UPDATE PLAYER'S CAMERA INFO */
 

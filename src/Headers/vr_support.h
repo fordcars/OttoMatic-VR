@@ -73,6 +73,9 @@ typedef struct
 	vrEuler rotDelta; // Rotation delta (dif since last frame/last check)
 	OGLMatrix4x4 transformationMatrix; // NOT corrected for gameYaw
 	OGLMatrix4x4 transformationMatrixCorrected; // CORRECTED for gameYaw
+	OGLMatrix4x4 rotationMatrixCorrected; // CORRECTED for gameYaw
+	OGLMatrix4x4 translationMatrix; // NOT corrected for gameYaw
+
 
 		// Rotation special
 	double HMDYawCorrected; // Only useful for HMD, use to correct yaw from thumbstick rotation

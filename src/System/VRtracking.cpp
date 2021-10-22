@@ -98,6 +98,40 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 	deviceToParse->transformationMatrix.value[M31] = 0;
 	deviceToParse->transformationMatrix.value[M32] = 0;
 	deviceToParse->transformationMatrix.value[M33] = 1;
+
+
+	// Update the HMD specific members
+	vrInfoHMD.HMDgameYawIgnoringHMD = vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw;
+
+	vrInfoHMD.HMDgameYawCorrectionMatrix = { 0 };
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M00] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M02] = -sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M20] = sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M22] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M11] = 1;
+	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M33] = 1;
+
+	// Calculate the HMD's corrected matrix
+	OGLMatrix4x4_Multiply(&vrInfoHMD.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoHMD.transformationMatrixCorrected);
+
+
+	// Calculate the HMD's corrected matrix
+	OGLMatrix4x4 rotOnly = deviceToParse->transformationMatrixCorrected;
+	OGLMatrix4x4 transOnly = { 0 };
+	rotOnly.value[M03] = 0;
+	rotOnly.value[M13] = 0;
+	rotOnly.value[M23] = 0;
+
+	transOnly.value[M03] = deviceToParse->transformationMatrix.value[M03];
+	transOnly.value[M13] = deviceToParse->transformationMatrix.value[M13];
+	transOnly.value[M23] = deviceToParse->transformationMatrix.value[M23];
+	transOnly.value[M33] = 1;
+	transOnly.value[M22] = 1;
+	transOnly.value[M11] = 1;
+	transOnly.value[M00] = 1;
+
+	deviceToParse->rotationMatrixCorrected = rotOnly;
+	deviceToParse->translationMatrix = transOnly;
 }
 
 
@@ -181,18 +215,6 @@ extern "C" void updateHMDposition(void)
 		//vrInfoLeftHand.rot.roll = 0.01;
 	}
 	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!
-
-
-	// Update the HMD specific members
-	vrInfoHMD.HMDgameYawIgnoringHMD = vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw;
-
-	vrInfoHMD.HMDgameYawCorrectionMatrix = { 0 };
-	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M00] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
-	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M02] = -sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
-	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M20] = sin(-vrInfoHMD.HMDgameYawIgnoringHMD);
-	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M22] = cos(-vrInfoHMD.HMDgameYawIgnoringHMD);
-	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M11] = 1;
-	vrInfoHMD.HMDgameYawCorrectionMatrix.value[M33] = 1;
 
 
 
