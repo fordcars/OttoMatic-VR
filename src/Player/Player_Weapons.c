@@ -221,7 +221,9 @@ static void ShootWeapon(ObjNode *theNode)
 {
 OGLPoint3D		muzzleCoord;
 OGLVector3D		muzzleVector;
-OGLMatrix4x4	m;
+OGLMatrix4x4 rotOnly = vrInfoLeftHand.rotationMatrixCorrected;
+OGLMatrix4x4 transOnly = vrInfoLeftHand.translationMatrix;
+
 
 	gTimeSinceLastShoot = 0;
 	gCameraUserRotY = 0;											// reset user rot see we can see where we're shooting
@@ -234,35 +236,28 @@ OGLMatrix4x4	m;
 
 	if (gPlayerInfo.holdingGun)
 	{
-		FindJointFullMatrix(theNode,PLAYER_JOINT_LEFTHAND,&m);
-		OGLPoint3D_Transform(&gPlayerMuzzleTipOff, &m, &muzzleCoord);
-		OGLVector3D_Transform(&gPlayerMuzzleTipAim, &m, &muzzleVector);
+		//FindJointFullMatrix(theNode,PLAYER_JOINT_LEFTHAND,&m);
+		// Get lefthand position from controller
+
+		OGLPoint3D_Transform(&gPlayerMuzzleTipOff, &rotOnly, &muzzleCoord); // Get controller pos + muzzle location
+		// Add offsets:
+		muzzleCoord.x += lhand->Coord.x;
+		muzzleCoord.y += lhand->Coord.y;
+		muzzleCoord.z += lhand->Coord.z;
+		OGLPoint3D_Transform(&muzzleCoord, &transOnly, &muzzleCoord); // Get controller pos + muzzle location
+
+		OGLVector3D_Transform(&gPlayerMuzzleTipAim, &vrInfoLeftHand.rotationMatrixCorrected, &muzzleVector);
+
+		printf("SHOT!!!\n");
+		printf("muzzleCoord.x: %f\n", muzzleCoord.x);
+		printf("muzzleCoord.y: %f\n", muzzleCoord.y);
+		printf("muzzleCoord.z: %f\n", muzzleCoord.z);
+		printf("muzzleVector.x: %f\n", muzzleVector.x);
+		printf("muzzleVector.y: %f\n", muzzleVector.y);
+		printf("muzzleVector.z: %f\n\n", muzzleVector.z);
 	}
 
 
-
-	// TEST - to adjust
-	muzzleCoord.x = lhand->Coord.x;
-	muzzleCoord.y = lhand->Coord.y;
-	muzzleCoord.z = lhand->Coord.z;
-
-	muzzleVector.x = -cos(lhand->Rot.y - PI/2);
-	muzzleVector.y = -cos(lhand->Rot.x); // x rotation (pitch) controls height of shot
-	muzzleVector.z = -cos(lhand->Rot.y);
-
-	//printf("muzzleVector.x raw: %f\n", muzzleVector.x);
-	//printf("muzzleVector.y raw: %f\n", muzzleVector.y);
-	//printf("muzzleVector.z raw: %f\n", muzzleVector.z);
-
-	//printf("muzzleCoord.x: %f\n", muzzleCoord.x);
-	//printf("muzzleCoord.y: %f\n", muzzleCoord.y);
-	//printf("muzzleCoord.z: %f\n", muzzleCoord.z);
-
-	OGLVector3D_Normalize(&muzzleVector, &muzzleVector);
-
-	//printf("muzzleVector.x: %f\n", muzzleVector.x);
-	//printf("muzzleVector.y: %f\n", muzzleVector.y);
-	//printf("muzzleVector.z: %f\n\n", muzzleVector.z);
 
 
 			/* SHOOT APPROPRIATE WEAPON */
