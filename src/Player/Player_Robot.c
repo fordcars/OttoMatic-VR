@@ -1827,7 +1827,7 @@ void UpdateRobotHands(ObjNode *theNode)
 				/* POSITION CONTROLLER TRACKING */
 
 			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
-			updateGameSpacePositions();
+			vrpp_updateGameSpacePositions();
 
 			int scale = VRroomDistanceToGameDistanceScale;
 			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;

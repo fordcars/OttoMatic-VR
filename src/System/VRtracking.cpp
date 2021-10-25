@@ -136,7 +136,7 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 
 
 
-extern "C" void updateHMDposition(void)
+extern "C" void vrcpp_updateTrackedDevices(void)
 {
 	int numberOfTrackedDevices = 0;
 	// Check for all VR devices
@@ -246,7 +246,7 @@ extern "C" void updateHMDposition(void)
 
 }
 
-extern "C" void updateGameSpacePositions() {
+extern "C" void vrpp_updateGameSpacePositions() {
 	double HMDposGameAxesXSinceLastUpdate = vrInfoHMD.posGameAxes.x;
 	double HMDposGameAxesZSinceLastUpdate = vrInfoHMD.posGameAxes.z;
 	double LeftHandposGameAxesXSinceLastUpdate = vrInfoLeftHand.posGameAxes.x;

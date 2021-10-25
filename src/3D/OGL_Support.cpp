@@ -522,7 +522,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 
 
 
-	updateHMDposition();
+	vrcpp_updateTrackedDevices();
 
 
 
