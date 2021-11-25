@@ -1,4 +1,5 @@
 # WIP: Not yet functional
+**On hold until early 2022**
 
 <p align="center" width="100%"><img src="docs/logo.png" alt="Otto Matic"></p>
  
