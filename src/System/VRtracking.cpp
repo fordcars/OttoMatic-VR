@@ -134,6 +134,76 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 	deviceToParse->translationMatrix = transOnly;
 }
 
+OGLMatrix4x4 hmdMatrix3x4_to_OGLMatrix4x4(vr::HmdMatrix34_t *vrMat) {
+	OGLMatrix4x4 oglMat;
+	oglMat.value[M00] = vrMat->m[0][0];
+	oglMat.value[M01] = vrMat->m[0][1];
+	oglMat.value[M02] = vrMat->m[0][2];
+	oglMat.value[M03] = vrMat->m[0][3];
+	oglMat.value[M10] = vrMat->m[1][0];
+	oglMat.value[M11] = vrMat->m[1][1];
+	oglMat.value[M12] = vrMat->m[1][2];
+	oglMat.value[M13] = vrMat->m[1][3];
+	oglMat.value[M20] = vrMat->m[2][0];
+	oglMat.value[M21] = vrMat->m[2][1];
+	oglMat.value[M22] = vrMat->m[2][2];
+	oglMat.value[M23] = vrMat->m[2][3];
+	oglMat.value[M30] = 0;
+	oglMat.value[M31] = 0;
+	oglMat.value[M32] = 0;
+	oglMat.value[M33] = 1;
+	//printf("%f\n", vrMat->m[0][0]);
+	//printf("%f\n", vrMat->m[0][1]);
+	//printf("%f\n", vrMat->m[0][2]);
+	//printf("%f\n", vrMat->m[0][3]);
+	//printf("%f\n", vrMat->m[1][0]);
+	//printf("%f\n", vrMat->m[1][1]);
+	//printf("%f\n", vrMat->m[1][2]);
+	//printf("%f\n", vrMat->m[1][3]);
+	//printf("%f\n", vrMat->m[2][0]);
+	//printf("%f\n", vrMat->m[2][1]);
+	//printf("%f\n", vrMat->m[2][2]);
+	//printf("%f\n", vrMat->m[2][3]);
+	return oglMat;
+}
+
+OGLMatrix4x4 hmdMatrix4x4_to_OGLMatrix4x4(vr::HmdMatrix44_t *vrMat) {
+	OGLMatrix4x4 oglMat;
+	oglMat.value[M00] = vrMat->m[0][0];
+	oglMat.value[M01] = vrMat->m[0][1];
+	oglMat.value[M02] = vrMat->m[0][2];
+	oglMat.value[M03] = vrMat->m[0][3];
+	oglMat.value[M10] = vrMat->m[1][0];
+	oglMat.value[M11] = vrMat->m[1][1];
+	oglMat.value[M12] = vrMat->m[1][2];
+	oglMat.value[M13] = vrMat->m[1][3];
+	oglMat.value[M20] = vrMat->m[2][0];
+	oglMat.value[M21] = vrMat->m[2][1];
+	oglMat.value[M22] = vrMat->m[2][2];
+	oglMat.value[M23] = vrMat->m[2][3];
+	oglMat.value[M30] = vrMat->m[3][0];
+	oglMat.value[M31] = vrMat->m[3][1];
+	oglMat.value[M32] = vrMat->m[3][2];
+	oglMat.value[M33] = vrMat->m[3][3];
+	//printf("%f\n", vrMat->m[0][0]);
+	//printf("%f\n", vrMat->m[0][1]);
+	//printf("%f\n", vrMat->m[0][2]);
+	//printf("%f\n", vrMat->m[0][3]);
+	//printf("%f\n", vrMat->m[1][0]);
+	//printf("%f\n", vrMat->m[1][1]);
+	//printf("%f\n", vrMat->m[1][2]);
+	//printf("%f\n", vrMat->m[1][3]);
+	//printf("%f\n", vrMat->m[2][0]);
+	//printf("%f\n", vrMat->m[2][1]);
+	//printf("%f\n", vrMat->m[2][2]);
+	//printf("%f\n", vrMat->m[2][3]);
+	//printf("%f\n", vrMat->m[3][0]);
+	//printf("%f\n", vrMat->m[3][1]);
+	//printf("%f\n", vrMat->m[3][2]);
+	//printf("%f\n", vrMat->m[3][3]);
+	return oglMat;
+}
+
 
 
 extern "C" void vrcpp_updateTrackedDevices(void)
@@ -182,6 +252,17 @@ extern "C" void vrcpp_updateTrackedDevices(void)
 		parseTrackingData(&vrInfoLeftHand);
 	if (vrInfoRightHand.deviceID)
 		parseTrackingData(&vrInfoRightHand);
+
+	// Get eye projection matrix
+	vr::HmdMatrix44_t vrMatProjLeft = gIVRSystem->GetProjectionMatrix(vr::Eye_Left, gGameViewInfoPtr->hither, gGameViewInfoPtr->yon);
+	vr::HmdMatrix44_t vrMatProjRight = gIVRSystem->GetProjectionMatrix(vr::Eye_Right, gGameViewInfoPtr->hither, gGameViewInfoPtr->yon);
+	vrInfoHMD.HMDleftProj = hmdMatrix4x4_to_OGLMatrix4x4(&vrMatProjLeft);
+	vrInfoHMD.HMDrightProj = hmdMatrix4x4_to_OGLMatrix4x4(&vrMatProjRight);
+
+	vr::HmdMatrix34_t vrEyeToHeadLeft = gIVRSystem->GetEyeToHeadTransform(vr::Eye_Left);
+	vr::HmdMatrix34_t vrEyeToHeadRight = gIVRSystem->GetEyeToHeadTransform(vr::Eye_Right);
+	vrInfoHMD.HMDeyeToHeadLeft = hmdMatrix3x4_to_OGLMatrix4x4(&vrEyeToHeadLeft);
+	vrInfoHMD.HMDeyeToHeadRight = hmdMatrix3x4_to_OGLMatrix4x4(&vrEyeToHeadRight);
 
 
 	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!

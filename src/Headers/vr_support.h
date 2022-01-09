@@ -88,6 +88,15 @@ typedef struct
 	vrPosition posDelta; // Position delta (dif since last frame/last check)
 	vrPosition posGameAxes; // Position based in the game worldspace
 	vrPosition posDeltaGameAxes; // Position based in the game worldspace delta
+
+		/* HMD Projection View */
+	OGLMatrix4x4 HMDleftProj;
+	OGLMatrix4x4 HMDrightProj;
+	OGLMatrix4x4 HMDeyeToHeadLeft;
+	OGLMatrix4x4 HMDeyeToHeadRight;
+
+
+
 }TrackedVrDeviceInfo;
 
 #ifdef __cplusplus

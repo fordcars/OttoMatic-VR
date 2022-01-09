@@ -514,15 +514,36 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 {
 	vr::VRCompositor()->WaitGetPoses(gTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
+	vrcpp_updateTrackedDevices();
+
+
 	// Render VR first
+
+	// Left eye
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glMultMatrixf(&vrInfoHMD.HMDleftProj.value[M00]);
+	glMatrixMode(GL_MODELVIEW);
 	setupInfo->renderLeftEye = true;
 	OGL_DrawEye(setupInfo, drawRoutine);
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	glFinish();
+
+	// Right eye
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glMultMatrixf(&vrInfoHMD.HMDrightProj.value[M00]);
+	glMatrixMode(GL_MODELVIEW);
 	setupInfo->renderLeftEye = false;
 	OGL_DrawEye(setupInfo, drawRoutine);
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
 
 
+	
 
-	vrcpp_updateTrackedDevices();
 
 
 
@@ -535,7 +556,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 		vr::Texture_t leftEyeTexture = { (void *)(uintptr_t)gLeftEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 		vr::Texture_t rightEyeTexture = { (void *)(uintptr_t)gRightEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::VRCompositor()->Submit(vr::Eye_Right, &leftEyeTexture);
+		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 	}
 
 	glFlush();
@@ -862,8 +883,18 @@ void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutp
 
 	OGL_Camera_SetPlacementAndUpdateMatrices(setupInfo);
 
+	if (setupInfo->renderLeftEye)
+		glMultMatrixf(&vrInfoHMD.HMDeyeToHeadLeft.value[M00]);
+	else
+		glMultMatrixf(&vrInfoHMD.HMDeyeToHeadRight.value[M00]);
+
+
 
 			/* CALL INPUT DRAW FUNCTION */
+
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDepthMask(GL_TRUE);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (drawRoutine != nil)
 		drawRoutine(setupInfo);
@@ -1449,11 +1480,11 @@ OGLLightDefType	*lights;
 
 			/* INIT PROJECTION MATRIX */
 
-	glMatrixMode(GL_PROJECTION);
+	//glMatrixMode(GL_PROJECTION);
 
 			/* SETUP FOR ANAGLYPH STEREO 3D CAMERA */
 
-	if (gGamePrefs.anaglyph)
+	/*if (gGamePrefs.anaglyph)
 	{
 		float	left, right;
 		float	halfFOV = setupInfo->fov * .5f;
@@ -1475,19 +1506,19 @@ OGLLightDefType	*lights;
 		glLoadIdentity();
 		glFrustum(left, right, -wd2, wd2, setupInfo->hither, setupInfo->yon);
 		glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat*) &gViewToFrustumMatrix.value[0]);
-	}
+	}*/
 
 			/* SETUP STANDARD PERSPECTIVE CAMERA */
-	else
-	{
-		OGL_SetGluPerspectiveMatrix(
-				&gViewToFrustumMatrix,
-				setupInfo->fov,
-				aspect,
-				setupInfo->hither,
-				setupInfo->yon);
-		glLoadMatrixf((const GLfloat*) &gViewToFrustumMatrix.value[0]);
-	}
+	//else
+	//{
+	//	OGL_SetGluPerspectiveMatrix(
+	//			&gViewToFrustumMatrix,
+	//			setupInfo->fov,
+	//			aspect,
+	//			setupInfo->hither,
+	//			setupInfo->yon);
+	//	glLoadMatrixf((const GLfloat*) &gViewToFrustumMatrix.value[0]);
+	//}
 
 
 
@@ -1499,9 +1530,7 @@ OGLLightDefType	*lights;
 			&setupInfo->cameraPlacement.cameraLocation,
 			&setupInfo->cameraPlacement.pointOfInterest,
 			&setupInfo->cameraPlacement.upVector);
-	//OGLMatrix4x4 tempMat;
-	//OGLcompatible44toOGLMatrix4x4(&vrInfoHMD.transformationMatrix,&tempMat);
-	//OGLMatrix4x4_Multiply(&gWorldToViewMatrix, &tempMat, &gWorldToViewMatrix);
+	
 	glLoadMatrixf((const GLfloat*) &gWorldToViewMatrix.value[0]);
 
 
@@ -1527,7 +1556,6 @@ OGLLightDefType	*lights;
 
 	OGLMatrix4x4_GetFrustumToWindow(setupInfo, &gFrustumToWindowMatrix);
 	OGLMatrix4x4_Multiply(&gWorldToFrustumMatrix, &gFrustumToWindowMatrix, &gWorldToWindowMatrix);
-
 	UpdateListenerLocation(setupInfo);
 }
 
