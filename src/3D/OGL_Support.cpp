@@ -57,8 +57,6 @@ u_char					gAnaglyphGreyTable[255];
 SDL_GLContext	gAGLContext = nil;
 GLuint gLeftEyeTexture = 0;
 GLuint gRightEyeTexture = 0;
-GLuint gEyeTargetWidth = 0;
-GLuint gEyeTargetHeight = 0;
 GLuint gEyeTextureSize = 0;
 vr::TrackedDevicePose_t gTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 
@@ -224,15 +222,14 @@ OGLSetupOutputType	*outputPtr;
 	TextMesh_InitMaterial(outputPtr, setupDefPtr->styles.redFont);
 	OGL_InitFont();
 
-	gIVRSystem->GetRecommendedRenderTargetSize(&gEyeTargetWidth, &gEyeTargetHeight);
 
 	// Find next power of 2 (cool math)
 	// https://stackoverflow.com/questions/466204/rounding-up-to-next-power-of-2
 	GLuint v = 0;
-	if(gEyeTargetWidth > gEyeTargetHeight)
-		v = gEyeTargetWidth;
+	if(vrInfoHMD.gEyeTargetWidth > vrInfoHMD.gEyeTargetHeight)
+		v = vrInfoHMD.gEyeTargetWidth;
 	else
-		v = gEyeTargetHeight;
+		v = vrInfoHMD.gEyeTargetHeight;
 	
 	v--;
 	v |= v >> 1;
@@ -330,10 +327,9 @@ static char			*s;
 		glGenTextures(1, &gRightEyeTexture);
 
 		glBindTexture(GL_TEXTURE_2D, gLeftEyeTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTextureSize, gEyeTextureSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glBindTexture(GL_TEXTURE_2D, gRightEyeTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTargetWidth, gEyeTargetHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gEyeTextureSize, gEyeTextureSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	}
 
 
@@ -506,6 +502,13 @@ GLfloat	ambient[4];
 
 }
 
+
+void vr_DoEyeProjection(OGLSetupOutputType *setupInfo) {
+	// Move some stuff in DrawScene over here for it to be more clean??
+	// We could call this function for each eye instead of having duplicate code in DrawScene
+}
+
+
 #pragma mark -
 
 /******************* OGL DRAW SCENE *********************/
@@ -519,31 +522,52 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 
 	// Render VR first
 
-	// Left eye
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glMultMatrixf(&vrInfoHMD.HMDleftProj.value[M00]);
+	// LEFT EYE
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(&vrInfoHMD.HMDleftProj.value[M00]);
+	glMultMatrixf(&vrInfoHMD.HMDeyeToHeadLeft.value[M00]);
+	
+	//glMultMatrixf(&vrInfoHMD.transformationMatrixInverted.value[M00]);
+	// Unsure where exactly to insert the HMD transformation matrix
+	
+	OGL_SetGluLookAtMatrix(
+		&gWorldToViewMatrix,
+		&setupInfo->cameraPlacement.cameraLocation,
+		&setupInfo->cameraPlacement.pointOfInterest,
+		&setupInfo->cameraPlacement.upVector);
+	glMultMatrixf((const GLfloat *)&gWorldToViewMatrix.value[0]);
+
 	glMatrixMode(GL_MODELVIEW);
 	setupInfo->renderLeftEye = true;
 	OGL_DrawEye(setupInfo, drawRoutine);
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
 
 	glFinish();
 
-	// Right eye
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glMultMatrixf(&vrInfoHMD.HMDrightProj.value[M00]);
+
+	// RIGHT EYE
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(&vrInfoHMD.HMDrightProj.value[M00]);
+	glMultMatrixf(&vrInfoHMD.HMDeyeToHeadRight.value[M00]);
+
+	//glMultMatrixf(&vrInfoHMD.transformationMatrixInverted.value[M00]);
+	// Unsure where exactly to insert the HMD transformation matrix
+
+	OGL_SetGluLookAtMatrix(
+		&gWorldToViewMatrix,
+		&setupInfo->cameraPlacement.cameraLocation,
+		&setupInfo->cameraPlacement.pointOfInterest,
+		&setupInfo->cameraPlacement.upVector);
+	glMultMatrixf((const GLfloat *)&gWorldToViewMatrix.value[0]);
+
 	glMatrixMode(GL_MODELVIEW);
 	setupInfo->renderLeftEye = false;
 	OGL_DrawEye(setupInfo, drawRoutine);
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
 
 
-	
 
+
+	// lights and listenerLocation, cleanup and put elsewhere?:
+	OGL_Camera_SetPlacementAndUpdateMatrices(setupInfo);
 
 
 
@@ -552,11 +576,16 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 
 	if(gIVRSystem)
 	{
-		vr::VRTextureBounds_t bounds = { 0, 0, static_cast<float>(gEyeTargetWidth) / gEyeTextureSize, static_cast<float>(gEyeTargetHeight) / gEyeTextureSize };
+		vr::VRTextureBounds_t bounds = { 
+			0.0f, // left
+			0.92f - static_cast<float>(vrInfoHMD.gEyeTargetHeight) / gEyeTextureSize, // top
+			static_cast<float>(vrInfoHMD.gEyeTargetWidth) / gEyeTextureSize+0.5f, // right
+			1.0f // bottom
+		}; 
 		vr::Texture_t leftEyeTexture = { (void *)(uintptr_t)gLeftEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 		vr::Texture_t rightEyeTexture = { (void *)(uintptr_t)gRightEyeTexture, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture, &bounds);
+		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture, &bounds);
 	}
 
 	glFlush();
@@ -866,9 +895,9 @@ void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutp
 
 	{
 		int x, y, w, h;
-		OGL_GetCurrentViewport(setupInfo, &x, &y, &w, &h);
-		glViewport(x, y, w, h);
-		gCurrentAspectRatio = (float) w / (float) (h == 0? 1: h);
+		// OGL_GetCurrentViewport(setupInfo, &x, &y, &w, &h);
+		// glViewport(0, 0, vrInfoHMD.gEyeTargetWidth, vrInfoHMD.gEyeTargetHeight);
+		gCurrentAspectRatio = (float)vrInfoHMD.gEyeTargetWidth / (float) (vrInfoHMD.gEyeTargetHeight == 0? 1: vrInfoHMD.gEyeTargetHeight);
 
 		// Compute logical width & height for 2D elements
 		g2DLogicalHeight = 480.0f;
@@ -881,13 +910,12 @@ void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutp
 
 			/* GET UPDATED GLOBAL COPIES OF THE VARIOUS MATRICES */
 
-	OGL_Camera_SetPlacementAndUpdateMatrices(setupInfo);
 
-	if (setupInfo->renderLeftEye)
-		glMultMatrixf(&vrInfoHMD.HMDeyeToHeadLeft.value[M00]);
-	else
-		glMultMatrixf(&vrInfoHMD.HMDeyeToHeadRight.value[M00]);
+	//OGL_Camera_SetPlacementAndUpdateMatrices(setupInfo);
 
+
+
+	
 
 
 			/* CALL INPUT DRAW FUNCTION */
@@ -914,8 +942,7 @@ void OGL_DrawEye(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutp
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, gEyeTargetWidth, gEyeTargetHeight, 0);
-
+	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, vrInfoHMD.gEyeTargetWidth, vrInfoHMD.gEyeTargetHeight, 0);
 	glBindTexture(GL_TEXTURE_2D, oldTexture);
 
 
@@ -962,10 +989,15 @@ int	t,b,l,r;
 	l = setupInfo->clip.left;
 	r = setupInfo->clip.right;
 
-	*x = l;
-	*y = t;
-	*w = gGameWindowWidth-l-r;
-	*h = gGameWindowHeight-t-b;
+	//*x = l;
+	//*y = t;
+	//*w = gGameWindowWidth-l-r;
+	//*h = gGameWindowHeight-t-b;
+
+	*x = 0;
+	*y = 0;
+	*w = vrInfoHMD.gEyeTargetWidth;
+	*h = vrInfoHMD.gEyeTargetHeight;
 }
 
 
@@ -1471,9 +1503,9 @@ void OGL_UpdateCameraFromToUp(OGLSetupOutputType *setupInfo, OGLPoint3D *from, O
 
 void OGL_Camera_SetPlacementAndUpdateMatrices(OGLSetupOutputType *setupInfo)
 {
-float	aspect;
-int		temp, w, h, i;
-OGLLightDefType	*lights;
+	float	aspect;
+	int		temp, w, h, i;
+	OGLLightDefType	*lights;
 
 	OGL_GetCurrentViewport(setupInfo, &temp, &temp, &w, &h);
 	aspect = (float)w/(float)h;
@@ -1520,18 +1552,16 @@ OGLLightDefType	*lights;
 	//	glLoadMatrixf((const GLfloat*) &gViewToFrustumMatrix.value[0]);
 	//}
 
-
-
 			/* INIT MODELVIEW MATRIX */
 
-	glMatrixMode(GL_MODELVIEW);
-	OGL_SetGluLookAtMatrix(
-			&gWorldToViewMatrix,
-			&setupInfo->cameraPlacement.cameraLocation,
-			&setupInfo->cameraPlacement.pointOfInterest,
-			&setupInfo->cameraPlacement.upVector);
-	
-	glLoadMatrixf((const GLfloat*) &gWorldToViewMatrix.value[0]);
+	//glMatrixMode(GL_MODELVIEW);
+	//OGL_SetGluLookAtMatrix(
+	//		&gWorldToViewMatrix,
+	//		&setupInfo->cameraPlacement.cameraLocation,
+	//		&setupInfo->cameraPlacement.pointOfInterest,
+	//		&setupInfo->cameraPlacement.upVector);
+	//
+	//glLoadMatrixf((const GLfloat*) &gWorldToViewMatrix.value[0]);
 
 
 
@@ -1552,10 +1582,10 @@ OGLLightDefType	*lights;
 
 			/* GET VARIOUS CAMERA MATRICES */
 
-	OGLMatrix4x4_Multiply(&gWorldToViewMatrix, &gViewToFrustumMatrix, &gWorldToFrustumMatrix);
+	//OGLMatrix4x4_Multiply(&gWorldToViewMatrix, &gViewToFrustumMatrix, &gWorldToFrustumMatrix);
 
-	OGLMatrix4x4_GetFrustumToWindow(setupInfo, &gFrustumToWindowMatrix);
-	OGLMatrix4x4_Multiply(&gWorldToFrustumMatrix, &gFrustumToWindowMatrix, &gWorldToWindowMatrix);
+	//OGLMatrix4x4_GetFrustumToWindow(setupInfo, &gFrustumToWindowMatrix);
+	//OGLMatrix4x4_Multiply(&gWorldToFrustumMatrix, &gFrustumToWindowMatrix, &gWorldToWindowMatrix);
 	UpdateListenerLocation(setupInfo);
 }
 

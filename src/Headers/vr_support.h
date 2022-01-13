@@ -72,6 +72,7 @@ typedef struct
 	vrEuler rot; // Current actual rotation
 	vrEuler rotDelta; // Rotation delta (dif since last frame/last check)
 	OGLMatrix4x4 transformationMatrix; // NOT corrected for gameYaw
+	OGLMatrix4x4 transformationMatrixInverted;
 	OGLMatrix4x4 transformationMatrixCorrected; // CORRECTED for gameYaw
 	OGLMatrix4x4 rotationMatrixCorrected; // CORRECTED for gameYaw
 	OGLMatrix4x4 translationMatrix; // NOT corrected for gameYaw
@@ -94,7 +95,8 @@ typedef struct
 	OGLMatrix4x4 HMDrightProj;
 	OGLMatrix4x4 HMDeyeToHeadLeft;
 	OGLMatrix4x4 HMDeyeToHeadRight;
-
+	uint32_t gEyeTargetWidth;
+	uint32_t gEyeTargetHeight;
 
 
 }TrackedVrDeviceInfo;
