@@ -1829,13 +1829,16 @@ void UpdateRobotHands(ObjNode *theNode)
 			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
 			updateGameSpacePositions();
 
-			int scale = VRroomDistanceToGameDistanceScale;
+
+			// This code does not work, cannot depend on HMD coords to find hand coords!!! ref #33
+			VRroomDistanceToGameDistanceScale; // temp forcing 250, tweaked in other branch
+			int scale = 250;
 			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			lhand->Coord.y = theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			lhand->Coord.y = scale + theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
 			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 			rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			rhand->Coord.y = theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
+			rhand->Coord.y = scale + theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
 			rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 
