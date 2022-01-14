@@ -413,7 +413,7 @@ OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 	else {
 		// VR HMD Controlled view
 		// Set FPS height to VR height
-		firstPersonHeight = vrInfoHMD.pos.y * VRroomDistanceToGameDistanceScale - 100; // seems to give reasonable height 
+		firstPersonHeight = vrInfoHMD.pos.y * VRroomDistanceToGameDistanceScale - 150; // seems to give reasonable height 
 													   // SLIGHTLY too low when standing? but too high when touching floor. To adjust
 		// firstPersonHeight to be tested / not sure where to apply this now
 		// Set initial to.xyz pos, x & y should be 0, and z -1 * "rotation resolution"
@@ -424,9 +424,10 @@ OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 
 		OGLPoint3D_Transform(&to, &rotOnly, &to);
 
-		to.x += playerObj->Coord.x;
-		to.y += playerObj->Coord.y;
-		to.z += playerObj->Coord.z;
+		/* DISABLING THIS - USING HMD POSE in OGL_Support.cpp */
+		//to.x += playerObj->Coord.x;
+		//to.y += playerObj->Coord.y;
+		//to.z += playerObj->Coord.z;
 
 		OGLPoint3D_Transform(&to, &transOnly, &to);
 
@@ -462,9 +463,12 @@ OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 		calculatedUpVector = globalUp;
 	}
 	else {
-		calculatedUpVector.x = vrInfoHMD.transformationMatrixCorrected.value[M01];
-		calculatedUpVector.y = vrInfoHMD.transformationMatrixCorrected.value[M11];
-		calculatedUpVector.z = vrInfoHMD.transformationMatrixCorrected.value[M21];
+		calculatedUpVector = globalUp;
+
+		/* DISABLING THIS - USING HMD POSE in OGL_Support.cpp */
+		//calculatedUpVector.x = vrInfoHMD.transformationMatrixCorrected.value[M01];
+		//calculatedUpVector.y = vrInfoHMD.transformationMatrixCorrected.value[M11];
+		//calculatedUpVector.z = vrInfoHMD.transformationMatrixCorrected.value[M21];
 
 		//printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);
 		//printf("calculatedUpVector.y: %f\n", calculatedUpVector.y);

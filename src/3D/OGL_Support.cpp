@@ -527,7 +527,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 	glLoadMatrixf(&vrInfoHMD.HMDleftProj.value[M00]);
 	glMultMatrixf(&vrInfoHMD.HMDeyeToHeadLeft.value[M00]);
 	
-	//glMultMatrixf(&vrInfoHMD.transformationMatrixInverted.value[M00]);
+	glMultMatrixf(&vrInfoHMD.transformationMatrixInverted.value[M00]);
 	// Unsure where exactly to insert the HMD transformation matrix
 	
 	OGL_SetGluLookAtMatrix(
@@ -536,6 +536,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 		&setupInfo->cameraPlacement.pointOfInterest,
 		&setupInfo->cameraPlacement.upVector);
 	glMultMatrixf((const GLfloat *)&gWorldToViewMatrix.value[0]);
+	//glScalef(1.25f, 1.25f, 1.25f);
 
 	glMatrixMode(GL_MODELVIEW);
 	setupInfo->renderLeftEye = true;
@@ -549,7 +550,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 	glLoadMatrixf(&vrInfoHMD.HMDrightProj.value[M00]);
 	glMultMatrixf(&vrInfoHMD.HMDeyeToHeadRight.value[M00]);
 
-	//glMultMatrixf(&vrInfoHMD.transformationMatrixInverted.value[M00]);
+	glMultMatrixf(&vrInfoHMD.transformationMatrixInverted.value[M00]);
 	// Unsure where exactly to insert the HMD transformation matrix
 
 	OGL_SetGluLookAtMatrix(
@@ -558,6 +559,7 @@ void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOu
 		&setupInfo->cameraPlacement.pointOfInterest,
 		&setupInfo->cameraPlacement.upVector);
 	glMultMatrixf((const GLfloat *)&gWorldToViewMatrix.value[0]);
+	//glScalef(1.25f, 1.25f, 1.25f);
 
 	glMatrixMode(GL_MODELVIEW);
 	setupInfo->renderLeftEye = false;
