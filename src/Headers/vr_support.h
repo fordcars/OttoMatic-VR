@@ -25,7 +25,7 @@ enum playerActions
 
 // Multiply tracked VR device pos by this to get the equivalent game distance
 // This number is APPROXIMATE and should be tweaked as playtesting happens
-#define VRroomDistanceToGameDistanceScale 100
+#define VRroomDistanceToGameDistanceScale 250
 
 typedef struct
 {
@@ -72,6 +72,7 @@ typedef struct
 	vrEuler rot; // Current actual rotation
 	vrEuler rotDelta; // Rotation delta (dif since last frame/last check)
 	OGLMatrix4x4 transformationMatrix; // NOT corrected for gameYaw
+	OGLMatrix4x4 transformationMatrixInverted;
 	OGLMatrix4x4 transformationMatrixCorrected; // CORRECTED for gameYaw
 	OGLMatrix4x4 rotationMatrixCorrected; // CORRECTED for gameYaw
 	OGLMatrix4x4 translationMatrix; // NOT corrected for gameYaw
@@ -88,6 +89,16 @@ typedef struct
 	vrPosition posDelta; // Position delta (dif since last frame/last check)
 	vrPosition posGameAxes; // Position based in the game worldspace
 	vrPosition posDeltaGameAxes; // Position based in the game worldspace delta
+
+		/* HMD Projection View */
+	OGLMatrix4x4 HMDleftProj;
+	OGLMatrix4x4 HMDrightProj;
+	OGLMatrix4x4 HMDeyeToHeadLeft;
+	OGLMatrix4x4 HMDeyeToHeadRight;
+	uint32_t gEyeTargetWidth;
+	uint32_t gEyeTargetHeight;
+
+
 }TrackedVrDeviceInfo;
 
 #ifdef __cplusplus

@@ -132,11 +132,169 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 
 	deviceToParse->rotationMatrixCorrected = rotOnly;
 	deviceToParse->translationMatrix = transOnly;
+
+	OGLMatrix4x4_Invert(&deviceToParse->transformationMatrix, &deviceToParse->transformationMatrixInverted);
+}
+
+OGLMatrix4x4 hmdMatrix3x4_to_OGLMatrix4x4(vr::HmdMatrix34_t *vrMat) {
+	OGLMatrix4x4 oglMat;
+	oglMat.value[M00] = vrMat->m[0][0];
+	oglMat.value[M01] = vrMat->m[0][1];
+	oglMat.value[M02] = vrMat->m[0][2];
+	oglMat.value[M03] = vrMat->m[0][3];
+	oglMat.value[M10] = vrMat->m[1][0];
+	oglMat.value[M11] = vrMat->m[1][1];
+	oglMat.value[M12] = vrMat->m[1][2];
+	oglMat.value[M13] = vrMat->m[1][3];
+	oglMat.value[M20] = vrMat->m[2][0];
+	oglMat.value[M21] = vrMat->m[2][1];
+	oglMat.value[M22] = vrMat->m[2][2];
+	oglMat.value[M23] = vrMat->m[2][3];
+	oglMat.value[M30] = 0;
+	oglMat.value[M31] = 0;
+	oglMat.value[M32] = 0;
+	oglMat.value[M33] = 1;
+	printf("vrMat ORIGINAL\n");
+	printf("%f   ", vrMat->m[0][0]);
+	printf("%f   ", vrMat->m[0][1]);
+	printf("%f   ", vrMat->m[0][2]);
+	printf("%f   \n", vrMat->m[0][3]);
+	printf("%f   ", vrMat->m[1][0]);
+	printf("%f   ", vrMat->m[1][1]);
+	printf("%f   ", vrMat->m[1][2]);
+	printf("%f   \n", vrMat->m[1][3]);
+	printf("%f   ", vrMat->m[2][0]);
+	printf("%f   ", vrMat->m[2][1]);
+	printf("%f   ", vrMat->m[2][2]);
+	printf("%f   \n", vrMat->m[2][3]);
+	printf("%f   ", vrMat->m[3][0]);
+	printf("%f   ", vrMat->m[3][1]);
+	printf("%f   ", vrMat->m[3][2]);
+	printf("%f   \n\n\n\n", vrMat->m[3][3]);
+	printf("oglMat CONVERTED\n");
+	printf("%f   ", oglMat.value[M00]);
+	printf("%f   ", oglMat.value[M01]);
+	printf("%f   ", oglMat.value[M02]);
+	printf("%f   \n", oglMat.value[M03]);
+	printf("%f   ", oglMat.value[M10]);
+	printf("%f   ", oglMat.value[M11]);
+	printf("%f   ", oglMat.value[M12]);
+	printf("%f   \n", oglMat.value[M13]);
+	printf("%f   ", oglMat.value[M20]);
+	printf("%f   ", oglMat.value[M21]);
+	printf("%f   ", oglMat.value[M22]);
+	printf("%f   \n", oglMat.value[M23]);
+	printf("%f   ", oglMat.value[M30]);
+	printf("%f   ", oglMat.value[M31]);
+	printf("%f   ", oglMat.value[M32]);
+	printf("%f   \n\n\n\n\n\n", oglMat.value[M33]);
+
+	//float factor = 1.0f;
+
+	//OGLMatrix4x4 scaler;
+	//scaler.value[M00] = factor;
+	//scaler.value[M01] = 0;
+	//scaler.value[M02] = 0;
+	//scaler.value[M03] = 0;
+	//scaler.value[M10] = 0;
+	//scaler.value[M11] = factor;
+	//scaler.value[M12] = 0;
+	//scaler.value[M13] = 0;
+	//scaler.value[M20] = 0;
+	//scaler.value[M21] = 0;
+	//scaler.value[M22] = factor;
+	//scaler.value[M23] = 0;
+	//scaler.value[M30] = 0;
+	//scaler.value[M31] = 0;
+	//scaler.value[M32] = 0;
+	//scaler.value[M33] = 1;
+
+	OGLMatrix4x4 tempMat = oglMat;
+	//OGLMatrix4x4_Multiply(&oglMat, &scaler, &tempMat);
+
+
+	tempMat.value[M03] = (250 * tempMat.value[M03]);
+	OGLMatrix4x4_Invert(&tempMat, &tempMat);
+
+	printf("tempMat SCALED\n");
+	printf("%f   ", tempMat.value[M00]);
+	printf("%f   ", tempMat.value[M01]);
+	printf("%f   ", tempMat.value[M02]);
+	printf("%f   \n", tempMat.value[M03]);
+	printf("%f   ", tempMat.value[M10]);
+	printf("%f   ", tempMat.value[M11]);
+	printf("%f   ", tempMat.value[M12]);
+	printf("%f   \n", tempMat.value[M13]);
+	printf("%f   ", tempMat.value[M20]);
+	printf("%f   ", tempMat.value[M21]);
+	printf("%f   ", tempMat.value[M22]);
+	printf("%f   \n", tempMat.value[M23]);
+	printf("%f   ", tempMat.value[M30]);
+	printf("%f   ", tempMat.value[M31]);
+	printf("%f   ", tempMat.value[M32]);
+	printf("%f   \n\n\n\n\n\n\n\n\n", tempMat.value[M33]);
+
+	return tempMat;
+}
+
+OGLMatrix4x4 hmdMatrix4x4_to_OGLMatrix4x4(vr::HmdMatrix44_t *vrMat) {
+	OGLMatrix4x4 oglMat;
+	oglMat.value[M00] = vrMat->m[0][0];
+	oglMat.value[M01] = vrMat->m[0][1];
+	oglMat.value[M02] = vrMat->m[0][2];
+	oglMat.value[M03] = vrMat->m[0][3];
+	oglMat.value[M10] = vrMat->m[1][0];
+	oglMat.value[M11] = vrMat->m[1][1];
+	oglMat.value[M12] = vrMat->m[1][2];
+	oglMat.value[M13] = vrMat->m[1][3];
+	oglMat.value[M20] = vrMat->m[2][0];
+	oglMat.value[M21] = vrMat->m[2][1];
+	oglMat.value[M22] = vrMat->m[2][2];
+	oglMat.value[M23] = vrMat->m[2][3];
+	oglMat.value[M30] = vrMat->m[3][0];
+	oglMat.value[M31] = vrMat->m[3][1];
+	oglMat.value[M32] = vrMat->m[3][2];
+	oglMat.value[M33] = vrMat->m[3][3];
+	//printf("vrMat ORIGINAL\n");
+	//printf("%f   ", vrMat->m[0][0]);
+	//printf("%f   ", vrMat->m[0][1]);
+	//printf("%f   ", vrMat->m[0][2]);
+	//printf("%f   \n", vrMat->m[0][3]);
+	//printf("%f   ", vrMat->m[1][0]);
+	//printf("%f   ", vrMat->m[1][1]);
+	//printf("%f   ", vrMat->m[1][2]);
+	//printf("%f   \n", vrMat->m[1][3]);
+	//printf("%f   ", vrMat->m[2][0]);
+	//printf("%f   ", vrMat->m[2][1]);
+	//printf("%f   ", vrMat->m[2][2]);
+	//printf("%f   \n", vrMat->m[2][3]);
+	//printf("%f   ", vrMat->m[3][0]);
+	//printf("%f   ", vrMat->m[3][1]);
+	//printf("%f   ", vrMat->m[3][2]);
+	//printf("%f   \n\n\n\n", vrMat->m[3][3]);
+	//printf("oglMat CONVERTED\n");
+	//printf("%f   ", oglMat.value[M00]);
+	//printf("%f   ", oglMat.value[M01]);
+	//printf("%f   ", oglMat.value[M02]);
+	//printf("%f   \n", oglMat.value[M03]);
+	//printf("%f   ", oglMat.value[M10]);
+	//printf("%f   ", oglMat.value[M11]);
+	//printf("%f   ", oglMat.value[M12]);
+	//printf("%f   \n", oglMat.value[M13]);
+	//printf("%f   ", oglMat.value[M20]);
+	//printf("%f   ", oglMat.value[M21]);
+	//printf("%f   ", oglMat.value[M22]);
+	//printf("%f   \n", oglMat.value[M23]);
+	//printf("%f   ", oglMat.value[M30]);
+	//printf("%f   ", oglMat.value[M31]);
+	//printf("%f   ", oglMat.value[M32]);
+	//printf("%f   \n\n\n\n\n\n", oglMat.value[M33]);
+	return oglMat;
 }
 
 
 
-extern "C" void updateHMDposition(void)
+extern "C" void vrcpp_updateTrackedDevices(void)
 {
 	int numberOfTrackedDevices = 0;
 	// Check for all VR devices
@@ -182,6 +340,17 @@ extern "C" void updateHMDposition(void)
 		parseTrackingData(&vrInfoLeftHand);
 	if (vrInfoRightHand.deviceID)
 		parseTrackingData(&vrInfoRightHand);
+
+	// Get eye projection matrix
+	vr::HmdMatrix44_t vrMatProjLeft = gIVRSystem->GetProjectionMatrix(vr::Eye_Left, gGameViewInfoPtr->hither, gGameViewInfoPtr->yon);
+	vr::HmdMatrix44_t vrMatProjRight = gIVRSystem->GetProjectionMatrix(vr::Eye_Right, gGameViewInfoPtr->hither, gGameViewInfoPtr->yon);
+	vrInfoHMD.HMDleftProj = hmdMatrix4x4_to_OGLMatrix4x4(&vrMatProjLeft);
+	vrInfoHMD.HMDrightProj = hmdMatrix4x4_to_OGLMatrix4x4(&vrMatProjRight);
+
+	vr::HmdMatrix34_t vrEyeToHeadLeft = gIVRSystem->GetEyeToHeadTransform(vr::Eye_Left);
+	vr::HmdMatrix34_t vrEyeToHeadRight = gIVRSystem->GetEyeToHeadTransform(vr::Eye_Right);
+	vrInfoHMD.HMDeyeToHeadLeft = hmdMatrix3x4_to_OGLMatrix4x4(&vrEyeToHeadLeft);
+	vrInfoHMD.HMDeyeToHeadRight = hmdMatrix3x4_to_OGLMatrix4x4(&vrEyeToHeadRight);
 
 
 	// FOR TESTING ONLY, DISABLE WHEN USING REAL CONTROLLERS!!!!!!!!!!!!!!!!!!!!!
@@ -246,7 +415,7 @@ extern "C" void updateHMDposition(void)
 
 }
 
-extern "C" void updateGameSpacePositions() {
+extern "C" void vrpp_updateGameSpacePositions() {
 	double HMDposGameAxesXSinceLastUpdate = vrInfoHMD.posGameAxes.x;
 	double HMDposGameAxesZSinceLastUpdate = vrInfoHMD.posGameAxes.z;
 	double LeftHandposGameAxesXSinceLastUpdate = vrInfoLeftHand.posGameAxes.x;

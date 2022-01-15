@@ -283,6 +283,9 @@ retry:
 	// Init SteamVR Input
 	vrcpp_initSteamVRInput();
 
+	// Get OpenVR render target sizes
+	gIVRSystem->GetRecommendedRenderTargetSize(&vrInfoHMD.gEyeTargetWidth, &vrInfoHMD.gEyeTargetHeight);
+
 	
 	if (gGamePrefs.preferredDisplay >= SDL_GetNumVideoDisplays())
 		gGamePrefs.preferredDisplay = 0;
@@ -301,8 +304,8 @@ retry:
 			GetWindowTitle(),
 			SDL_WINDOWPOS_CENTERED_DISPLAY(gGamePrefs.preferredDisplay),
 			SDL_WINDOWPOS_CENTERED_DISPLAY(gGamePrefs.preferredDisplay),
-			1280,
-			720,
+			vrInfoHMD.gEyeTargetWidth,
+			vrInfoHMD.gEyeTargetHeight,
 			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 
 	if (!gSDLWindow)

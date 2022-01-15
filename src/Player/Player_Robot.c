@@ -1827,7 +1827,7 @@ void UpdateRobotHands(ObjNode *theNode)
 				/* POSITION CONTROLLER TRACKING */
 
 			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
-			updateGameSpacePositions();
+			vrpp_updateGameSpacePositions();
 
 
 			// This code does not work, cannot depend on HMD coords to find hand coords!!! ref #33
@@ -2383,7 +2383,7 @@ int					numPasses,pass;
 
 				/* CALC TURNING */
 
-	theNode->Rot.y -= gPlayerInfo.analogControlX * 1.5f * fps;
+	theNode->Rot.y -= gPlayerInfo.strafeControlX * fps;
 
 
 		/* CALC MOTION VECTOR BASED ON AIM OF JUMP-JET ANIM */
