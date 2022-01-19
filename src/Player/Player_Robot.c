@@ -1806,9 +1806,9 @@ void UpdateRobotHands(ObjNode *theNode)
 				/* ROTATION CONTROLLER TRACKING */
 
 			// For both hands, disable translation (for now we don't use this:
-			vrInfoLeftHand.transformationMatrix.value[M03] = 0;
-			vrInfoLeftHand.transformationMatrix.value[M13] = 0;
-			vrInfoLeftHand.transformationMatrix.value[M23] = 0;
+			//vrInfoLeftHand.transformationMatrix.value[M03] = 0;
+			//vrInfoLeftHand.transformationMatrix.value[M13] = 0;
+			//vrInfoLeftHand.transformationMatrix.value[M23] = 0;
 
 			// Multiply controller orientation with the gameYaw correction to make the hand rotate with the player when using thumbsticks
 			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoLeftHand.transformationMatrixCorrected);
@@ -1822,6 +1822,11 @@ void UpdateRobotHands(ObjNode *theNode)
 			SetObjectTransformMatrix(lhand);
 			SetObjectTransformMatrix(rhand);
 
+			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M03]);
+			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M13]);
+			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M23]);
+			printf("lhand->BaseTransformMatrix %f\n\n", lhand->BaseTransformMatrix.value[M33]);
+
 
 
 				/* POSITION CONTROLLER TRACKING */
@@ -1831,15 +1836,25 @@ void UpdateRobotHands(ObjNode *theNode)
 
 
 			// This code does not work, cannot depend on HMD coords to find hand coords!!! ref #33
-			VRroomDistanceToGameDistanceScale; // temp forcing 250, tweaked in other branch
-			int scale = 250;
+			int scale = VRroomDistanceToGameDistanceScale;
 			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			lhand->Coord.y = scale + theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
+			lhand->Coord.y = theNode->Coord.y - 150 + vrInfoLeftHand.pos.y * scale;
 			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 			rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			rhand->Coord.y = scale + theNode->Coord.y + (vrInfoRightHand.pos.y - vrInfoHMD.pos.y) * scale;
+			rhand->Coord.y = theNode->Coord.y - 150 + vrInfoRightHand.pos.y * scale;
 			rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
+
+			printf("Coord.x %f\n", theNode->Coord.x);
+			printf("Coord.y %f\n", theNode->Coord.y);
+			printf("Coord.z %f\n\n", theNode->Coord.z);
+			printf("Left Controller.x %f\n", vrInfoLeftHand.posGameAxes.x * scale);
+			printf("Left Controller.y %f\n", vrInfoLeftHand.pos.y * scale);
+			printf("Left Controller.z %f\n\n", vrInfoLeftHand.posGameAxes.z * scale);
+			printf("Left Hand.x %f\n", lhand->Coord.x);
+			printf("Left Hand.y %f\n", lhand->Coord.y);
+			printf("Left Hand.z %f\n\n\n", lhand->Coord.z);
+
 
 
 			

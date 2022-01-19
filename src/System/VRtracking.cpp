@@ -154,6 +154,7 @@ OGLMatrix4x4 hmdMatrix3x4_to_OGLMatrix4x4(vr::HmdMatrix34_t *vrMat) {
 	oglMat.value[M31] = 0;
 	oglMat.value[M32] = 0;
 	oglMat.value[M33] = 1;
+	/*
 	printf("vrMat ORIGINAL\n");
 	printf("%f   ", vrMat->m[0][0]);
 	printf("%f   ", vrMat->m[0][1]);
@@ -188,7 +189,7 @@ OGLMatrix4x4 hmdMatrix3x4_to_OGLMatrix4x4(vr::HmdMatrix34_t *vrMat) {
 	printf("%f   ", oglMat.value[M31]);
 	printf("%f   ", oglMat.value[M32]);
 	printf("%f   \n\n\n\n\n\n", oglMat.value[M33]);
-
+	*/
 	//float factor = 1.0f;
 
 	//OGLMatrix4x4 scaler;
@@ -216,23 +217,23 @@ OGLMatrix4x4 hmdMatrix3x4_to_OGLMatrix4x4(vr::HmdMatrix34_t *vrMat) {
 	tempMat.value[M03] = (250 * tempMat.value[M03]);
 	OGLMatrix4x4_Invert(&tempMat, &tempMat);
 
-	printf("tempMat SCALED\n");
-	printf("%f   ", tempMat.value[M00]);
-	printf("%f   ", tempMat.value[M01]);
-	printf("%f   ", tempMat.value[M02]);
-	printf("%f   \n", tempMat.value[M03]);
-	printf("%f   ", tempMat.value[M10]);
-	printf("%f   ", tempMat.value[M11]);
-	printf("%f   ", tempMat.value[M12]);
-	printf("%f   \n", tempMat.value[M13]);
-	printf("%f   ", tempMat.value[M20]);
-	printf("%f   ", tempMat.value[M21]);
-	printf("%f   ", tempMat.value[M22]);
-	printf("%f   \n", tempMat.value[M23]);
-	printf("%f   ", tempMat.value[M30]);
-	printf("%f   ", tempMat.value[M31]);
-	printf("%f   ", tempMat.value[M32]);
-	printf("%f   \n\n\n\n\n\n\n\n\n", tempMat.value[M33]);
+	//printf("tempMat SCALED\n");
+	//printf("%f   ", tempMat.value[M00]);
+	//printf("%f   ", tempMat.value[M01]);
+	//printf("%f   ", tempMat.value[M02]);
+	//printf("%f   \n", tempMat.value[M03]);
+	//printf("%f   ", tempMat.value[M10]);
+	//printf("%f   ", tempMat.value[M11]);
+	//printf("%f   ", tempMat.value[M12]);
+	//printf("%f   \n", tempMat.value[M13]);
+	//printf("%f   ", tempMat.value[M20]);
+	//printf("%f   ", tempMat.value[M21]);
+	//printf("%f   ", tempMat.value[M22]);
+	//printf("%f   \n", tempMat.value[M23]);
+	//printf("%f   ", tempMat.value[M30]);
+	//printf("%f   ", tempMat.value[M31]);
+	//printf("%f   ", tempMat.value[M32]);
+	//printf("%f   \n\n\n\n\n\n\n\n\n", tempMat.value[M33]);
 
 	return tempMat;
 }
@@ -296,6 +297,9 @@ OGLMatrix4x4 hmdMatrix4x4_to_OGLMatrix4x4(vr::HmdMatrix44_t *vrMat) {
 
 extern "C" void vrcpp_updateTrackedDevices(void)
 {
+	vr::VRCompositor()->WaitGetPoses(trackedDevices, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+
+	
 	int numberOfTrackedDevices = 0;
 	// Check for all VR devices
 	for (int deviceID = 0; deviceID < vr::k_unMaxTrackedDeviceCount; deviceID++) {
@@ -328,9 +332,9 @@ extern "C" void vrcpp_updateTrackedDevices(void)
 	}
 
 
-	// Actually GET the position data
-	gIVRSystem->GetDeviceToAbsoluteTrackingPose(
-		vr::TrackingUniverseStanding, 0, trackedDevices, numberOfTrackedDevices);
+	//// Actually GET the position data
+	//gIVRSystem->GetDeviceToAbsoluteTrackingPose(
+	//	vr::TrackingUniverseStanding, 0, trackedDevices, numberOfTrackedDevices);
 
 
 	// Parse it

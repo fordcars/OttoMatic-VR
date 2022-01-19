@@ -58,7 +58,6 @@ SDL_GLContext	gAGLContext = nil;
 GLuint gLeftEyeTexture = 0;
 GLuint gRightEyeTexture = 0;
 GLuint gEyeTextureSize = 0;
-vr::TrackedDevicePose_t gTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 
 
 OGLMatrix4x4	gViewToFrustumMatrix,gWorldToViewMatrix,gWorldToFrustumMatrix;
@@ -515,8 +514,6 @@ void vr_DoEyeProjection(OGLSetupOutputType *setupInfo) {
 
 void OGL_DrawScene(OGLSetupOutputType *setupInfo, void (*drawRoutine)(OGLSetupOutputType *))
 {
-	vr::VRCompositor()->WaitGetPoses(gTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
-
 	vrcpp_updateTrackedDevices();
 
 
