@@ -1822,10 +1822,10 @@ void UpdateRobotHands(ObjNode *theNode)
 			SetObjectTransformMatrix(lhand);
 			SetObjectTransformMatrix(rhand);
 
-			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M03]);
-			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M13]);
-			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M23]);
-			printf("lhand->BaseTransformMatrix %f\n\n", lhand->BaseTransformMatrix.value[M33]);
+			//printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M03]);
+			//printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M13]);
+			//printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M23]);
+			//printf("lhand->BaseTransformMatrix %f\n\n", lhand->BaseTransformMatrix.value[M33]);
 
 
 
@@ -1845,15 +1845,15 @@ void UpdateRobotHands(ObjNode *theNode)
 			rhand->Coord.y = theNode->Coord.y - 150 + vrInfoRightHand.pos.y * scale;
 			rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
-			printf("Coord.x %f\n", theNode->Coord.x);
-			printf("Coord.y %f\n", theNode->Coord.y);
-			printf("Coord.z %f\n\n", theNode->Coord.z);
-			printf("Left Controller.x %f\n", vrInfoLeftHand.posGameAxes.x * scale);
-			printf("Left Controller.y %f\n", vrInfoLeftHand.pos.y * scale);
-			printf("Left Controller.z %f\n\n", vrInfoLeftHand.posGameAxes.z * scale);
-			printf("Left Hand.x %f\n", lhand->Coord.x);
-			printf("Left Hand.y %f\n", lhand->Coord.y);
-			printf("Left Hand.z %f\n\n\n", lhand->Coord.z);
+			//printf("Coord.x %f\n", theNode->Coord.x);
+			//printf("Coord.y %f\n", theNode->Coord.y);
+			//printf("Coord.z %f\n\n", theNode->Coord.z);
+			//printf("Left Controller.x %f\n", vrInfoLeftHand.posGameAxes.x * scale);
+			//printf("Left Controller.y %f\n", vrInfoLeftHand.pos.y * scale);
+			//printf("Left Controller.z %f\n\n", vrInfoLeftHand.posGameAxes.z * scale);
+			//printf("Left Hand.x %f\n", lhand->Coord.x);
+			//printf("Left Hand.y %f\n", lhand->Coord.y);
+			//printf("Left Hand.z %f\n\n\n", lhand->Coord.z);
 
 
 
@@ -2328,8 +2328,9 @@ static Boolean DoPlayerMovementAndCollision(ObjNode *theNode, Byte aimMode, Bool
 		gVrHMDPosMovedeltaWorldspace.z = vrInfoHMD.posDelta.z * 32768 * sin(vrInfoHMD.HMDYawCorrected - PI / 2 - vrInfoHMD.rot.yaw);
 		gVrHMDPosMovedeltaWorldspace.z += vrInfoHMD.posDelta.x * 32768 * sin(vrInfoHMD.HMDYawCorrected - vrInfoHMD.rot.yaw);
 		
-		gCoord.x -= gVrHMDPosMovedeltaWorldspace.x * fps;
-		gCoord.z -= gVrHMDPosMovedeltaWorldspace.z * fps;
+		// Disabling move physical moves robot, testing new camera system
+		//gCoord.x -= gVrHMDPosMovedeltaWorldspace.x * fps;
+		//gCoord.z -= gVrHMDPosMovedeltaWorldspace.z * fps;
 
 		//printf("heading (yaw): %f\n", vrInfoHMD.rot.yaw);
 		//printf("HMDYawCorrected (yaw + stick): %f\n", vrInfoHMD.HMDYawCorrected);

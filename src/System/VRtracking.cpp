@@ -27,6 +27,16 @@ TrackedVrDeviceInfo vrInfoLeftHand;
 TrackedVrDeviceInfo vrInfoRightHand;
 
 
+OGLMatrix4x4 scaleVRtoGameTranslation(OGLMatrix4x4 matrixToScale) {
+	OGLMatrix4x4 scaledMatrix = matrixToScale;
+	scaledMatrix.value[M03] = (VRroomDistanceToGameDistanceScale * matrixToScale.value[M03]);
+	scaledMatrix.value[M13] = (VRroomDistanceToGameDistanceScale * matrixToScale.value[M13]);
+	scaledMatrix.value[M23] = (VRroomDistanceToGameDistanceScale * matrixToScale.value[M23]);
+
+	return scaledMatrix;
+}
+
+
 void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 	vr::HmdMatrix34_t trackedDeviceMatrix = trackedDevices[deviceToParse->deviceID].mDeviceToAbsoluteTracking;
 
@@ -98,6 +108,49 @@ void parseTrackingData(TrackedVrDeviceInfo *deviceToParse) {
 	deviceToParse->transformationMatrix.value[M31] = 0;
 	deviceToParse->transformationMatrix.value[M32] = 0;
 	deviceToParse->transformationMatrix.value[M33] = 1;
+
+	// Caution: These log for all device parsing (HMD, controllers)
+	// Log transformationMatrix before scaling translation values
+	printf("transformationMatrix ORIGINAL\n");
+	printf("%f   ", deviceToParse->transformationMatrix.value[M00]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M01]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M02]);
+	printf("%f   \n", deviceToParse->transformationMatrix.value[M03]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M10]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M11]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M12]);
+	printf("%f   \n", deviceToParse->transformationMatrix.value[M13]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M20]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M21]);;
+	printf("%f   ", deviceToParse->transformationMatrix.value[M22]);
+	printf("%f   \n", deviceToParse->transformationMatrix.value[M23]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M30]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M31]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M32]);
+	printf("%f   \n\n\n\n", deviceToParse->transformationMatrix.value[M33]);
+
+
+	// Scale the translation values to gameSpace in transformationMatrix
+	deviceToParse->transformationMatrix = scaleVRtoGameTranslation(deviceToParse->transformationMatrix);
+	
+	// Log transformationMatrix after scaling translation values
+	printf("transformationMatrix SCALED TRANS\n");
+	printf("%f   ", deviceToParse->transformationMatrix.value[M00]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M01]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M02]);
+	printf("%f   \n", deviceToParse->transformationMatrix.value[M03]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M10]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M11]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M12]);
+	printf("%f   \n", deviceToParse->transformationMatrix.value[M13]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M20]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M21]);;
+	printf("%f   ", deviceToParse->transformationMatrix.value[M22]);
+	printf("%f   \n", deviceToParse->transformationMatrix.value[M23]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M30]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M31]);
+	printf("%f   ", deviceToParse->transformationMatrix.value[M32]);
+	printf("%f   \n\n\n\n", deviceToParse->transformationMatrix.value[M33]);
 
 
 	// Update the HMD specific members
