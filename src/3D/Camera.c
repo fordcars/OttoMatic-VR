@@ -400,8 +400,6 @@ OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 	// If the game says the player should not move, moving the HMD should move the camera, NOT the player
 
 	bool vrHMDcontrol = true;
-	OGLVector3D calculatedUpVector;
-	OGLVector3D globalUp = { 0,1,0 };
 
 
 	if (!vrHMDcontrol) {
@@ -413,28 +411,11 @@ OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 	else {
 		// VR HMD Controlled view
 		// Set FPS height to VR height
-		firstPersonHeight = vrInfoHMD.pos.y * VRroomDistanceToGameDistanceScale - 150; // seems to give reasonable height 
-		firstPersonHeight = 0; // new camera system, testing
-													   // SLIGHTLY too low when standing? but too high when touching floor. To adjust
-		// firstPersonHeight to be tested / not sure where to apply this now
-		// Set initial to.xyz pos, x & y should be 0, and z -1 * "rotation resolution"
-		// Higher negative numbers (-10 or -100 or -1000) seem to provide way smoother rotation than -1
+		firstPersonHeight = -VRroomDistanceToGameDistanceScale/2; 
+
 		to.x = 0;
 		to.y = 0;
-		to.z = -1000;
-
-		OGLPoint3D_Transform(&to, &rotOnly, &to);
-
-		/* DISABLING THIS - USING HMD POSE in OGL_Support.cpp */
-		//to.x += playerObj->Coord.x;
-		//to.y += playerObj->Coord.y;
-		//to.z += playerObj->Coord.z;
-
-		OGLPoint3D_Transform(&to, &transOnly, &to);
-
-		if (playerObj->StatusBits & STATUS_BIT_NOMOVE) {
-			//playerObj->StatusBits &= ~(STATUS_BIT_NOMOVE);
-		}
+		to.z = -1;
 	}
 
 	// HMD rotation turns Otto:
@@ -447,62 +428,14 @@ OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 			/* CALC FROM (camera location) POINT */
 			/*************************************/
 
-
 	from.x = playerObj->Coord.x; // ( + a few hundred if needed to see body for testing )
 	from.z = playerObj->Coord.z;	
-	from.y = playerObj->Coord.y + firstPersonHeight;
-
-	// OGLPoint3D_Transform(&from, &transOnly, &from); // To test but can probably delete this line, handled from player_robot.c
-
-
+	from.y = playerObj->Coord.y;
 
 	// printf("playerObj->Coord.y: %f, Player height: %i\n", playerObj->Coord.y,firstPersonHeight);
 
 
-	// Calculate up vector
-	if (!vrHMDcontrol) {
-		calculatedUpVector = globalUp;
-	}
-	else {
-		calculatedUpVector = globalUp;
-
-		/* DISABLING THIS - USING HMD POSE in OGL_Support.cpp */
-		//calculatedUpVector.x = vrInfoHMD.transformationMatrixCorrected.value[M01];
-		//calculatedUpVector.y = vrInfoHMD.transformationMatrixCorrected.value[M11];
-		//calculatedUpVector.z = vrInfoHMD.transformationMatrixCorrected.value[M21];
-
-		//printf("calculatedUpVector.x: %f\n", calculatedUpVector.x);
-		//printf("calculatedUpVector.y: %f\n", calculatedUpVector.y);
-		//printf("calculatedUpVector.z: %f\n\n", calculatedUpVector.z);
-		//printf("NcalculatedUpVector.x: %f\n", calculatedUpVector.x);
-		//printf("NcalculatedUpVector.y: %f\n", calculatedUpVector.y);
-		//printf("NcalculatedUpVector.z: %f\n\n\n", calculatedUpVector.z);
-	}
-
-	OGL_UpdateCameraFromToUp(gGameViewInfoPtr, &from, &to, &calculatedUpVector);
-
-
-	//printf("rotOnly X-X (M00): %f\n", rotOnly.value[M00]);
-	//printf("rotOnly X-Y (M10): %f\n", rotOnly.value[M10]);
-	//printf("rotOnly X-Z (M20): %f\n", rotOnly.value[M20]);
-	//printf("rotOnly Y-X (M01): %f\n", rotOnly.value[M01]);
-	//printf("rotOnly Y-Y (M11): %f\n", rotOnly.value[M11]);
-	//printf("rotOnly Y-Z (M21): %f\n", rotOnly.value[M21]);
-	//printf("rotOnly Z-X (M02): %f\n", rotOnly.value[M02]);
-	//printf("rotOnly Z-Y (M12): %f\n", rotOnly.value[M12]);
-	//printf("rotOnly Z-Z (M22): %f\n\n", rotOnly.value[M22]);
-
-	//printf("playerObj->Rot.x: %f\n", playerObj->Rot.x);
-	//printf("playerObj->Rot.y: %f\n", playerObj->Rot.y);
-	//printf("playerObj->Rot.z: %f\n\n", playerObj->Rot.z);
-
-	//printf("FROM cameraLocation.x: %f\n", from.x);
-	//printf("FROM cameraLocation.y: %f\n", from.y);
-	//printf("FROM cameraLocation.z: %f\n\n", from.z);
-
-	//printf("TO cameraLocation.x: %f\n", to.x);
-	//printf("TO cameraLocation.y: %f\n", to.y);
-	//printf("TO cameraLocation.z: %f\n\n\n", to.z);
+	OGL_UpdateCameraFromTo(gGameViewInfoPtr, &from, &to);
 
 				/* UPDATE PLAYER'S CAMERA INFO */
 
