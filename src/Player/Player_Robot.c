@@ -1805,18 +1805,19 @@ void UpdateRobotHands(ObjNode *theNode)
 
 				/* ROTATION CONTROLLER TRACKING */
 
-			// For both hands, disable translation (for now we don't use this:
-			//vrInfoLeftHand.transformationMatrix.value[M03] = 0;
-			//vrInfoLeftHand.transformationMatrix.value[M13] = 0;
-			//vrInfoLeftHand.transformationMatrix.value[M23] = 0;
+			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
+			vrpp_updateGameSpacePositions();
 
+
+
+			// TEMPORARILY DISABLED, TESTING NEW CAMERA SYSTEM
 			// Multiply controller orientation with the gameYaw correction to make the hand rotate with the player when using thumbsticks
-			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoLeftHand.transformationMatrixCorrected);
-			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoRightHand.transformationMatrixCorrected);
+			//OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoLeftHand.transformationMatrixCorrected);
+			//OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoRightHand.transformationMatrixCorrected);
 
 			// Multiply corrected controller orientation with the hands BaseTransformMatrix
-			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrixCorrected, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
-			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrixCorrected, &rhand->BaseTransformMatrix, &rhand->BaseTransformMatrix);
+			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
+			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &rhand->BaseTransformMatrix, &rhand->BaseTransformMatrix);
 
 			// Apply rotations to hands
 			SetObjectTransformMatrix(lhand);
@@ -1831,29 +1832,27 @@ void UpdateRobotHands(ObjNode *theNode)
 
 				/* POSITION CONTROLLER TRACKING */
 
-			// This also adjusts based on gameYaw rotation so using thumbsticks to rotate world doesn't leave hands behind
-			vrpp_updateGameSpacePositions();
+			
+
+			lhand->Coord.x =+ theNode->Coord.x;
+			lhand->Coord.y =+ theNode->Coord.y;
+			lhand->Coord.z =+ theNode->Coord.z;
+
+			rhand->Coord.x =+ theNode->Coord.x;
+			rhand->Coord.y =+ theNode->Coord.y;
+			rhand->Coord.z =+ theNode->Coord.z;
 
 
-			// This code does not work, cannot depend on HMD coords to find hand coords!!! ref #33
-			int scale = VRroomDistanceToGameDistanceScale;
-			lhand->Coord.x = theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			lhand->Coord.y = theNode->Coord.y - 150 + vrInfoLeftHand.pos.y * scale;
-			lhand->Coord.z = theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
-			rhand->Coord.x = theNode->Coord.x + (vrInfoRightHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			rhand->Coord.y = theNode->Coord.y - 150 + vrInfoRightHand.pos.y * scale;
-			rhand->Coord.z = theNode->Coord.z + (vrInfoRightHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
-
-			//printf("Coord.x %f\n", theNode->Coord.x);
-			//printf("Coord.y %f\n", theNode->Coord.y);
-			//printf("Coord.z %f\n\n", theNode->Coord.z);
-			//printf("Left Controller.x %f\n", vrInfoLeftHand.posGameAxes.x * scale);
-			//printf("Left Controller.y %f\n", vrInfoLeftHand.pos.y * scale);
-			//printf("Left Controller.z %f\n\n", vrInfoLeftHand.posGameAxes.z * scale);
-			//printf("Left Hand.x %f\n", lhand->Coord.x);
-			//printf("Left Hand.y %f\n", lhand->Coord.y);
-			//printf("Left Hand.z %f\n\n\n", lhand->Coord.z);
+			printf("Coord.x %f\n", theNode->Coord.x);
+			printf("Coord.y %f\n", theNode->Coord.y);
+			printf("Coord.z %f\n\n", theNode->Coord.z);
+			printf("Left Controller.x %f\n", vrInfoLeftHand.transformationMatrix.value[M03]);
+			printf("Left Controller.y %f\n", vrInfoLeftHand.transformationMatrix.value[M13]);
+			printf("Left Controller.z %f\n\n", vrInfoLeftHand.transformationMatrix.value[M23]);
+			printf("Left Hand.x %f\n", lhand->Coord.x);
+			printf("Left Hand.y %f\n", lhand->Coord.y);
+			printf("Left Hand.z %f\n\n\n", lhand->Coord.z);
 
 
 
@@ -1869,38 +1868,6 @@ void UpdateRobotHands(ObjNode *theNode)
 			//printf("LeftController rot.yaw: %f\n", vrInfoLeftHand.rot.yaw);
 			//printf("LeftController rot.roll: %f\n\n", vrInfoLeftHand.rot.roll);
 
-		
-
-			//printf("PRElhand pos X m12: %f\n", vrInfoLeftHand.transformationMatrix.value[M03]);
-			//printf("PRElhand pos Y m13: %f\n", vrInfoLeftHand.transformationMatrix.value[M13]);
-			//printf("PRElhand pos Z m14: %f\n", vrInfoLeftHand.transformationMatrix.value[M23]);
-			//printf("PRE BaseTransformMatrix pos X: %f\n", lhand->BaseTransformMatrix.value[M03]);
-			//printf("PRE BaseTransformMatrix pos Y: %f\n", lhand->BaseTransformMatrix.value[M13]);
-			//printf("PRE BaseTransformMatrix pos Z: %f\n\n", lhand->BaseTransformMatrix.value[M23]);
-			//printf("NODE INIT Y: %f\n", theNode->InitCoord.y);
-			//printf("NODE Y: %f\n", theNode->Coord.y);
-			//printf("NODE OLD Y: %f\n", theNode->OldCoord.y);
-			//printf("DIF: %f\n\n", theNode->Coord.y - theNode->OldCoord.y);
-
-
-
-
-			//float quantity1 = theNode->InitCoord.y;
-			//if (subtractOnceDone)
-			//	quantity1 = 0;
-			//float quantity2 = theNode->InitCoord.y - theNode->Coord.y;
-			//if (subtractTwiceDone)
-			//	quantity2 = 0;
-			//lhand->Coord.x = lhand->BaseTransformMatrix.value[M03];			// get coords from matrix
-			//lhand->Coord.y = lhand->BaseTransformMatrix.value[M13] + theNode->Coord.y - theNode->OldCoord.y;
-			//	lhand->Coord.y = lhand->BaseTransformMatrix.value[M13] + theNode->Coord.y - theNode->OldCoord.y - quantity2;
-			//	subtractTwiceDone = true;
-			//lhand->Coord.z = lhand->BaseTransformMatrix.value[M23];
-
-
-			//theNode->Coord.x + (vrInfoLeftHand.posGameAxes.x - vrInfoHMD.posGameAxes.x) * scale;
-			//theNode->Coord.y + (vrInfoLeftHand.pos.y - vrInfoHMD.pos.y) * scale;
-			//theNode->Coord.z + (vrInfoLeftHand.posGameAxes.z - vrInfoHMD.posGameAxes.z) * scale;
 
 			//printf("X m0: %f\n", vrInfoLeftHand.matrix.m[0][0]);
 			//printf("X m1: %f\n", vrInfoLeftHand.matrix.m[0][1]);
