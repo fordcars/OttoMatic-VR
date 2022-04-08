@@ -1810,6 +1810,12 @@ void UpdateRobotHands(ObjNode *theNode)
 
 
 
+			lhand->BaseTransformMatrix.value[M00] = (0.8346 * lhand->BaseTransformMatrix.value[M00]); // X
+			lhand->BaseTransformMatrix.value[M11] = (0.8346 * lhand->BaseTransformMatrix.value[M11]); // Y
+			lhand->BaseTransformMatrix.value[M22] = (0.8346 * lhand->BaseTransformMatrix.value[M22]); // Z
+
+
+
 			// TEMPORARILY DISABLED, TESTING NEW CAMERA SYSTEM
 			// Multiply controller orientation with the gameYaw correction to make the hand rotate with the player when using thumbsticks
 			//OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &vrInfoHMD.HMDgameYawCorrectionMatrix, &vrInfoLeftHand.transformationMatrixCorrected);
@@ -1817,30 +1823,38 @@ void UpdateRobotHands(ObjNode *theNode)
 
 			// Multiply corrected controller orientation with the hands BaseTransformMatrix
 			OGLMatrix4x4_Multiply(&vrInfoLeftHand.transformationMatrix, &lhand->BaseTransformMatrix, &lhand->BaseTransformMatrix);
-			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &rhand->BaseTransformMatrix, &rhand->BaseTransformMatrix);
-
-			// Apply rotations to hands
 			SetObjectTransformMatrix(lhand);
+
+			OGLMatrix4x4_Multiply(&vrInfoRightHand.transformationMatrix, &rhand->BaseTransformMatrix, &rhand->BaseTransformMatrix);
 			SetObjectTransformMatrix(rhand);
 
-			//printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M03]);
-			//printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M13]);
-			//printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M23]);
-			//printf("lhand->BaseTransformMatrix %f\n\n", lhand->BaseTransformMatrix.value[M33]);
+
+			// Apply rotations to hands
+
+
+			/* POSITION CONTROLLER TRACKING */
+
+			lhand->Coord.x = theNode->Coord.x;
+			lhand->Coord.y = theNode->Coord.y;
+			lhand->Coord.z = theNode->Coord.z;
+
+			rhand->Coord.x = +theNode->Coord.x;
+			rhand->Coord.y = +theNode->Coord.y;
+			rhand->Coord.z = +theNode->Coord.z;
 
 
 
-				/* POSITION CONTROLLER TRACKING */
 
-			
+			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M03]);
+			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M13]);
+			printf("lhand->BaseTransformMatrix %f\n", lhand->BaseTransformMatrix.value[M23]);
+			printf("lhand->BaseTransformMatrix %f\n\n", lhand->BaseTransformMatrix.value[M33]);
 
-			lhand->Coord.x =+ theNode->Coord.x;
-			lhand->Coord.y =+ theNode->Coord.y;
-			lhand->Coord.z =+ theNode->Coord.z;
 
-			rhand->Coord.x =+ theNode->Coord.x;
-			rhand->Coord.y =+ theNode->Coord.y;
-			rhand->Coord.z =+ theNode->Coord.z;
+
+
+
+
 
 
 
@@ -1853,7 +1867,6 @@ void UpdateRobotHands(ObjNode *theNode)
 			printf("Left Hand.x %f\n", lhand->Coord.x);
 			printf("Left Hand.y %f\n", lhand->Coord.y);
 			printf("Left Hand.z %f\n\n\n", lhand->Coord.z);
-
 
 
 			
