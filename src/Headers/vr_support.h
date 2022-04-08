@@ -25,7 +25,7 @@ enum playerActions
 
 // Multiply tracked VR device pos by this to get the equivalent game distance
 // This number is APPROXIMATE and should be tweaked as playtesting happens
-#define VRroomDistanceToGameDistanceScale 250
+#define VRroomDistanceToGameDistanceScale 100
 
 typedef struct
 {

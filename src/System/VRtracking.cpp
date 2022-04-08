@@ -267,7 +267,7 @@ OGLMatrix4x4 hmdMatrix3x4_to_OGLMatrix4x4(vr::HmdMatrix34_t *vrMat) {
 	//OGLMatrix4x4_Multiply(&oglMat, &scaler, &tempMat);
 
 
-	tempMat.value[M03] = (250 * tempMat.value[M03]);
+	tempMat.value[M03] = (175 * tempMat.value[M03]);
 	OGLMatrix4x4_Invert(&tempMat, &tempMat);
 
 	//printf("tempMat SCALED\n");

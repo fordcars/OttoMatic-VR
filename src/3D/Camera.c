@@ -411,7 +411,7 @@ OGLMatrix4x4 transOnly = vrInfoHMD.translationMatrix;
 	else {
 		// VR HMD Controlled view
 		// Set FPS height to VR height
-		firstPersonHeight = -VRroomDistanceToGameDistanceScale/2; 
+		firstPersonHeight = -VRroomDistanceToGameDistanceScale; 
 
 		to.x = 0;
 		to.y = 0;
